@@ -1364,7 +1364,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                             style:
                                                                 AppFonts.headerStyle(
                                                                   fontSize:
-                                                                      17.sp,
+                                                                      14.sp,
                                                                   color:
                                                                       customcolor
                                                                           .black,
@@ -1403,11 +1403,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                         .datecontroller
                                                                         .text =
                                                                     datefrom;
-                                                                print(
-                                                                  GlobalLists
-                                                                      .datecontroller
-                                                                      .text,
-                                                                );
+                                                            
                                                                 setState(
                                                                   () => selectedDateTime =
                                                                       pickedDate,

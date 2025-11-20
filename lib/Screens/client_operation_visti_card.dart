@@ -1040,7 +1040,7 @@ bool isVisitViewLoad=false;
    setState(() {
         isVisitViewLoad=false;
       });
-          print('GlobalLists.visitview ${GlobalLists.visitview[0]}');
+      
         } else {
           ShowDialogs.showToast(resp.msg.toString());
            setState(() {
