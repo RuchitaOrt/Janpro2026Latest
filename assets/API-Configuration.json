@@ -1,0 +1,14 @@
+{
+    "environment": "production",
+    "version": "1",
+    "development": {
+        "hostUrl": "https://janpro.onerooftechnologiesllp.com",
+        "timeout": 120,
+        "retry": 3
+    },
+    "production": {
+        "hostUrl": "https://crm.jan-pro.in",
+        "timeout": 120,
+        "retry": 3
+    }
+}

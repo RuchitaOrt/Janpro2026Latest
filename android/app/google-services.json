@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "613970098231",
+    "project_id": "janpro-16c2c",
+    "storage_bucket": "janpro-16c2c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613970098231:android:95260f82c7a7a1f2c127b2",
+        "android_client_info": {
+          "package_name": "com.ort.janpro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC_r99xVGaPNabhIRRNLRvbmK1xfVIik4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
