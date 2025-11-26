@@ -17,12 +17,13 @@ import '../Utitlity/sizeConfig.dart';
 import '../const/global.dart';
 import '../model/ClientwisetrainingResponse.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 class MarkStatusPage extends StatefulWidget {
   final List<Janitor> janitors_list;
   String clientname;
 
   MarkStatusPage(this.janitors_list, this.clientname, {Key? key})
-      : super(key: key);
+    : super(key: key);
 
   @override
   _MarkStatusPageState createState() => _MarkStatusPageState();
@@ -44,9 +45,9 @@ class _MarkStatusPageState extends State<MarkStatusPage> {
         "status": janitor.status == true
             ? "Pass"
             : janitor.status == false
-                ? "Fail"
-                : null,
-        "canEdit": false
+            ? "Fail"
+            : null,
+        "canEdit": false,
       };
     }).toList();
   }
@@ -61,8 +62,8 @@ class _MarkStatusPageState extends State<MarkStatusPage> {
         entry['canEdit'] = (role == '3' || role == '4')
             ? (status == null || status == '')
             : (role == '5')
-                ? (status != null && status != '')
-                : false;
+            ? (status != null && status != '')
+            : false;
       }
     });
   }
@@ -90,76 +91,63 @@ class _MarkStatusPageState extends State<MarkStatusPage> {
   //     }
   //   });
   // }
-void markAll(String status) {
-
+  void markAll(String status) {
     print('role $role  status $status');
 
     setState(() {
-
       for (var entry in janitorsStatusList) {
-
         final currentStatus = entry['status'];
 
         if (role == '3' || role == '4') {
-
           if (entry['canEdit'] == true) {
-
             entry['status'] = status.isEmpty ? null : status;
-
           }
-
         } else if (role == '5') {
-
           if (entry['canEdit'] == true ||
-
               (currentStatus != null && currentStatus != '')) {
-
             entry['status'] = status.isEmpty ? null : status;
 
             entry['canEdit'] = true;
-
           }
-
         }
-
       }
-
     });
-
   }
-
 
   bool isSubmitEnabled() {
     return janitorsStatusList.any((e) => e['canEdit'] == true);
   }
 
-
   final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     final total = janitorsStatusList.length;
-    final passed =
-        janitorsStatusList.where((e) => e['status'] == 'Pass').length;
+    final passed = janitorsStatusList
+        .where((e) => e['status'] == 'Pass')
+        .length;
     return Scaffold(
       key: _scaffoldKey1,
       backgroundColor: customcolor.greybg,
       appBar: PreferredSize(
-          preferredSize: Size.fromHeight(148),
-          child: AppbarComman(
-              setStyleStr: 'Training',
-              onPressedBack: () {},
-              onPressedNotify: () {},
-              onPressedSearch: () {},
-              onPressedSort: () {},
-              onPressedmenu: () {
-                _scaffoldKey1.currentState!.openEndDrawer();
-              }),
+        preferredSize: Size.fromHeight(148),
+        child: AppbarComman(
+          setStyleStr: 'Training',
+          onPressedBack: () {},
+          onPressedNotify: () {},
+          onPressedSearch: () {},
+          onPressedSort: () {},
+          onPressedmenu: () {
+            _scaffoldKey1.currentState!.openEndDrawer();
+          },
         ),
-         endDrawer: Theme(
-          data: Theme.of(context).copyWith(
-              canvasColor: customcolor.blue, primaryColor: customcolor.blue),
-          child: AppDrawerfilter(role),
+      ),
+      endDrawer: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: customcolor.blue,
+          primaryColor: customcolor.blue,
         ),
+        child: AppDrawerfilter(role),
+      ),
       // appBar: AppBar(
       //   title: Text("Mark Janitor Status"),
       //   backgroundColor: customcolor.blue,
@@ -178,41 +166,54 @@ void markAll(String status) {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.only( left: 10, right: 10, top: 20, bottom: 0),
+            padding: const EdgeInsets.only(
+              left: 10,
+              right: 10,
+              top: 20,
+              bottom: 0,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 Row(
-                   children: [
-                     GestureDetector(
-                                  onTap: ()
-                                  {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Icon(Icons.arrow_back)),
-                                        SizedBox(width: 10,),
-                  Container(
-                                child: Text(
-                                  "Mark Janitor Status",
-                                  style: AppFonts.headerStyle(
-                                      fontSize: 17.sp,
-                                      color: customcolor.title,
-                                      fontWeight: FontWeight.normal),
-                                ),
-                              ),
-                   ],
-                 ),
-                        
-                   if (role == '3' || role == '4' || role == '5')
-              PopupMenuButton<String>(
-                onSelected: (value) => markAll(value),
-                itemBuilder: (context) => [
-                  PopupMenuItem(value: 'Pass', child: Text("Mark all as pass")),
-                  PopupMenuItem(value: 'Fail', child: Text("Mark all as fail")),
-                  PopupMenuItem(value: '', child: Text("Clear all")),
-                ],
-              ),
-              ],),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Icon(Icons.arrow_back),
+                    ),
+                    SizedBox(width: 10),
+                    Container(
+                      child: Text(
+                        "Mark Janitor Status",
+                        style: AppFonts.headerStyle(
+                          fontSize: 17.sp,
+                          color: customcolor.title,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (role == '3' || role == '4' || role == '5')
+                  PopupMenuButton<String>(
+                    onSelected: (value) => markAll(value),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'Pass',
+                        child: Text("Mark all as pass"),
+                      ),
+                      PopupMenuItem(
+                        value: 'Fail',
+                        child: Text("Mark all as fail"),
+                      ),
+                      PopupMenuItem(value: '', child: Text("Clear all")),
+                    ],
+                  ),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -230,14 +231,16 @@ void markAll(String status) {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(
-                          left: 8, right: 8, top: 6, bottom: 6),
+                        left: 8,
+                        right: 8,
+                        top: 6,
+                        bottom: 6,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            width: SizeConfig.blockSizeHorizontal * 2,
-                          ),
+                          SizedBox(width: SizeConfig.blockSizeHorizontal * 2),
                           Container(
                             width: SizeConfig.blockSizeHorizontal * 60,
                             child: Text(
@@ -246,10 +249,12 @@ void markAll(String status) {
                               textAlign: TextAlign.start,
                               overflow: TextOverflow.ellipsis,
                               style: AppFonts.headerStyle(
-                                  fontSize: ResponsiveFlutter.of(context)
-                                      .fontSize(2.5),
-                                  color: customcolor.textblue,
-                                  fontWeight: FontWeight.bold),
+                                fontSize: ResponsiveFlutter.of(
+                                  context,
+                                ).fontSize(2.5),
+                                color: customcolor.textblue,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           Container(
@@ -293,79 +298,79 @@ void markAll(String status) {
                   margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 12),
+                      vertical: 10.0,
+                      horizontal: 12,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Row(
                             children: [
-                              if (!canEdit)
-                              //   Icon(Icons.lock, size: 16, color: Colors.grey),
-                              // SizedBox(width: 6),
-                              Expanded(
-                                child: Text(janitor.janitorsName,
+                              // if (!canEdit)
+                                //   Icon(Icons.lock, size: 16, color: Colors.grey),
+                                // SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    janitor.janitorsName,
                                     style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600)),
-                              ),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
-                      (role == '6' || role == '7')
+                       
+                        (role == '6' || role == '7')
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
 
-    ? Row(
+                                mainAxisSize: MainAxisSize.min,
 
-        mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
 
-        mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    status == null ? 'Pending' : status!,
 
-        crossAxisAlignment: CrossAxisAlignment.center,
-
-        children: [
-
-          Text(
-
-            status == null ? 'Pending' : status!,
-
-            style: const TextStyle(fontWeight: FontWeight.w500),
-
-          ),
-
-        ],
-
-      )
-
-    :  Row(
-                          children: [
-                            Row(
-                              children: [
-                                Radio<String>(
-                                  activeColor: customcolor.blue,
-                                  value: 'Pass',
-                                  groupValue: status,
-                                  onChanged: canEdit
-                                      ? (val) => updateStatus(index, val!)
-                                      : null,
-                                ),
-                                Text('Pass'),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Radio<String>(
-                                  activeColor: customcolor.red,
-                                  value: 'Fail',
-                                  groupValue: status,
-                                  onChanged: canEdit
-                                      ? (val) => updateStatus(index, val!)
-                                      : null,
-                                ),
-                                Text('Fail'),
-                              ],
-                            ),
-                          ],
-                        ),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Radio<String>(
+                                        activeColor: customcolor.blue,
+                                        value: 'Pass',
+                                        groupValue: status,
+                                        onChanged: canEdit
+                                            ? (val) => updateStatus(index, val!)
+                                            : null,
+                                      ),
+                                      Text('Pass'),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Radio<String>(
+                                        activeColor: customcolor.red,
+                                        value: 'Fail',
+                                        groupValue: status,
+                                        onChanged: canEdit
+                                            ? (val) => updateStatus(index, val!)
+                                            : null,
+                                      ),
+                                      Text('Fail'),
+                                    ],
+                                  ),
+                                ],
+                              ),
                       ],
                     ),
                   ),
@@ -373,52 +378,58 @@ void markAll(String status) {
               },
             ),
           ),
-        (role == '6' || role == '7')?Container():   Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: ElevatedButton.icon(
-              onPressed: isSubmitEnabled() ? () => markestatus() : null,
-              icon: Icon(Icons.save),
-              label:isSubmitLoader?CircularProgressIndicator(color: customcolor.white,): Text("Submit"),
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size.fromHeight(50),
-                backgroundColor:
-                    isSubmitEnabled() ? customcolor.blue : Colors.grey,
-              ),
-            ),
-          )
+          (role == '6' || role == '7')
+              ? Container()
+              : Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: ElevatedButton.icon(
+                    onPressed: isSubmitEnabled() ? () => markestatus() : null,
+                    icon: Icon(Icons.save),
+                    label: isSubmitLoader
+                        ? CircularProgressIndicator(color: customcolor.white)
+                        : Text("Submit"),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size.fromHeight(50),
+                      backgroundColor: isSubmitEnabled()
+                          ? customcolor.blue
+                          : Colors.grey,
+                    ),
+                  ),
+                ),
         ],
       ),
     );
   }
-bool isSubmitLoader=false;
+
+  bool isSubmitLoader = false;
   markestatus() async {
     var status = await ConnectionDetector.checkInternetConnection();
 
-    final List<Map<String, dynamic>> dynamicList =
-        janitorsStatusList.where((e) => e['canEdit'] == true).map((entry) {
-      final janitor = entry['janitor'] as Janitor;
-      final status = entry['status'];
-      return {
-        "id": janitor.id,
-        "user_status": status == 'Pass'
-            ? true
-            : status == 'Fail'
+    final List<Map<String, dynamic>> dynamicList = janitorsStatusList
+        .where((e) => e['canEdit'] == true)
+        .map((entry) {
+          final janitor = entry['janitor'] as Janitor;
+          final status = entry['status'];
+          return {
+            "id": janitor.id,
+            "user_status": status == 'Pass'
+                ? true
+                : status == 'Fail'
                 ? false
                 : null,
-      };
-    }).toList();
+          };
+        })
+        .toList();
 
-    final payload = {
-      "janitors_status_list": dynamicList,
-    };
+    final payload = {"janitors_status_list": dynamicList};
 
     log(jsonEncode(payload));
 
     if (status) {
       // ShowDialogs.showLoadingDialog(context, _marksttaus);
-setState(() {
-  isSubmitLoader=true;
-});
+      setState(() {
+        isSubmitLoader = true;
+      });
       try {
         final response = await http.post(
           Uri.parse(APIManager.markstatus),
@@ -430,16 +441,17 @@ setState(() {
         );
 
         // Navigator.pop(context);
-setState(() {
-  isSubmitLoader=false;
-});
+        setState(() {
+          isSubmitLoader = false;
+        });
         if (response.statusCode == 200) {
           final res = json.decode(response.body);
-          log("✅ Response: $res");
+          log(" Response: $res");
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-                builder: (context) => Training(widget.clientname)),
+              builder: (context) => Training(widget.clientname),
+            ),
           );
           ShowDialogs.showToast(res['msg'] ?? 'Marked successfully');
         } else {
@@ -448,20 +460,22 @@ setState(() {
         }
       } catch (e) {
         setState(() {
-  isSubmitLoader=false;
-});
+          isSubmitLoader = false;
+        });
         // Navigator.pop(context);
         ShowDialogs.showToast("Error: ${e.toString()}");
       }
     } else {
       print('store in local');
       await DBHelper.insertOfflineRequest(
-          '${Global.baseUrl}/api/trainingmaster/update_janitor_status', payload,
-          isMultipart: false);
+        '${Global.baseUrl}/api/trainingmaster/update_janitor_status',
+        payload,
+        isMultipart: false,
+      );
       ShowDialogs.showToast("Saved offline. Will sync when connected.");
       setState(() {
-  isSubmitLoader=false;
-});
+        isSubmitLoader = false;
+      });
       // Navigator.pop(context);
     }
   }

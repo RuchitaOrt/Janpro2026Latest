@@ -347,6 +347,9 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                               fontWeight: FontWeight.bold),
                         ),
                         onPressed: () {
+                          log("maintag :$maintag");
+                          log('widget.clientname :${widget.clientname}');
+                          log("mainlisttab[maintag].trainingData :${mainlisttab[maintag].trainingData}");
                           mainlisttab.length > 0
                               ? mainlisttab[maintag]
                                       .totalNumberOfTraning
@@ -1701,18 +1704,17 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
       var clientid = await SPManager().getclientid();
       var supervisorid = await SPManager().getsupervisorid();
 
-      print("$clientid");
+     
       if (role == GlobalLists.clientrole) {
         map['clientid'] = clientid;
       } else {
         map['emp_id'] = supervisorid;
       }
-      print("map");
-      print(map);
+ 
       APIManager().apiRequest(context, API.clientwisetraininglist,
           (response) async {
         training.ClientwisetrainingResponse resp = response;
-        print('called API ${resp}');
+   
         if (resp.status == 1) {
           setState(() {
             isTrainingLoaded = false;
@@ -1724,11 +1726,9 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
             // GlobalLists.ratinggraphlist=resp.;
 
             for (int i = 0; i < resp.data.length; i++) {
-              log("resp.data :${resp.data[i]}");
+              log("mainlisttab.data :${resp.data[i]}");
               mainlisttab.add(resp.data[i]);
-              print("TRAI");
-              print(widget.clientname);
-              print(resp.data[i].clientName);
+           
               if (resp.data[i].clientName == widget.clientname) {
                 //  int selectindex = resp.data.indexWhere((item) => item.clientName == "RMALL - Mulund");
                 setState(() {
@@ -1772,7 +1772,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
     var map = <String, dynamic>{};
 
     if (status1) {
-      // ✅ Online: Fetch from API
+      //  Online: Fetch from API
       APIManager().apiRequest(context, API.mobilelisttrainingmaster,
           (response) async {
         agen.MobilelisttrainingResponse resp = response;
@@ -1833,7 +1833,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
       // ✅ Online
       APIManager().apiRequest(context, API.janitorslist, (response) async {
         JanitorslistResponse resp = response;
-        print('called Janitor1 $resp');
+      
 
         if (resp.status == 1) {
           setState(() {

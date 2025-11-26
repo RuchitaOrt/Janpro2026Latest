@@ -1,3 +1,5 @@
+// ignore_for_file: use_super_parameters
+
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
@@ -748,57 +750,7 @@ Widget _buildThumbnail(String url, String? label) {
     ],
   );
 }
-// void showVisitImageDialog(BuildContext context, String imageUrl) {
-//   showDialog(
-//     context: context,
-//     builder: (ctx) => AlertDialog(
-//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//       titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-//       contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-//       title: Row(
-//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//         children: [
-//           const Text("Operation Visits", style: TextStyle(fontWeight: FontWeight.bold)),
-//           GestureDetector(
-//             onTap: () => Navigator.pop(context),
-//             child: const Icon(Icons.close, color: Colors.black),
-//           ),
-//         ],
-//       ),
-//       content: SizedBox(
-//         width: double.maxFinite,
-//         child: GestureDetector(
-//           onTap: () {
-//             _showFullImageDialog(context, imageUrl,"Operation Visits");
-//           },
-//           child: ClipRRect(
-//             borderRadius: BorderRadius.circular(10),
-//             child: AspectRatio(
-//               aspectRatio: 1, // ensures balance before image loads
-//               child: Image.network(
-//                 imageUrl,
-//                 fit: BoxFit.contain, // prevents cropping (fixes extra space issue)
-//                 loadingBuilder: (context, child, loadingProgress) {
-//                   if (loadingProgress == null) return child;
-//                   return Container(
-//                     height: 200,
-//                     alignment: Alignment.center,
-//                     child: const CircularProgressIndicator(),
-//                   );
-//                 },
-//                 errorBuilder: (ctx, error, stackTrace) => Container(
-//                   color: Colors.grey.shade200,
-//                   alignment: Alignment.center,
-//                   child: const Icon(Icons.broken_image, size: 40, color: Colors.grey),
-//                 ),
-//               ),
-//             ),
-//           ),
-//         ),
-//       ),
-//     ),
-//   );
-// }
+
 Widget _buildDialogHeader(BuildContext context, String title) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1053,7 +1005,7 @@ bool isVisitViewLoad=false;
         isVisitViewLoad=false;
       });
         // Navigator.pop(context);
-        print('API Error: $error');
+
       }, false, "", jsonval: map);
     } else {
       ShowDialogs.showToast("Please check internet connection");

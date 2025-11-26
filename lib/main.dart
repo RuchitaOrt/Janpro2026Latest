@@ -1,8 +1,9 @@
 
+// ignore_for_file: depend_on_referenced_packages, unrelated_type_equality_checks, avoid_print, library_private_types_in_public_api, deprecated_member_use, use_super_parameters
+
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -139,7 +140,7 @@ void callbackDispatcher() {
 Future<void> requestNotificationPermission() async {
   if (Platform.isAndroid) {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
-    final sdkInt = androidInfo.version.sdkInt ?? 0;
+    final sdkInt = androidInfo.version.sdkInt ;
 
     if (sdkInt >= 33) {
       final status = await Permission.notification.status;
@@ -200,7 +201,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-
     settoken();
     requestNotificationPermissions();
     initLocalNotificationUpdated();
@@ -461,9 +461,7 @@ class _MyAppState extends State<MyApp> {
 @override
 Widget build(BuildContext context) {
   return ScreenUtilInit(
-    designSize: const Size(390, 844), // Your design size 
-    // minTextAdapt: true,
-    // splitScreenMode: true,
+    designSize: const Size(390, 844), 
     builder: (context, child) {
       return MaterialApp(
         title: 'JanPro',
