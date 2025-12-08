@@ -69,7 +69,7 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
     print("Current Permission Status: $status");
 
     if (status.isGranted) {
-      // ✅ Already granted
+      //      Already granted
       print("Location permission granted");
       getLocation();
     } else if (status.isDenied) {
@@ -927,7 +927,7 @@ Future<Placemark> getLocation() async {
     print("Site Dropdown Request: $map");
 
     if (status1) {
-      // ✅ Online: Fetch from API
+      //      Online: Fetch from API
       APIManager().apiRequest(context, API.sitedropdown, (response) async {
         SiteDropDown resp = response;
 
@@ -937,7 +937,7 @@ Future<Placemark> getLocation() async {
             GlobalLists.sitedropdown = resp.data ?? [];
           });
 
-          // ✅ Save to local storage
+          //      Save to local storage
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
               'cached_site_dropdown', siteDropDownToJson(resp));

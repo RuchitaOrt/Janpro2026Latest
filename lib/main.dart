@@ -146,13 +146,13 @@ Future<void> requestNotificationPermission() async {
       final status = await Permission.notification.status;
       if (!status.isGranted) {
         final result = await Permission.notification.request();
-        print(
+        log(
             'Android 13+ notification permission granted: ${result.isGranted}');
       } else {
-        print('Android 13+ notification permission already granted.');
+        log('Android 13+ notification permission already granted.');
       }
     } else {
-      print('Notification permission not needed on Android SDK < 33.');
+      log('Notification permission not needed on Android SDK < 33.');
     }
   }
 
@@ -162,8 +162,7 @@ Future<void> requestNotificationPermission() async {
       badge: true,
       sound: true,
     );
-    print(
-        'iOS notification permission status: ${settings.authorizationStatus}');
+    log('iOS notification permission status: ${settings.authorizationStatus}');
   }
 }
 
@@ -175,12 +174,12 @@ void setupWorkmanager() {
 }
 
 Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
-  print('Notification bg');
+  log('Notification bg');
   await Firebase.initializeApp();
   //  configLocalNotification();
   if (message.containsKey('data')) {
     // navigateToScreen(message);
-    print('in bg');
+    log('in bg');
   }
 }
 

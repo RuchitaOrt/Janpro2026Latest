@@ -372,7 +372,7 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
   fit: BoxFit.cover,
   loadingBuilder: (context, child, loadingProgress) {
     if (loadingProgress == null) {
-      // ✅ Image loaded successfully
+      //      Image loaded successfully
       return child;
     } else {
       // 🌀 While loading, show a loader

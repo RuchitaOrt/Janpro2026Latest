@@ -1228,7 +1228,7 @@ setState(() {
         jsonval: payload,
       );
     } else {
-      /// ✅ Offline: Save to DB
+      ///      Offline: Save to DB
       await DBHelper.insertOfflineRequest(
         '${Global.baseUrl}/api/attendancemaster/add_janitors',
         payload,
@@ -1298,7 +1298,7 @@ setState(() {
         jsonval: payload,
       );
     } else {
-      // ✅ Save the update request to SQLite for later sync
+      //      Save the update request to SQLite for later sync
       await DBHelper.insertOfflineRequest(
           '${Global.baseUrl}/api/attendancemaster/update_janitor', payload);
 
@@ -1597,7 +1597,7 @@ Future<Placemark> getLocation() async {
             GlobalLists.clientmasterlist = resp.data ?? [];
           });
 
-          // ✅ Save to local cache
+          //      Save to local cache
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             'cached_unit_client_master',

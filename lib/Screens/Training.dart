@@ -1785,7 +1785,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                 .toList();
           });
 
-          // ✅ Save to cache
+          //      Save to cache
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
               'cached_training_agenda', json.encode(resp.toJson()));
@@ -1830,7 +1830,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
     };
 
     if (status1) {
-      // ✅ Online
+      //      Online
       APIManager().apiRequest(context, API.janitorslist, (response) async {
         JanitorslistResponse resp = response;
       
@@ -1843,7 +1843,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                 .toList();
           });
 
-          // ✅ Save to local storage
+          //      Save to local storage
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             'cached_janitor_agenda',
@@ -1884,7 +1884,7 @@ bool isAddTrainingLoaded=false;
     String train_agenda = agendaid.join(', ');
     String train_janitor = janitorid.join(', ');
 
-    /// ✅ Create payload
+    ///      Create payload
     final payload = {
       'Date_of_Training': datecontroller.text,
       'Training_Agenda': train_agenda,

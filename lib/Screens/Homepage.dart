@@ -388,7 +388,7 @@ Future<void> refreshData() async {
             // }
           });
 
-          // ✅ Save JSON to SharedPreferences
+          //      Save JSON to SharedPreferences
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
               'cached_attendance_data', att.attendencelistResponseToJson(resp));
@@ -650,7 +650,7 @@ Future<void> refreshData() async {
         // _updateCardValues();
         // _generateTabs();
 
-        // ✅ Cache response locally
+        //      Cache response locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(
           'cached_operationalworkflow',
@@ -829,13 +829,13 @@ Future<void> refreshData() async {
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 prefs.setString("workflow_response", jsonEncode(resp.toJson()));
 
-                /// ✅ FIX: Store the entire response, not just `data`
+                ///      FIX: Store the entire response, not just `data`
                 String clientIdKey = client_id;
                 if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
                   GlobalLists.clientDetailsMap[clientIdKey] = [];
                 }
                 GlobalLists.clientDetailsMap[clientIdKey]!
-                    .addAll(resp.data); // ✅ Correct
+                    .addAll(resp.data); //      Correct
 // 👈 FIXED LINE
               } else {
                 // setState(() {
@@ -877,13 +877,13 @@ Future<void> refreshData() async {
             // isdataloaded = true;
             // });
 
-            /// ✅ FIX: Add full response object, not just `data`
+            ///      FIX: Add full response object, not just `data`
             String clientIdKey = client_id;
             if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
               GlobalLists.clientDetailsMap[clientIdKey] = [];
             }
             GlobalLists.clientDetailsMap[clientIdKey]!
-                .addAll(resp.data); // ✅ Correct
+                .addAll(resp.data); //      Correct
             // 👈 FIXED LINE
           } catch (e) {
             print("Error reading offline data: $e");
@@ -4645,7 +4645,7 @@ Future<void> unitdashboardApi() async {
         print("API Call: ${API.unitclientmaster}");
         UnitclientMasterResponse resp = response;
         if (resp.status == 1) {
-          // ✅ Save offline
+          //      Save offline
           await prefs.setString('unitclientmaster_offline', jsonEncode(resp));
 
           setState(() {
@@ -5108,7 +5108,7 @@ setState(() {
                   .toList();
             });
 
-            // ✅ Save to SharedPreferences
+            //      Save to SharedPreferences
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(cacheKey, json.encode(resp.toJson()));
           } else {

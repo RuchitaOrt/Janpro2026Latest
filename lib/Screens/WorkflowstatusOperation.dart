@@ -5123,7 +5123,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
             // Navigator.of(context).pop();
           });
 
-          // ✅ Cache response locally
+          //      Cache response locally
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             'cached_operationalworkflow',
@@ -5368,13 +5368,13 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 prefs.setString("workflow_response", jsonEncode(resp.toJson()));
 
-                /// ✅ FIX: Store the entire response, not just `data`
+                ///      FIX: Store the entire response, not just `data`
                 String clientIdKey = client_id;
                 if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
                   GlobalLists.clientDetailsMap[clientIdKey] = [];
                 }
                 GlobalLists.clientDetailsMap[clientIdKey]!
-                    .addAll(resp.data); // ✅ Correct
+                    .addAll(resp.data); //      Correct
 // 👈 FIXED LINE
               } else {
                 setState(() {
@@ -5425,13 +5425,13 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
               isdataloaded = true;
             });
 
-            /// ✅ FIX: Add full response object, not just `data`
+            ///      FIX: Add full response object, not just `data`
             String clientIdKey = client_id;
             if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
               GlobalLists.clientDetailsMap[clientIdKey] = [];
             }
             GlobalLists.clientDetailsMap[clientIdKey]!
-                .addAll(resp.data); // ✅ Correct
+                .addAll(resp.data); //      Correct
             // 👈 FIXED LINE
           } catch (e) {
             print("Error reading offline data: $e");
@@ -5544,7 +5544,7 @@ setState(() {
 setState(() {
   isworkflowUpdated=false;
 });
-            // ✅ Update local GlobalLists.workflowstatuslist
+            //      Update local GlobalLists.workflowstatuslist
             for (var area in GlobalLists.workflowstatuslist) {
               if (area.shift.toString() == shiftid) {
                 for (var masterArea in area.masterAreaWiseList) {
@@ -5568,7 +5568,7 @@ setState(() {
               }
             }
 
-            // ✅ Save updated list to SharedPreferences
+            //      Save updated list to SharedPreferences
             await saveWorkflowStatusToPrefs();
 
             Navigator.pushReplacement(
@@ -5608,7 +5608,7 @@ setState(() {
         isMultipart: false,
       );
 
-      // ✅ Update in-memory list
+      //      Update in-memory list
       for (var area in GlobalLists.workflowstatuslist) {
         if (area.shift.toString() == shiftid) {
           for (var masterArea in area.masterAreaWiseList) {
@@ -5630,7 +5630,7 @@ setState(() {
         }
       }
 
-      // ✅ Save updated list to SharedPreferences
+      //      Save updated list to SharedPreferences
       await saveWorkflowStatusToPrefs();
 
       ShowDialogs.showToast("📴 Offline update saved. UI updated.");
@@ -5671,7 +5671,7 @@ setState(() {
 
     if (existingJson != newJson) {
       await prefs.setString('workflowstatusApi', newJson);
-      print("✅ workflowstatusApi updated in SharedPreferences");
+      print("     workflowstatusApi updated in SharedPreferences");
     } else {
       print("ℹ️ No change detected. Skipping SharedPreferences update.");
     }

@@ -1069,7 +1069,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         _locationMessage =
             "Latitude: ${position.latitude}, Longitude: ${position.longitude}";
 
-        print(_locationMessage);
+   
       });
     } catch (e) {
       // setState(() {
@@ -1082,19 +1082,18 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   grantPermission() async {
     var status = await permishan.Permission.location.status;
-    print("status");
-    print(status);
+ 
     if (status.isGranted) {
       getLocation();
     } else if (status.isPermanentlyDenied) {
-      print("isUndetermined");
+   
       //  ShowDialogs.showToast(
       //                       "Please Allow Your Location Permission From Setting  To Add your Attendance");
       getLocation();
       //await Permission.location.request();
     } else {
       // getLocation();
-      print("status1");
+  
       permishan.openAppSettings();
       //locatedCountryCode = null;
       //await Permission.location.request();
@@ -1850,7 +1849,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     GlobalLists.mainlisttab.length > 0
                                         ? Wrap(
                                             children:
-                                                _buildChoicemainList(), // ✅ correct usage
+                                                _buildChoicemainList(), //      correct usage
                                           )
                                         : Container(),
                                     //workflow
@@ -2130,7 +2129,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 shrinkWrap: true,
                                 physics: ScrollPhysics(),
                                 children:
-                                    _buildChoicemainList(), // ✅ now returns List<Widget>
+                                    _buildChoicemainList(), //      now returns List<Widget>
                               ),
                             ),
                           )
@@ -3007,13 +3006,18 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 "Please Enter Valid Mobile No",
                               );
                             } else {
+                              
                               addattendanceApi();
                             }
                           } else {
                             // Navigator.pop(context);
-                            if (lat == null || long == null) {
+                            log("Checking location before adding attendance");
+                             if (lat == null || long == null) {
                               grantPermission();
-                            } else if (namecontroller.text.isEmpty) {
+                               log("Latitude: $lat, Longitude: $long"); 
+                            }
+                            
+                           else if (namecontroller.text.isEmpty) {
                               ShowDialogs.showToast("Please Enter Name");
                             } else if (mobilecontroller.text.isEmpty) {
                               ShowDialogs.showToast("Please Enter Mobile No");
@@ -3022,7 +3026,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 "Please Enter Valid Mobile No",
                               );
                             } else {
-                              print("RUCHIADD");
+                              log("Calling addattendanceApi c");                           
                               addattendanceApi();
                             }
                           }
@@ -3159,7 +3163,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             "Offline: Deleted from local cache & saved delete request.",
           );
         } catch (e) {
-          print("❌ Error updating offline cache: $e");
+          print("     Error updating offline cache: $e");
           ShowDialogs.showToast("Failed to delete offline data");
         }
       } else {
@@ -3792,7 +3796,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               attendencelistResponseToJson(resp),
             );
 
-            // ✅ Save JSON to SharedPreferences
+            //      Save JSON to SharedPreferences
             //29OctRUCHI
             setState(() {
               isattendanceLoadin = false;
@@ -3863,7 +3867,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
           ShowDialogs.showToast("Offline attendance data loaded");
         } catch (e) {
-          print("❌ Error parsing cached attendance: $e");
+          print("     Error parsing cached attendance: $e");
           ShowDialogs.showToast("Failed to load offline data");
         }
       } else {
@@ -4101,7 +4105,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   }
 
   Future<Placemark> getLocation() async {
-    print("Getting location...");
+
 
     // Request permission if needed
     LocationPermission permission = await Geolocator.checkPermission();
@@ -4122,8 +4126,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
     var first = placemarks.first;
 
-    String lat = position.latitude.toString();
-    String long = position.longitude.toString();
+     lat = position.latitude.toString();
+     long = position.longitude.toString();
 
     print(
       "${first.name} : ${first.street}, ${first.locality}, ${first.country}",
@@ -4372,7 +4376,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
     if (status1) {
       log(' In side called');
-      // ✅ Online mode
+ 
       // ShowDialogs.showLoadingDialog(context, _keyLoader);
       setState(() {
         GlobalLists.isaddAttendance.value = true;
@@ -4404,7 +4408,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             });
           } else {
             ShowDialogs.showToast(resp.msg);
-            print("RUCHIELSE");
+       
             setState(() {
               GlobalLists.isaddAttendance.value = false;
             });
@@ -4420,7 +4424,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       );
     } else {
       print("RUCHIELSE offline");
-      // 🚫 Offline Mode
+      //  Offline Mode
       await DBHelper.insertOfflineRequest(
         '${Global.baseUrl}/api/attendancemaster/Add_AttendanceMaster',
         map,
@@ -4436,7 +4440,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         loginTime: map['time'],
       );
 
-      // ✅ Check duplicate in GlobalLists
+      //      Check duplicate in GlobalLists
       bool exists = GlobalLists.attendanceemployeelist.any(
         (e) => e.contact == newEmployee.contact,
       );
@@ -4447,7 +4451,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         GlobalLists.attendancedata.employeeList.add(newEmployee);
         // });
 
-        // ✅ Update SharedPreferences cache
+        //      Update SharedPreferences cache
         final prefs = await SharedPreferences.getInstance();
         String? cachedData = prefs.getString('cached_attendance_data');
 
@@ -4470,7 +4474,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               );
             }
           } catch (e) {
-            print("❌ Error updating cache: $e");
+            print("     Error updating cache: $e");
           }
         }
       } else {
@@ -4506,7 +4510,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     final cacheKey = 'cached_janitor_${idclient}_$idsite';
 
     if (status1) {
-      // ✅ ONLINE mode
+      //      ONLINE mode
       APIManager().apiRequest(
         context,
         API.janitorslist,
@@ -4539,7 +4543,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               print('called JANITOR LENGTH ${GlobalLists.dropdownList.length}');
             });
 
-            // ✅ Save response to local cache
+            //      Save response to local cache
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(cacheKey, json.encode(resp.toJson()));
           } else {

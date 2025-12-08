@@ -2031,7 +2031,7 @@ class _ComplaintState extends State<Complaint> with TickerProviderStateMixin {
                                                             ) {
                                                               if (loadingProgress ==
                                                                   null) {
-                                                                // ✅ Image loaded successfully
+                                                                //      Image loaded successfully
                                                                 return child;
                                                               } else {
                                                                 // ⏳ Show loader while image is loading
@@ -3055,7 +3055,7 @@ class _ComplaintState extends State<Complaint> with TickerProviderStateMixin {
                                                       ) {
                                                         if (loadingProgress ==
                                                             null) {
-                                                          // ✅ Image loaded successfully
+                                                          //      Image loaded successfully
                                                           return child;
                                                         } else {
                                                           // ⏳ Show loader while image is loading
@@ -4509,7 +4509,7 @@ class _ComplaintState extends State<Complaint> with TickerProviderStateMixin {
                                                       ) {
                                                         if (loadingProgress ==
                                                             null) {
-                                                          // ✅ Image loaded successfully
+                                                          //      Image loaded successfully
                                                           return child;
                                                         } else {
                                                           // ⏳ Show loader while image is loading
@@ -6885,7 +6885,7 @@ class _ComplaintState extends State<Complaint> with TickerProviderStateMixin {
                                                       ) {
                                                         if (loadingProgress ==
                                                             null) {
-                                                          // ✅ Image loaded successfully
+                                                          //      Image loaded successfully
                                                           return child;
                                                         } else {
                                                           // ⏳ Show loader while image is loading
@@ -8174,7 +8174,7 @@ class _ComplaintState extends State<Complaint> with TickerProviderStateMixin {
                                                   ) {
                                                     if (loadingProgress ==
                                                         null) {
-                                                      // ✅ Image loaded successfully
+                                                      //      Image loaded successfully
                                                       return child;
                                                     } else {
                                                       // ⏳ Show loader while image is loading
@@ -10250,7 +10250,7 @@ class _ComplaintState extends State<Complaint> with TickerProviderStateMixin {
                                                   ) {
                                                     if (loadingProgress ==
                                                         null) {
-                                                      // ✅ Image loaded successfully
+                                                      //      Image loaded successfully
                                                       return child;
                                                     } else {
                                                       // ⏳ Show loader while image is loading
@@ -12735,7 +12735,7 @@ class _ComplaintState extends State<Complaint> with TickerProviderStateMixin {
         ShowDialogs.showToast(res['msg']);
       }
     } else {
-      /// ✅ OFFLINE: Save payload + image paths
+      ///      OFFLINE: Save payload + image paths
       await DBHelper.insertOfflineRequest(
         '${Global.baseUrl}/api/ticketmanagement/Add_TicketManagement',
         payload,

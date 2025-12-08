@@ -475,7 +475,7 @@ class _ClientVisitViewState extends State<ClientVisitView> {
                   }
                 }
 
-                // ✅ Store globally
+                //      Store globally
                 GlobalLists.maxVisitCount = maxVisitCount;
                 print(" Max Total Number of Visit: $maxVisitCount");
 
