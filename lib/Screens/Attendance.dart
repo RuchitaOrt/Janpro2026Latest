@@ -3163,7 +3163,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             "Offline: Deleted from local cache & saved delete request.",
           );
         } catch (e) {
-          print("     Error updating offline cache: $e");
+         
           ShowDialogs.showToast("Failed to delete offline data");
         }
       } else {
@@ -3300,7 +3300,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         API.unitsitemaster,
         (response) async {
           sitemaster.UnitsiteMasterResponse resp = response;
-          print('called API ${resp}');
+       
           if (resp.status == "success") {
             setState(() {
               GlobalLists.sitemasterlist = resp.data;
@@ -3313,7 +3313,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           }
         },
         (error) {
-          print('ERR msg is $error');
+     
           //  Navigator.of(this.context).pop();
         },
         false,
@@ -4279,14 +4279,14 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     var map = <String, dynamic>{};
     var supervisorid = await SPManager().getsupervisorid();
 
-    map['Client'] = GlobalLists.clientid;
-    map['Site'] = GlobalLists.siteid;
-    map['no_of_staff'] = noofstaff;
-    map['new_no_of_staff'] = newstaff;
-    map['attanded_staff_count'] = staffcount;
-    map['shift_name'] = GlobalLists.shiftid;
-    map["supervisor"] = supervisorid;
-    map["multidays"] = "false";
+    // map['Client'] = GlobalLists.clientid;
+    // map['Site'] = GlobalLists.siteid;
+    map['number_of_staff'] = newstaff;
+    // map['new_no_of_staff'] = newstaff;
+    // map['attanded_staff_count'] = staffcount;
+    map['id'] = GlobalLists.shiftid;
+    // map["supervisor"] = supervisorid;
+    // map["multidays"] = "false";
 
     if (status1) {
       setState(() {
@@ -4302,7 +4302,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             setState(() {
               // Navigator.of(this.context).pop();
               isattendanceLoadin = false;
-              print("RUCHIIF");
+            
 
               Timer(
                 Duration(seconds: 1),
@@ -4315,8 +4315,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               );
             });
           } else {
-            ShowDialogs.showToast(resp.msg!);
-            print("RUCHIELSE");
+            ShowDialogs.showToast(resp.message);
+       
             setState(() {
               isattendanceLoadin = false;
             });
@@ -4390,7 +4390,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             setState(() {
               // Navigator.of(this.context).pop();
               GlobalLists.isaddAttendance.value = false;
-              print("RUCHIIF");
               // Timer(Duration(seconds: 1), () => Navigator.pop(context));
               ShowDialogs().confirmationdone(
                 context,
@@ -4423,7 +4422,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         jsonval: map,
       );
     } else {
-      print("RUCHIELSE offline");
       //  Offline Mode
       await DBHelper.insertOfflineRequest(
         '${Global.baseUrl}/api/attendancemaster/Add_AttendanceMaster',
@@ -4474,7 +4472,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               );
             }
           } catch (e) {
-            print("     Error updating cache: $e");
+
           }
         }
       } else {

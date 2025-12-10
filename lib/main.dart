@@ -1,4 +1,3 @@
-
 // ignore_for_file: depend_on_referenced_packages, unrelated_type_equality_checks, avoid_print, library_private_types_in_public_api, deprecated_member_use, use_super_parameters
 
 import 'dart:convert';
@@ -29,10 +28,11 @@ import 'DBHelper/syncs_offline.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-const AndroidNotificationChannel channel = AndroidNotificationChannel(
-  'high_importance_channel',
-  'High Importance Notifications',
-  description: 'Channel with sound',
+/// single top-level channel used everywhere
+const AndroidNotificationChannel kCustomChannel = AndroidNotificationChannel(
+  'custom_sound_channel_2', // id
+  'Custom Sound Channel', // name
+  description: 'Channel with custom sound',
   importance: Importance.high,
   sound: RawResourceAndroidNotificationSound('custom_notification_2'),
 );
@@ -41,34 +41,32 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+/// Background message handler
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Ensure Firebase is initialized in background isolate
   await Firebase.initializeApp();
 
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'custom_sound_channel_2',
-    'Custom Sound Notifications',
-    description: 'Channel with custom sound',
-    importance: Importance.high,
-    sound: RawResourceAndroidNotificationSound('custom_notification_2'),
-  );
-
+  // create channel in background as well (harmless if already exists)
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(kCustomChannel);
 
   if (message.notification != null) {
-    flutterLocalNotificationsPlugin.show(
+    await flutterLocalNotificationsPlugin.show(
       message.hashCode,
       message.notification?.title,
       message.notification?.body,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          channel.id,
-          channel.name,
-          channelDescription: channel.description,
+          kCustomChannel.id,
+          kCustomChannel.name,
+          channelDescription: kCustomChannel.description,
           icon: '@mipmap/ic_launcher',
-          sound: channel.sound,
+          sound: kCustomChannel.sound,
+          importance: Importance.high,
+          priority: Priority.high,
         ),
       ),
     );
@@ -76,50 +74,55 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 Future<void> main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
+
+  // Firebase first
+  await Firebase.initializeApp();
+
+  // register background handler (use the RemoteMessage signature)
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  const AndroidInitializationSettings initializationSettingsAndroid =
+  // Initialize local notifications
+  const AndroidInitializationSettings androidInitSettings =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  final InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
+  final InitializationSettings initSettings = InitializationSettings(
+    android: androidInitSettings,
+    iOS: DarwinInitializationSettings(),
+  );
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  setupWorkmanager(); // Initialize Workmanager
-  // await NotificationService().initialize();
-  await Firebase.initializeApp();
-  // Initial check
+  await flutterLocalNotificationsPlugin.initialize(
+    initSettings,
+    // onDidReceiveNotificationResponse handled later in app state if needed
+  );
+
+  // Create channel before any notifications are shown
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(kCustomChannel);
+
+  // initialize workmanager once
+  setupWorkmanager();
+
+  // request notification permission BEFORE runApp (Android 13+ / iOS)
+  await requestNotificationPermission();
+
+  // initial sync if connected
   if (await isConnected()) {
     syncOfflineRequests();
-
-  } else {
-
   }
 
-  // Auto-sync on network comeback
+  // listen for connectivity and auto-sync (keeps your existing behavior)
   Connectivity().onConnectivityChanged.listen((result) {
     if (result != ConnectivityResult.none) {
       syncOfflineRequests();
-      log('on syncOfflineRequests is connected');
     }
   });
 
-  setupWorkmanager();
-
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-
-  ]);
-  runApp(MyApp());
-  await requestNotificationPermission();
+  runApp(const MyApp());
 }
 
 Future<bool> isConnected() async {
@@ -131,23 +134,22 @@ Future<bool> isConnected() async {
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task == 'complaint_reminder') {
-
+      // implement the periodic reminder job if needed
     }
-    return true;
+    return Future.value(true);
   });
 }
 
 Future<void> requestNotificationPermission() async {
   if (Platform.isAndroid) {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
-    final sdkInt = androidInfo.version.sdkInt ;
+    final sdkInt = androidInfo.version.sdkInt;
 
     if (sdkInt >= 33) {
       final status = await Permission.notification.status;
       if (!status.isGranted) {
         final result = await Permission.notification.request();
-        log(
-            'Android 13+ notification permission granted: ${result.isGranted}');
+        log('Android 13+ notification permission granted: ${result.isGranted}');
       } else {
         log('Android 13+ notification permission already granted.');
       }
@@ -167,18 +169,13 @@ Future<void> requestNotificationPermission() async {
 }
 
 void setupWorkmanager() {
-  Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: false,
-  );
+  Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
 }
 
 Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
   log('Notification bg');
   await Firebase.initializeApp();
-  //  configLocalNotification();
   if (message.containsKey('data')) {
-    // navigateToScreen(message);
     log('in bg');
   }
 }
@@ -191,11 +188,11 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   dynamic globalvalue;
-  final GlobalKey<NavigatorState> navigatorKey =
-      GlobalKey(debugLabel: "Main Navigator");
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey(
+    debugLabel: "Main Navigator",
+  );
 
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  // use global flutterLocalNotificationsPlugin (do not redeclare locally)
 
   @override
   void initState() {
@@ -204,18 +201,32 @@ class _MyAppState extends State<MyApp> {
     requestNotificationPermissions();
     initLocalNotificationUpdated();
 
+    // handle case app launched from terminated state via notification
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
-        showNotification(message);
+        showNotification(
+          message.data.isNotEmpty
+              ? {
+                  'notification': {
+                    'title': message.notification?.title ?? '',
+                    'body': message.notification?.body ?? '',
+                  },
+                  'data': message.data,
+                }
+              : message,
+        );
         handleNavigationFromMessage(message);
       }
     });
 
+    // foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       globalvalue = message;
+      log('Foreground message received: ${message.messageId}');
       showForegroundNotification(message);
     });
 
+    // click on notification when app in background -> opened
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       handleNavigationFromMessage(message);
       configLocalNotification();
@@ -226,7 +237,6 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> initLocalNotificationUpdated() async {
     var androidSettings = AndroidInitializationSettings('@mipmap/janprologo');
-
     var iosSettings = DarwinInitializationSettings();
 
     var initSettings = InitializationSettings(
@@ -246,8 +256,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> configLocalNotification() async {
-    var details =
-        await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    var details = await flutterLocalNotificationsPlugin
+        .getNotificationAppLaunchDetails();
 
     if (details != null && details.didNotificationLaunchApp) {
       String? payload = details.notificationResponse?.payload;
@@ -262,13 +272,13 @@ class _MyAppState extends State<MyApp> {
     var body = message.notification?.body;
 
     final android = AndroidNotificationDetails(
-      'custom_sound_channel_2',
-      'Custom Sound Channel',
-      channelDescription: 'Channel with sound',
+      kCustomChannel.id,
+      kCustomChannel.name,
+      channelDescription: kCustomChannel.description,
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
-      sound: RawResourceAndroidNotificationSound('custom_notification_2'),
+      sound: kCustomChannel.sound,
       styleInformation: BigTextStyleInformation(body ?? ''),
       icon: '@mipmap/janprologo',
     );
@@ -277,17 +287,19 @@ class _MyAppState extends State<MyApp> {
 
     var type = message.data['type'];
     Note newNote = Note(
-      type: type.toString(),
-      status: message.data['status'],
+      type: type ?? '',
+      status: message.data['status'] ?? '',
       id: message.data['id'].toString(),
-      client_site_name: message.data['client_site_name'],
-      date: message.data['date'],
-      emp_id: message.data['emp_id'],
-      isclient: message.data['isclient'],
-      shift_end_time: message.data['shift_end_time'],
-      shift_id: message.data['shift_id'],
-      shift_start_time: message.data['shift_start_time'],
-      siteid: message.data['siteid'],
+      client_site_name: message.data['client_site_name'] ?? '',
+      date: message.data['date'] ?? "",
+      emp_id: message.data['emp_id'] ?? "",
+      isclient: message.data['isclient'] == true ||
+          message.data['isclient'] == "true" ? true : false,
+
+      shift_end_time: message.data['shift_end_time'] ?? '',
+      shift_id: message.data['shift_id'] ?? '',
+      shift_start_time: message.data['shift_start_time'] ?? '',
+      siteid: message.data['siteid'] ?? '',
     );
 
     String payload = newNote.toJsonString();
@@ -302,31 +314,51 @@ class _MyAppState extends State<MyApp> {
   }
 
   void showNotification(message) async {
+    // normalize message structure for both RemoteMessage and Map cases
+    String title = '';
+    String body = '';
+    dynamic payload;
+
+    if (message is RemoteMessage) {
+      title = message.notification?.title ?? '';
+      body = message.notification?.body ?? '';
+      payload = jsonEncode({
+        'notification': {'title': title, 'body': body},
+        'data': message.data,
+      });
+    } else if (message is Map) {
+      title = message['notification']?['title']?.toString() ?? '';
+      body = message['notification']?['body']?.toString() ?? '';
+      payload = jsonEncode(message);
+    }
+
     var androidDetails = AndroidNotificationDetails(
-      'custom_sound_channel_2',
-      'Custom Sound Channel',
-      channelDescription: 'Channel with sound',
+      kCustomChannel.id,
+      kCustomChannel.name,
+      channelDescription: kCustomChannel.description,
       channelShowBadge: true,
       enableVibration: true,
       importance: Importance.max,
       priority: Priority.high,
-      sound: RawResourceAndroidNotificationSound('custom_notification_2'),
+      sound: kCustomChannel.sound,
       playSound: true,
-      styleInformation:
-          BigTextStyleInformation(message['notification']['body']),
+      styleInformation: BigTextStyleInformation(body),
+      icon: '@mipmap/ic_launcher',
     );
 
     var iosDetails = DarwinNotificationDetails();
 
     var platform = NotificationDetails(
-        android: androidDetails, iOS: iosDetails);
+      android: androidDetails,
+      iOS: iosDetails,
+    );
 
-    flutterLocalNotificationsPlugin.show(
+    await flutterLocalNotificationsPlugin.show(
       0,
-      message['notification']['title'].toString(),
-      message['notification']['body'].toString(),
+      title,
+      body,
       platform,
-      payload: jsonEncode(message),
+      payload: payload,
     );
   }
 
@@ -349,45 +381,65 @@ class _MyAppState extends State<MyApp> {
     var type = message.data['type'];
 
     if (type == "complaint") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
           builder: (_) => Complaint(
-              true,
-              message.data['emp_type'],
-              message.data['site_id'],
-              message.data['emp_id'],
-              message.data['date'],
-              message.data['id'],
-              message.data['status'],
-              message.data['client_site_name'],
-              false)));
+            true,
+            message.data['emp_type'],
+            message.data['site_id'],
+            message.data['emp_id'],
+            message.data['date'],
+            message.data['id'],
+            message.data['status'],
+            message.data['client_site_name'],
+            false,
+          ),
+        ),
+      );
     } else if (type == "workflow") {
       GlobalLists.clientid = message.data['emp_id'];
       GlobalLists.siteid = message.data['site_id'];
 
-      navigatorKey.currentState?.push(MaterialPageRoute(
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
           builder: (_) => WorkflowstatusOperation(
-                message.data['shift_id'],
-                true,
-                message.data['shift_start_time'],
-                message.data['shift_end_time'],
-                message.data['client_site_name'],
-                "",
-              )));
+            message.data['shift_id'],
+            true,
+            message.data['shift_start_time'],
+            message.data['shift_end_time'],
+            message.data['client_site_name'],
+            "",
+          ),
+        ),
+      );
     } else if (type == "attendance_new") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => Attendance(message.data['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => Attendance(message.data['client_site_name']),
+        ),
+      );
     } else if (type == "training") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => Training(message.data['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => Training(message.data['client_site_name']),
+        ),
+      );
     } else if (type == "specialactivity") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => SpecialActivity(message.data['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => SpecialActivity(message.data['client_site_name']),
+        ),
+      );
     } else if (type == "rating") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => Rating(message.data['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => Rating(message.data['client_site_name']),
+        ),
+      );
     } else {
-      navigatorKey.currentState
-          ?.push(MaterialPageRoute(builder: (_) => HomePage()));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => HomePage()),
+      );
     }
   }
 
@@ -395,46 +447,63 @@ class _MyAppState extends State<MyApp> {
     String type = valueMap['type'];
 
     if (type == "complaint") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
           builder: (_) => Complaint(
-                true,
-                valueMap['emp_type'],
-                valueMap['site_id'],
-                valueMap['emp_id'],
-                valueMap['date'],
-                valueMap['id'],
-                valueMap['status'],
-                valueMap['client_site_name'],
-                false,
-              )));
+            true,
+            valueMap['emp_type'],
+            valueMap['site_id'],
+            valueMap['emp_id'],
+            valueMap['date'],
+            valueMap['id'],
+            valueMap['status'],
+            valueMap['client_site_name'],
+            false,
+          ),
+        ),
+      );
     } else if (type == "workflow") {
       GlobalLists.clientid = valueMap['emp_id'];
       GlobalLists.siteid = valueMap['site_id'];
 
-      navigatorKey.currentState?.push(MaterialPageRoute(
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
           builder: (_) => WorkflowstatusOperation(
-                valueMap['shift_id'],
-                true,
-                valueMap['shift_start_time'],
-                valueMap['shift_end_time'],
-                valueMap['client_site_name'],
-                "",
-              )));
+            valueMap['shift_id'],
+            true,
+            valueMap['shift_start_time'],
+            valueMap['shift_end_time'],
+            valueMap['client_site_name'],
+            "",
+          ),
+        ),
+      );
     } else if (type == "attendance_new") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => Attendance(valueMap['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => Attendance(valueMap['client_site_name']),
+        ),
+      );
     } else if (type == "training") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => Training(valueMap['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => Training(valueMap['client_site_name']),
+        ),
+      );
     } else if (type == "specialactivity") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => SpecialActivity(valueMap['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => SpecialActivity(valueMap['client_site_name']),
+        ),
+      );
     } else if (type == "rating") {
-      navigatorKey.currentState?.push(MaterialPageRoute(
-          builder: (_) => Rating(valueMap['client_site_name'])));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => Rating(valueMap['client_site_name'])),
+      );
     } else {
-      navigatorKey.currentState
-          ?.push(MaterialPageRoute(builder: (_) => HomePage()));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => HomePage()),
+      );
     }
   }
 
@@ -457,26 +526,24 @@ class _MyAppState extends State<MyApp> {
     await SPManager().setfcmAuthToken(token ?? "");
   }
 
-@override
-Widget build(BuildContext context) {
-  return ScreenUtilInit(
-    designSize: const Size(390, 844), 
-    builder: (context, child) {
-      return MaterialApp(
-        title: 'JanPro',
-        debugShowCheckedModeBanner: false,       
-        theme: ThemeData(
-          useMaterial3: false,
-          fontFamily: "Linotype Didot",
-          primarySwatch: Colors.blue,
-        ),
-        home: SplashScreen(),
-        routes: {
-          'Login': (_) => LoginScreen(),
-        },
-        navigatorKey: navigatorKey,
-      );
-    },
-  );
-}
+  @override
+  Widget build(BuildContext context) {
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'JanPro',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: false,
+            fontFamily: "Linotype Didot",
+            primarySwatch: Colors.blue,
+          ),
+          home: SplashScreen(),
+          routes: {'Login': (_) => LoginScreen()},
+          navigatorKey: navigatorKey,
+        );
+      },
+    );
+  }
 }

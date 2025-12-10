@@ -45,7 +45,6 @@ class _AppDrawerfilterState extends State<AppDrawerfilter> {
     SizeConfig().init(context);
     return Drawer(
       //  ScaffoldState().openDrawer() ,
-
       child: Container(
         color: customcolor.blue,
         child: Stack(
@@ -59,17 +58,13 @@ class _AppDrawerfilterState extends State<AppDrawerfilter> {
                   Align(
                     alignment: Alignment.topRight,
                     child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Icon(
-                          Icons.close,
-                          color: customcolor.white,
-                        )),
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Icon(Icons.close, color: customcolor.white),
+                    ),
                   ),
-                  SizedBox(
-                    height: 40,
-                  ),
+                  SizedBox(height: 40),
                   (widget.role == GlobalLists.headrole ||
                           widget.role == GlobalLists.reginalmanagerrole ||
                           widget.role == GlobalLists.clientrole ||
@@ -80,114 +75,97 @@ class _AppDrawerfilterState extends State<AppDrawerfilter> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) =>
-                                              Training("")));
-                                },
-                                child: Text(
-                                  "Training",
-                                  style: AppFonts.headerStyle(
-                                      fontSize: 14,
-                                      color: customcolor.white,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                            SizedBox(
-                              height: 10,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        Training(""),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "Training",
+                                style: AppFonts.headerStyle(
+                                  fontSize: 14,
+                                  color: customcolor.white,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
                             ),
-                            Divider(
-                              color: customcolor.white,
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            SizedBox(height: 10),
+                            Divider(color: customcolor.white),
+                            SizedBox(height: 10),
                             GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) =>
-                                              SpecialActivity("")));
-                                },
-                                child: Text(
-                                  "Special Activity",
-                                  style: AppFonts.headerStyle(
-                                      fontSize: 14,
-                                      color: customcolor.white,
-                                      fontWeight: FontWeight.normal),
-                                )),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        SpecialActivity(""),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "Special Activity",
+                                style: AppFonts.headerStyle(
+                                  fontSize: 14,
+                                  color: customcolor.white,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ),
                             // SizedBox(
                             //   height: 10,
                             // ),
                             // Divider(
                             //   color: customcolor.white,
                             // ),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            SizedBox(height: 10),
                             widget.role == GlobalLists.operationmanagerrole ||
                                     widget.role == GlobalLists.operationrole ||
                                     widget.role == GlobalLists.headrole ||
                                     widget.role ==
-                                        GlobalLists.reginalmanagerrole||
-                                         widget.role ==
-                                        GlobalLists.clientrole
+                                        GlobalLists.reginalmanagerrole ||
+                                    widget.role == GlobalLists.clientrole
                                 ? Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Divider(
-                                        color: customcolor.white,
-                                      ),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
+                                      Divider(color: customcolor.white),
+                                      SizedBox(height: 10),
                                       GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (BuildContext
-                                                            context) =>
-                                                            //  widget.role ==
-                                        // GlobalLists.clientrole?ClientVisitView():
-
-                                                        ClientVisitView()
-                                                    // OperationVisitCardPage()
-                                                    ));
-                                          },
-                                          child: Text(
-                                            "Operations Visit",
-                                            style: AppFonts.headerStyle(
-                                                fontSize: 14,
-                                                color: customcolor.white,
-                                                fontWeight: FontWeight.normal),
-                                          )),
-                                      SizedBox(
-                                        height: 10,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (BuildContext context) =>
+                                                  //  widget.role ==
+                                                  // GlobalLists.clientrole?ClientVisitView():
+                                                  ClientVisitView(),
+                                              // OperationVisitCardPage()
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          "Operations Visit",
+                                          style: AppFonts.headerStyle(
+                                            fontSize: 14,
+                                            color: customcolor.white,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                        ),
                                       ),
+                                      SizedBox(height: 10),
                                     ],
                                   )
                                 : SizedBox(),
 
-                            Divider(
-                              color: customcolor.white,
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            Divider(color: customcolor.white),
+                            SizedBox(height: 10),
                           ],
                         )
                       : Container(),
-
-                      
-
-                      
-
-
-
 
                   (widget.role == GlobalLists.supervisorrole ||
                           widget.role == GlobalLists.unitrole ||
@@ -198,29 +176,27 @@ class _AppDrawerfilterState extends State<AppDrawerfilter> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) =>
-                                              Janitormaster("")));
-                                },
-                                child: Text(
-                                  "Janitor's Master",
-                                  style: AppFonts.headerStyle(
-                                      fontSize: 14,
-                                      color: customcolor.white,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                            SizedBox(
-                              height: 10,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        Janitormaster(""),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "Janitor's Master",
+                                style: AppFonts.headerStyle(
+                                  fontSize: 14,
+                                  color: customcolor.white,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
                             ),
-                            Divider(
-                              color: customcolor.white,
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            SizedBox(height: 10),
+                            Divider(color: customcolor.white),
+                            SizedBox(height: 10),
                           ],
                         )
                       : Container(),
@@ -234,89 +210,81 @@ class _AppDrawerfilterState extends State<AppDrawerfilter> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) =>
-                                              AttendanceTrend("")));
-                                },
-                                child: Text(
-                                  "Attendance Trends",
-                                  style: AppFonts.headerStyle(
-                                      fontSize: 14,
-                                      color: customcolor.white,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                            SizedBox(
-                              height: 10,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        AttendanceTrend(""),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "Attendance Trends",
+                                style: AppFonts.headerStyle(
+                                  fontSize: 14,
+                                  color: customcolor.white,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
                             ),
-                            Divider(
-                              color: customcolor.white,
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            SizedBox(height: 10),
+                            Divider(color: customcolor.white),
+                            SizedBox(height: 10),
                           ],
                         )
                       : Container(),
                   GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (BuildContext context) => Profile()));
-                      },
-                      child: Text(
-                        "Profile",
-                        style: AppFonts.headerStyle(
-                            fontSize: 14,
-                            color: customcolor.white,
-                            fontWeight: FontWeight.normal),
-                      )),
-                  SizedBox(
-                    height: 10,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => Profile(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Profile",
+                      style: AppFonts.headerStyle(
+                        fontSize: 14,
+                        color: customcolor.white,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
                   ),
-                  Divider(
-                    color: customcolor.white,
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
+                  SizedBox(height: 10),
+                  Divider(color: customcolor.white),
+                  SizedBox(height: 10),
                   GestureDetector(
-                      onTap: () {
-                        dologoutApi();
-                      },
-                      child: Text(
-                        "Logout",
-                        style: AppFonts.headerStyle(
-                            fontSize: 14,
-                            color: customcolor.white,
-                            fontWeight: FontWeight.normal),
-                      )),
-                  SizedBox(
-                    height: 10,
+                    onTap: () {
+                      dologoutApi();
+                    },
+                    child: Text(
+                      "Logout",
+                      style: AppFonts.headerStyle(
+                        fontSize: 14,
+                        color: customcolor.white,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
                   ),
-                  Divider(
-                    color: customcolor.white,
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
+                  SizedBox(height: 10),
+                  Divider(color: customcolor.white),
+                  SizedBox(height: 10),
                 ],
               ),
             ),
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
-                  height: 30,
-                  child: Center(
-                      child: Text(
+                height: 30,
+                child: Center(
+                  child: Text(
                     "Version 2.0.0",
-                    style: TextStyle(
-                      color: customcolor.white,
-                    ),
-                  ))),
+                    style: TextStyle(color: customcolor.white),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -329,56 +297,63 @@ class _AppDrawerfilterState extends State<AppDrawerfilter> {
     var status1 = await ConnectionDetector.checkInternetConnection();
 
     if (status1) {
-   
-
       var map = new Map<String, dynamic>();
 
       var token = await SPManager().getAuthToken();
-      print(token);
+
       map['token'] = token;
 
-      APIManager().apiRequest(context, API.logout, (response) async {
-        LogoutResponse resp = response;
-        print('called API ${resp}');
-        if (resp.status == 1) {
+      APIManager().apiRequest(
+        context,
+        API.logout,
+        (response) async {
+          LogoutResponse resp = response;
+
+          if (resp.status == 1) {
+            // Navigator.of(this.context).pop();
+            ShowDialogs.showToast(resp.msg);
+            SPManager().setAuthToken("");
+
+            // --- CLEAR AUTH TOKEN & DASHBOARD CACHE ---
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.remove(
+              'unit_dashboard_cache',
+            ); // remove cached dashboard
+            await prefs.remove('clientdashboardApi');
+            await prefs.remove("dashboardApi");
+            await SPManager().setAuthToken("");
+
+            // --- RESET GLOBAL FLAGS ---
+            setState(() {
+              GlobalLists.isloadedAttendance = false;
+              GlobalLists.isloadedWokeflow = false;
+            });
+            GlobalLists.clearAll();
+
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) => LoginScreen(),
+              ),
+            );
+            setState(() {
+              GlobalLists.isloadedAttendance = false;
+              GlobalLists.isloadedWokeflow = false;
+            });
+            GlobalLists.clearAll();
+          } else {
+            ShowDialogs.showToast(resp.msg);
+            // Navigator.of(this.context).pop();
+          }
+        },
+        (error) {
+          print('ERR msg is $error');
           // Navigator.of(this.context).pop();
-          ShowDialogs.showToast(resp.msg);
-          SPManager().setAuthToken("");
-
- // --- CLEAR AUTH TOKEN & DASHBOARD CACHE ---
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.remove('unit_dashboard_cache'); // remove cached dashboard
-  await prefs.remove('clientdashboardApi');
-  await prefs.remove("dashboardApi");
-  await SPManager().setAuthToken("");
-
-  // --- RESET GLOBAL FLAGS ---
-  setState(() {
-    GlobalLists.isloadedAttendance = false;
-    GlobalLists.isloadedWokeflow = false;
-  });
-  GlobalLists.clearAll();
-
-
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation1, animation2) => LoginScreen(),
-            ),
-          );
-          setState(() {
-            GlobalLists.isloadedAttendance = false;
-            GlobalLists.isloadedWokeflow = false;
-          });
-          GlobalLists.clearAll();
-        } else {
-          ShowDialogs.showToast(resp.msg);
-          // Navigator.of(this.context).pop();
-        }
-      }, (error) {
-        print('ERR msg is $error');
-        // Navigator.of(this.context).pop();
-      }, false, "", jsonval: map);
+        },
+        false,
+        "",
+        jsonval: map,
+      );
     } else {
       ShowDialogs.showToast("Please check internet connection");
     }

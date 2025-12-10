@@ -375,8 +375,10 @@ class APIManager {
       case API.attendance_roster:
         apiPathString = "/api/attendancemaster/attendance-rooster";
         break;
-case API.add_attendance_daily_count:
-        apiPathString = "/api/siteconfigurator/add_attendance_daily_count";
+      case API.add_attendance_daily_count:
+        // apiPathString = "/api/siteconfigurator/add_attendance_daily_count";
+        apiPathString = "/api/siteconfigurator/Update_staff_count_for_attendance";
+
         break;
 
         
