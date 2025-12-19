@@ -3,37 +3,28 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
-
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'package:fl_chart/fl_chart.dart';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Screens/Training.dart';
 import 'package:janpro/Screens/TrainingDetail.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
-
 import 'package:janpro/Utitlity/custom_color.dart';
-
 import 'package:janpro/Utitlity/sizeConfig.dart';
-
 import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:janpro/model/ClientwisetrainingResponse.dart';
-
-
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-
 import 'make_status.dart';
 
 class Ratingclass {
@@ -273,7 +264,9 @@ class _TrainingListState extends State<TrainingList>
                                               "Training",
                                               style: AppFonts.headerStyle(
                                                   fontSize:
-                                                      17.sp,
+                                                      ResponsiveFlutter.of(
+                                                              context)
+                                                          .fontSize(2.3),
                                                   color: customcolor.black,
                                                   fontWeight: FontWeight.w300),
                                             ),
@@ -382,7 +375,7 @@ class _TrainingListState extends State<TrainingList>
                       Text(
                         name,
                         style: AppFonts.headerStyle(
-                          fontSize: 17.sp,
+                          fontSize: ResponsiveFlutter.of(context).fontSize(2),
                           color: customcolor.black,
                           fontWeight: FontWeight.w600,
                         ),
@@ -391,7 +384,7 @@ class _TrainingListState extends State<TrainingList>
                       Text(
                         value,
                         style: AppFonts.headerStyle(
-                          fontSize: 15.sp,
+                          fontSize: ResponsiveFlutter.of(context).fontSize(1.5),
                           color: customcolor.black,
                           fontWeight: FontWeight.normal,
                         ),
@@ -440,7 +433,7 @@ class _TrainingListState extends State<TrainingList>
               child: Text(
                 ratinglist[index].name,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2),
                     color: customcolor.black,
                     fontWeight: FontWeight.bold),
               ),
@@ -656,7 +649,7 @@ class _TrainingListState extends State<TrainingList>
                   child: Text(
                     employeelist[index].name,
                     style: AppFonts.headerStyle(
-                        fontSize:17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
                         color: customcolor.black,
                         fontWeight: FontWeight.w500),
                   ),
@@ -681,14 +674,16 @@ class _TrainingListState extends State<TrainingList>
                               Text(
                                 "Mobile",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 employeelist[index].contact,
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -701,14 +696,16 @@ class _TrainingListState extends State<TrainingList>
                               Text(
                                 "Login Timing",
                                 style: AppFonts.headerStyle(
-                                    fontSize:15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 "${employeelist[index].loginTime}",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -784,11 +781,12 @@ Future<Placemark> getLocation() async {
 
   Placemark first = placemarks.first;
 
-  String lat = position.latitude.toString();
-  String long = position.longitude.toString();
+   lat = position.latitude.toString();
+   long = position.longitude.toString();
 
   print("${first.name} : ${first.street}, ${first.locality}, ${first.country}");
 
   return first;
 }
+
 }

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -148,7 +148,9 @@ class _ClientVisitViewState extends State<ClientVisitView> {
                                                 "SITE VISIT",
                                                 style: AppFonts.headerStyle(
                                                     fontSize:
-                                                        17.sp,
+                                                        ResponsiveFlutter.of(
+                                                                context)
+                                                            .fontSize(2.3),
                                                     color: customcolor.black,
                                                     fontWeight:
                                                         FontWeight.w300),
@@ -270,7 +272,7 @@ class _ClientVisitViewState extends State<ClientVisitView> {
               child: Text(
                 name,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2),
                     color: customcolor.black,
                     fontWeight: FontWeight.normal),
               ),
@@ -280,7 +282,7 @@ class _ClientVisitViewState extends State<ClientVisitView> {
               child: Text(
                 value,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2.6),
                     color: customcolor.textyellow,
                     fontWeight: FontWeight.bold),
               ),
@@ -325,7 +327,7 @@ class _ClientVisitViewState extends State<ClientVisitView> {
                     textAlign: TextAlign.start,
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2),
                         color: customcolor.title,
                         fontWeight: FontWeight.normal),
                   ),
@@ -475,7 +477,7 @@ class _ClientVisitViewState extends State<ClientVisitView> {
                   }
                 }
 
-                //      Store globally
+                // ✅ Store globally
                 GlobalLists.maxVisitCount = maxVisitCount;
                 print(" Max Total Number of Visit: $maxVisitCount");
 

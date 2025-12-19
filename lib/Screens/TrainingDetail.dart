@@ -1,43 +1,27 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:ui';
 
-import 'package:buttons_tabbar/buttons_tabbar.dart';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:geocoding/geocoding.dart';
 
+import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:janpro/Screens/Homepage.dart';
-import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
-import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
-import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
-import 'package:janpro/Utitlity/button.dart';
-import 'package:janpro/Utitlity/customBottomNavigationBar.dart';
+
 import 'package:janpro/Utitlity/custom_color.dart';
-import 'package:janpro/Utitlity/internetConnection.dart';
-import 'package:janpro/Utitlity/linechart.dart';
+
 import 'package:janpro/Utitlity/sizeConfig.dart';
-import 'package:janpro/model/AddAttendanceResponse.dart' as addattten;
+
 import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:janpro/model/ClientwisetrainingResponse.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:permission_handler/permission_handler.dart' as permishan;
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'dart:math' as math;
+
 
 class Ratingclass {
   final String name;
@@ -122,7 +106,7 @@ class _TrainingDetailState extends State<TrainingDetail>
   Future<void> refreshData() async {
     // Simulating an API request or data refresh
     setState(() {
-      print("APICall");
+    
       //     var  datefrom =
       //                                   DateFormat('dd-MM-yyyy').format(DateTime.now());
       // datecontroller.text=datefrom;
@@ -327,7 +311,9 @@ class _TrainingDetailState extends State<TrainingDetail>
                                               "${widget.trainingData[widget.index].traningName}",
                                               style: AppFonts.headerStyle(
                                                   fontSize:
-                                                      17.sp,
+                                                      ResponsiveFlutter.of(
+                                                              context)
+                                                          .fontSize(2.3),
                                                   color: customcolor.black,
                                                   fontWeight: FontWeight.w600),
                                             ),
@@ -353,7 +339,9 @@ class _TrainingDetailState extends State<TrainingDetail>
                                                 "${widget.trainingData[widget.index].trainingDatumDateOfTraining}",
                                                 style: AppFonts.headerStyle(
                                                     fontSize:
-                                                        17.sp,
+                                                        ResponsiveFlutter.of(
+                                                                context)
+                                                            .fontSize(1.8),
                                                     color: customcolor.black,
                                                     fontWeight:
                                                         FontWeight.w300),
@@ -365,7 +353,8 @@ class _TrainingDetailState extends State<TrainingDetail>
                                           "TRAINING AGENDA",
                                           style: AppFonts.headerStyle(
                                               fontSize:
-                                                  17.sp,
+                                                  ResponsiveFlutter.of(context)
+                                                      .fontSize(1.8),
                                               color: customcolor.black,
                                               fontWeight: FontWeight.w300),
                                         ),
@@ -386,7 +375,9 @@ class _TrainingDetailState extends State<TrainingDetail>
                                                   ? TextOverflow.visible
                                                   : TextOverflow.ellipsis,
                                               style: AppFonts.headerStyle(
-                                                fontSize:17.sp,
+                                                fontSize: ResponsiveFlutter.of(
+                                                        context)
+                                                    .fontSize(2),
                                                 color: customcolor.black,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -414,7 +405,9 @@ class _TrainingDetailState extends State<TrainingDetail>
                                                     style: TextStyle(
                                                       color: customcolor.blue,
                                                       fontSize:
-                                                         14.sp,
+                                                          ResponsiveFlutter.of(
+                                                                  context)
+                                                              .fontSize(1.6),
                                                       fontWeight:
                                                           FontWeight.w600,
                                                     ),
@@ -431,7 +424,8 @@ class _TrainingDetailState extends State<TrainingDetail>
                                           //"Number of Janitors Trained",
                                           style: AppFonts.headerStyle(
                                               fontSize:
-                                                  17.sp,
+                                                  ResponsiveFlutter.of(context)
+                                                      .fontSize(2),
                                               color: customcolor.black,
                                               fontWeight: FontWeight.w500),
                                         ),
@@ -754,7 +748,7 @@ class _TrainingDetailState extends State<TrainingDetail>
                   child: Text(
                     employeelist[index].name,
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
                         color: customcolor.black,
                         fontWeight: FontWeight.w500),
                   ),
@@ -779,14 +773,16 @@ class _TrainingDetailState extends State<TrainingDetail>
                               Text(
                                 "Mobile",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 employeelist[index].contact,
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -799,14 +795,16 @@ class _TrainingDetailState extends State<TrainingDetail>
                               Text(
                                 "Login Timing",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 "${employeelist[index].loginTime}",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -882,8 +880,8 @@ Future<Placemark> getLocation() async {
 
   Placemark first = placemarks.first;
 
-  String lat = position.latitude.toString();
-  String long = position.longitude.toString();
+   lat = position.latitude.toString();
+   long = position.longitude.toString();
 
   print("${first.name} : ${first.street}, ${first.locality}, ${first.country}");
 

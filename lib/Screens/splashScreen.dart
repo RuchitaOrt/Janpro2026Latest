@@ -1,10 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Screens/Loginscreen.dart';
@@ -12,10 +8,7 @@ import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/UtilityFile.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/sizeConfig.dart';
-import 'package:http/http.dart' as http;
-import 'package:in_app_update/in_app_update.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -35,8 +28,24 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     requestNotificationPermissions();
     Utility().loadAPIConfig(context);
+    //        scaleController = AnimationController(
+    //     vsync: this,
+    //     duration: Duration(milliseconds: 800),
+    //   )..addStatusListener(
+    //       (status) {
+    //         if (status == AnimationStatus.completed) {
+    //       // Navigator.push(
+    //       //       context,
+    //       //       PageRouteBuilder(
+    //       //         pageBuilder: (context, animation1, animation2) =>
+    //       //             HomePage(),
+    //       //         transitionDuration: Duration(seconds: 0),
+    //       //       ),
+    //       //     );
 
-   
+    // Navigator.pushReplacement(
+    //             context, MaterialPageRoute(builder: (context) => HomePage()));
+    //     //  getstatus();
     Timer(
       Duration(milliseconds: 300),
       () {
@@ -46,16 +55,31 @@ class _SplashScreenState extends State<SplashScreen>
         //scaleController.reset();
       },
     );
- 
-  
-   
+    //         }
+    //       },
+    //     );
+
+    //   scaleAnimation =
+    //       Tween<double>(begin: 0.0, end: 6).animate(scaleController);
+
+    //   Timer(Duration(milliseconds: 600), () {
+    //     setState(() {
+    //       _opacity = 1.0;
+    //       _value = false;
+    //     });
+    //   });
+    //   Timer(Duration(milliseconds: 600), () {
+    //     setState(() {
+    //       scaleController.forward();
+    //     });
+    //   });
+
     getstatus();
   }
 
   getstatus() async {
     String? gettotken = await SPManager().getAuthToken();
-      // await checkForUpdates();
-  
+    print("Auth TOKEN ON SPLASH $gettotken");
     if (gettotken == "") {
       Timer(
           Duration(seconds: 1),
@@ -101,114 +125,69 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-
+    // TODO: implement dispose
+    print("object");
 
     scaleController.dispose();
+
     super.dispose();
   }
- Future<void> checkForUpdates() async {
-    if (Platform.isAndroid) {
-      checkAndroidUpdate();
-    } else if (Platform.isIOS) {
-      checkIOSUpdate();
-    }
-  }
 
+// @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: Stack(
+//         children: [
 
-  Future<void> checkAndroidUpdate() async {
-  
-    try {
-      final info = await InAppUpdate.checkForUpdate();
-      log("Android update info: $info");
-      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-        await InAppUpdate.performImmediateUpdate();
-      }
-    } catch (e) {
-      log("Android update error: $e");
-      // fallback dialog
-      showAndroidFallbackDialog();
-    }
-  }
+//           Center(
+//             child: AnimatedOpacity(
+//               curve: Curves.fastLinearToSlowEaseIn,
+//               duration: Duration(seconds: 0),
+//               opacity: _opacity,
+//               child: AnimatedContainer(
+//                 curve: Curves.fastLinearToSlowEaseIn,
+//                 duration: Duration(milliseconds: 0),
+//                 height: _value ? 100 : 200,
+//                 width: _value ? 100 : 200,
+//                 decoration: BoxDecoration(
+//                   // boxShadow: [
+//                   //   BoxShadow(
+//                   //     color: Colors.deepPurpleAccent.withOpacity(.2),
+//                   //     blurRadius: 100,
+//                   //     spreadRadius: 10,
+//                   //   ),
+//                   // ],
+//                   color: customcolor.blue,
+//                   borderRadius: BorderRadius.circular(20),
+//                 ),
+//                 child: AnimatedBuilder(
+//                   animation: scaleAnimation,
+//                   builder: (c, child) => Transform.scale(
+//                     scale: scaleAnimation.value,
+//                     child: Material(
+//       type: MaterialType.transparency,
+//       child: Container(
+//         width: SizeConfig.blockSizeHorizontal*100,
+//         height: SizeConfig.blockSizeVertical*100,
+//         color: customcolor.blue,
 
-  void showAndroidFallbackDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Update Available"),
-          content: Text("A new version is available. Please update the app."),
-          actions: [
-            TextButton(
-              child: Text("UPDATE"),
-              onPressed: () async {
-                const playStoreUrl =
-                    "https://play.google.com/store/apps/details?id=com.ort.janpro";
-                launchUrl(Uri.parse(playStoreUrl),
-                    mode: LaunchMode.externalApplication);
-              },
-            )
-          ],
-        );
-      },
-    );
-  }
-
-
-  Future<void> checkIOSUpdate() async {
-    try {
-      PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      String currentVersion = packageInfo.version;
-      String bundleId = packageInfo.packageName;
-
-      // Apple lookup API
-      final url =
-          Uri.parse("https://itunes.apple.com/lookup?bundleId=$bundleId");
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-
-        if (json["resultCount"] > 0) {
-          String storeVersion = json["results"][0]["version"];
-
-          if (storeVersion != currentVersion) {
-            showIOSUpdateDialog();
-          }
-        }
-      }
-    } catch (e) {
-      log("iOS Update Check Error: $e");
-    }
-  }
-
-  void showIOSUpdateDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: Text("Update Available"),
-          content: Text(
-              "A new version of the app is available on the App Store. Please update."),
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: Text("UPDATE"),
-              onPressed: () async {
-                const appStoreUrl =
-                    "https://apps.apple.com/app/id000000000"; // ← replace with your real iOS App ID
-
-                launchUrl(Uri.parse(appStoreUrl),
-                    mode: LaunchMode.externalApplication);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
+//       ),
+//     )
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ),
+//            Center(
+//              child: Padding(
+//                      padding: const EdgeInsets.all(40.0),
+//                      child: Image.asset('assets/images/mainlogo.png',width: 150,height: 150,),
+//                    ),
+//            ),
+//         ],
+//       ),
+//     );
+//   }
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
@@ -236,6 +215,26 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       ),
     );
-   
+    // Material(
+    //   type: MaterialType.transparency,
+    //   child: Container(
+
+    //     color: customcolor.blue,
+
+    //     child: Stack(
+    //       children: [
+    //         Column(
+    //           mainAxisAlignment: MainAxisAlignment.center,
+    //           crossAxisAlignment: CrossAxisAlignment.center,
+    //           children: <Widget>[
+    //             Center(child: Image.asset('assets/images/mainlogo.png',width: SizeConfig.blockSizeHorizontal*50,)),
+
+    //           ],
+    //         ),
+
+    //       ],
+    //     ),
+    //   ),
+    // );
   }
 }

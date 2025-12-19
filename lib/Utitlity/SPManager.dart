@@ -1,4 +1,4 @@
-
+import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,6 +8,7 @@ class SPManager {
    final String roleid="roleid";
    final String clientid="clientid";
    final String fcmauthToken="fcmauthToken";
+  final String ShiftId= "ShiftId";
  
   Future<void> clear() async {
     final SharedPreferences pref = await SharedPreferences.getInstance();
@@ -30,6 +31,21 @@ class SPManager {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? val;
     val = (prefs.getString(this.authToken) ?? "");
+    return val;
+  }
+
+
+  
+  Future<void> setShiftID(String ShiftId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(this.ShiftId, ShiftId);
+  }
+
+  //get auth token into shared preferences
+  Future<String?> getShiftID() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? val;
+    val = (prefs.getString(this.ShiftId) ?? "");
     return val;
   }
   Future<void> setsupervisorid(String supervisorid) async {

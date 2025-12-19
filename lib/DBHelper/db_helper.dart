@@ -85,7 +85,7 @@ class DBHelper {
 
     if (existing.isNotEmpty) {
       // Duplicate found, do not insert
-      print(' Duplicate offline request skipped');
+      print('⚠️ Duplicate offline request skipped');
       return;
     }
 

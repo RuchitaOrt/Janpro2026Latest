@@ -88,6 +88,8 @@ class DependentdatumElement {
   String status;
   String image1;
   String image2;
+  String close_img1;
+  String close_img2;
   dynamic image3;
   dynamic comment;
   String tatDuration;
@@ -129,6 +131,8 @@ class DependentdatumElement {
     required this.turnAroundTime,
     required this.tatDate,
     required this.TAT_remark,
+    required this.close_img1,
+    required this.close_img2,
   });
 
   factory DependentdatumElement.fromJson(Map<String, dynamic> json) =>
@@ -153,6 +157,8 @@ class DependentdatumElement {
         image1: json["image1"] ?? "",
         image2: json["image2"] ?? "",
         image3: json["image3"] ?? "",
+        close_img1:json["close_img1"],
+         close_img2: json["close_img2"],
 
         comment: json["comment"] ?? "",
         tatDuration: json["TAT_duration"] ?? "",

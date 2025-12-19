@@ -22,6 +22,7 @@ import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -39,7 +40,7 @@ import 'package:janpro/model/RatinglistResponse.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart' as permishan;
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 import 'dart:math' as math;
 
@@ -299,7 +300,9 @@ class _RatingDetailsState extends State<RatingDetails>
                                                 "RATING",
                                                 style: AppFonts.headerStyle(
                                                     fontSize:
-                                                        17.sp,
+                                                        ResponsiveFlutter.of(
+                                                                context)
+                                                            .fontSize(2.3),
                                                     color: customcolor.black,
                                                     fontWeight:
                                                         FontWeight.w300),
@@ -437,7 +440,7 @@ class _RatingDetailsState extends State<RatingDetails>
             //     padding:  EdgeInsets.only(right: SizeConfig.blockSizeHorizontal *10,bottom: 30,left: SizeConfig.blockSizeHorizontal * 10),
             //     child:  ElevatedButton(
             //                           style: ElevatedButton.styleFrom(
-            //                               primary: customcolor.blue,
+            //                               backgroundColor: customcolor.blue,
             //                               minimumSize: Size(
             //                                   SizeConfig.blockSizeHorizontal * 80,
             //                                   SizeConfig.blockSizeVertical * 5),
@@ -706,7 +709,7 @@ class _RatingDetailsState extends State<RatingDetails>
 //           //   padding:  EdgeInsets.only(right: SizeConfig.blockSizeHorizontal *10,bottom: 10,left: SizeConfig.blockSizeHorizontal * 10),
 //           //   child:  ElevatedButton(
 //           //                 style: ElevatedButton.styleFrom(
-//           //                     primary: customcolor.blue,
+//           //                     backgroundColor: customcolor.blue,
 //           //                     minimumSize: Size(
 //           //                         SizeConfig.blockSizeHorizontal * 80,
 //           //                         SizeConfig.blockSizeVertical * 5),
@@ -803,7 +806,7 @@ class _RatingDetailsState extends State<RatingDetails>
                         .blockData![index]
                         .masterBlockName!,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                     color: customcolor.black,
                     fontWeight: FontWeight.w500),
               ),
@@ -873,7 +876,7 @@ class _RatingDetailsState extends State<RatingDetails>
                 //         .masterBlockName!,
                 "Review",
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                     color: customcolor.black,
                     fontWeight: FontWeight.w500),
               ),
@@ -883,7 +886,7 @@ class _RatingDetailsState extends State<RatingDetails>
               child: Text(
                 mainlisttab[maintag].review,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(1.8),
                     color: customcolor.greytext,
                     fontWeight: FontWeight.w500),
               ),
@@ -1028,7 +1031,7 @@ class _RatingDetailsState extends State<RatingDetails>
                   child: Text(
                     employeelist[index].name,
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
                         color: customcolor.black,
                         fontWeight: FontWeight.w500),
                   ),
@@ -1053,14 +1056,16 @@ class _RatingDetailsState extends State<RatingDetails>
                               Text(
                                 "Mobile",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 employeelist[index].contact,
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -1073,14 +1078,16 @@ class _RatingDetailsState extends State<RatingDetails>
                               Text(
                                 "Login Timing",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 "${employeelist[index].loginTime}",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -1137,14 +1144,14 @@ class _RatingDetailsState extends State<RatingDetails>
   //   }
   // }
 
- Future<Placemark> getLocation() async {
-  print("Fetching location...");
+  Future<Placemark> getLocation() async {
+
 
   // Get current position
   Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high);
 
-  print('Latitude: ${position.latitude}, Longitude: ${position.longitude}');
+
 
   // Get placemarks (address) from coordinates
   List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -1156,13 +1163,14 @@ class _RatingDetailsState extends State<RatingDetails>
 
   Placemark first = placemarks.first;
 
-  String lat = position.latitude.toString();
-  String long = position.longitude.toString();
+   lat = position.latitude.toString();
+   long = position.longitude.toString();
 
   print("${first.name} : ${first.street}, ${first.locality}, ${first.country}");
 
   return first;
 }
+  
   //addrating
 bool addRating=false;
   addratingapi(String overallrating, int tabmainindex, String review) async {

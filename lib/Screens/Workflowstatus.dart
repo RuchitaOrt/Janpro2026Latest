@@ -1448,7 +1448,7 @@
 //                   child: Text(
 //                     "Master Area",
 //                     style: AppFonts.headerStyle(
-//                         fontSize: 17.sp,
+//                         fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
 //                         color: customcolor.black,
 //                         fontWeight: FontWeight.w400),
 //                   ),
@@ -1634,7 +1634,7 @@
 //                   child: Text(
 //                     "Master Area",
 //                     style: AppFonts.headerStyle(
-//                         fontSize: 17.sp,
+//                         fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
 //                         color: customcolor.black,
 //                         fontWeight: FontWeight.w400),
 //                   ),
@@ -1702,7 +1702,7 @@
 //           child: Text(
 //             "Master Blocks",
 //             style: AppFonts.headerStyle(
-//                 fontSize: 17.sp,
+//                 fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
 //                 color: customcolor.black,
 //                 fontWeight: FontWeight.w400),
 //           ),
@@ -1816,7 +1816,7 @@
 //           child: Text(
 //             "Master Blocks",
 //             style: AppFonts.headerStyle(
-//                 fontSize: 17.sp,
+//                 fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
 //                 color: customcolor.black,
 //                 fontWeight: FontWeight.w400),
 //           ),
@@ -2026,7 +2026,7 @@
 //                       : SizeConfig.blockSizeHorizontal * 70,
 //               child: Scrollbar(
 //                 thumbVisibility: true,
-//                 // isAlwaysShown: true,
+//                 // thumbVisibility: true,
 //                 child: ListView(
 //                   shrinkWrap: true,
 //                   physics: ScrollPhysics(),
@@ -2333,7 +2333,7 @@
 //                       : SizeConfig.blockSizeHorizontal * 70,
 //               child: Scrollbar(
 //                 thumbVisibility: true,
-//                 // isAlwaysShown: true,
+//                 // thumbVisibility: true,
 //                 child: ListView(
 //                   shrinkWrap: true,
 //                   physics: ScrollPhysics(),

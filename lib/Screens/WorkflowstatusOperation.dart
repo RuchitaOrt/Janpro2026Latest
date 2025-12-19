@@ -1,23 +1,19 @@
-import 'dart:async';
+
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'package:flutter/gestures.dart';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Attendance.dart';
 import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
-import 'package:janpro/Utitlity/Dropbutton.dart';
-import 'package:janpro/Utitlity/FormTextField.dart';
-import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -34,15 +30,10 @@ import 'package:janpro/model/Workflowoperationalmodel.dart' as newopera;
 import 'package:janpro/model/WorkfowstatusResponse.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:chips_choice/chips_choice.dart';
-
-
-
+// import 'package:responsive_flutter/responsive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../DBHelper/db_helper.dart';
 import '../const/global.dart';
-import '../model/WorkflowoperationalDetailmodel.dart' as worke;
 
 // import 'package:syncfusion_flutter_sliders/sliders.dart';
 
@@ -169,6 +160,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
   // List<newoperdetail.Datum> GlobalLists.detailopeermainlisttab = [];
   List<String>? formValue1;
   int tag = 0;
+  bool isUpdateButtonVisible = true;
+
   String finaldateselecter = '';
 
   Future<void> refreshData() async {
@@ -184,11 +177,28 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
     });
   }
 
+  var todaysDate = "";
   @override
   void initState() {
     super.initState();
+    // var todaysDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+    // final DateFormat formatter = DateFormat('dd-MM-yyyy');
+
+    // DateTime today = formatter.parse(
+    //   formatter.format(DateTime.now()),
+    // );
+
+    // DateTime selectedDate = formatter.parse(GlobalLists.datecontroller.text);
+
+    // if (selectedDate.isBefore(today)) {
+    //   isUpdateButtonVisible = false;
+    // } else {
+    //   isUpdateButtonVisible = true;
+    // }
 
     print("Anand");
+
     var datefrom = DateFormat('dd-MM-yyyy').format(DateTime.now());
     if (widget.updateDate.isEmpty) {
       // no date
@@ -312,265 +322,362 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
         key: _scaffoldKey1,
         bottomNavigationBar: CustomBottomNavigationBar(index: 1),
         body:
-        // isWorflowLoading?
-        //Center(child: Column(
-        //    mainAxisAlignment: MainAxisAlignment.center,
-        //   crossAxisAlignment: CrossAxisAlignment.center,
-        //   children: [
-        //     CircularProgressIndicator(color: customcolor.blue,),
-        //     SizedBox(height: 15),
-        //         Text("Loading, please wait...",
-        //             style: TextStyle(
-        //                 color:   Colors.black))
-        //   ],
-        // )):
+            // isWorflowLoading?
+            //Center(child: Column(
+            //    mainAxisAlignment: MainAxisAlignment.center,
+            //   crossAxisAlignment: CrossAxisAlignment.center,
+            //   children: [
+            //     CircularProgressIndicator(color: customcolor.blue,),
+            //     SizedBox(height: 15),
+            //         Text("Loading, please wait...",
+            //             style: TextStyle(
+            //                 color:   Colors.black))
+            //   ],
+            // )):
 
-        ValueListenableBuilder<bool>(
-  valueListenable: GlobalLists.isWorflowLoading,
-  builder: (context, isLoading, _) {
-    if(isLoading)
-    {
-  return Center(child: Column(
-           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: customcolor.blue,),
-            SizedBox(height: 15),
-                Text("Loading, please wait...",
-                    style: TextStyle(
-                        color:   Colors.black))
-          ],
-        ));
-    }
-       return  Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                  left: 10, right: 10, top: 20, bottom: 20),
-              child: Container(
-                height: SizeConfig.blockSizeVertical * 100,
-                child: SingleChildScrollView(
-                  child: Column(
-                    // shrinkWrap: true,
-                    // physics: ScrollPhysics(),
+            ValueListenableBuilder<bool>(
+                valueListenable: GlobalLists.isWorflowLoading,
+                builder: (context, isLoading, _) {
+                  if (isLoading) {
+                    return Center(
+                        child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: customcolor.blue,
+                        ),
+                        SizedBox(height: 15),
+                        Text("Loading, please wait...",
+                            style: TextStyle(color: Colors.black))
+                      ],
+                    ));
+                  }
+                  return Stack(
                     children: [
-                      //r SizedBox(height:10),
-                      Container(
-                        // color: customcolor.blue,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              child: Text(
-                                "WORKFLOW",
-                                style: AppFonts.headerStyle(
-                                    fontSize: 18.sp,
-                                    color: customcolor.title,
-                                    fontWeight: FontWeight.normal),
-                              ),
-                            ),
-                            // hidedate
-                            (role == GlobalLists.unitrole ||
-                                    role == GlobalLists.headrole ||
-                                    role == GlobalLists.reginalmanagerrole ||
-                                    role == GlobalLists.clientrole ||
-                                    role == GlobalLists.operationrole ||
-                                    role == GlobalLists.operationmanagerrole ||
-                                    role == GlobalLists.supervisorrole)
-                                ? Row(
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 10, right: 10, top: 20, bottom: 20),
+                        child: Container(
+                          height: SizeConfig.blockSizeVertical * 100,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              // shrinkWrap: true,
+                              // physics: ScrollPhysics(),
+                              children: [
+                                //r SizedBox(height:10),
+                                Container(
+                                  // color: customcolor.blue,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
-                                      new Container(
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        width:
-                                            SizeConfig.blockSizeHorizontal * 32,
-                                        height: 30,
-                                        // padding: EdgeInsets.only(left: 6,bottom: 5,top:3,right: 5),
-                                        child: new Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            // new Expanded(child: new Text("Bemerkung",)),
-                                            new Expanded(
-                                              child: new TextField(
-                                                textAlignVertical:
-                                                    TextAlignVertical.center,
-                                                textAlign: TextAlign.center,
-                                                style: AppFonts.headerStyle(
-                                                    fontSize:
-                                                       14.sp,
-                                                    color: customcolor.black,
-                                                    fontWeight:
-                                                        FontWeight.w300),
-                                                readOnly: true,
-                                                onTap: () async {
-                                                  DateTime? pickedDate =
-                                                      await showDatePicker(
-                                                          context: context,
-                                                          initialDate: selectedDateTime ??
-                                                                  GlobalLists
-                                                                      .multiday
-                                                              ? DateTime.now()
-                                                                  .subtract(
-                                                                      const Duration(
-                                                                          days:
-                                                                              1))
-                                                              : DateTime.now(),
-                                                          firstDate:
-                                                              DateTime(1950),
-                                                          lastDate:
-                                                              DateTime(2050));
-
-                                                  if (pickedDate != null) {
-                                                    var datefrom =
-                                                        DateFormat('dd-MM-yyyy')
-                                                            .format(pickedDate);
-                                                    finaldateselecter =
-                                                        DateFormat('yyyy-MM-dd')
-                                                            .format(pickedDate);
-                                                    GlobalLists.datecontroller
-                                                        .text = datefrom;
-                                                    print(GlobalLists
-                                                        .datecontroller.text);
-                                                    setState(() =>
-                                                        selectedDateTime =
-                                                            pickedDate);
-                                                    if (role == GlobalLists.operationrole ||
-                                                        role ==
-                                                            GlobalLists
-                                                                .headrole ||
-                                                        role ==
-                                                            GlobalLists
-                                                                .reginalmanagerrole ||
-                                                        role ==
-                                                            GlobalLists
-                                                                .operationmanagerrole) {
-                                                      operationlManagerworkflowstatusApi();
-                                                    } else if (role ==
-                                                        GlobalLists
-                                                            .clientrole) {
-                                                      operationlworkflowstatusApi();
-                                                    } else {
-                                                      workflowstatusApi(
-                                                          widget.shiftid);
-                                                    }
-                                                  }
-                                                },
-                                                controller:
-                                                    GlobalLists.datecontroller,
-                                                decoration: InputDecoration(
-                                                  border: InputBorder.none,
-                                                  contentPadding:
-                                                      EdgeInsets.zero,
-                                                  isDense: true,
-                                                ),
-                                              ),
-                                            ),
-                                            GestureDetector(
-                                              onTap: () async {
-                                                DateTime? pickedDate =
-                                                    await showDatePicker(
-                                                        context: context,
-                                                        initialDate:
-                                                            selectedDateTime ??
-                                                                DateTime.now(),
-                                                        firstDate:
-                                                            DateTime(1950),
-                                                        lastDate:
-                                                            DateTime(2050));
-
-                                                if (pickedDate != null) {
-                                                  var datefrom =
-                                                      DateFormat('dd-MM-yyyy')
-                                                          .format(pickedDate);
-                                                  GlobalLists.datecontroller
-                                                      .text = datefrom;
-                                                  finaldateselecter =
-                                                      DateFormat('yyyy-MM-dd')
-                                                          .format(pickedDate);
-                                                  setState(() =>
-                                                      selectedDateTime =
-                                                          pickedDate);
-                                                  print(GlobalLists
-                                                      .datecontroller.text);
-                                                  if (role ==
-                                                          GlobalLists
-                                                              .operationrole ||
-                                                      role ==
-                                                          GlobalLists
-                                                              .headrole ||
-                                                      role ==
-                                                          GlobalLists
-                                                              .reginalmanagerrole ||
-                                                      role ==
-                                                          GlobalLists
-                                                              .operationmanagerrole) {
-                                                    operationlManagerworkflowstatusApi();
-                                                  } else if (role ==
-                                                      GlobalLists.clientrole) {
-                                                    operationlworkflowstatusApi();
-                                                  } else {
-                                                    workflowstatusApi(
-                                                        widget.shiftid);
-                                                  }
-                                                }
-                                              },
-                                              child: Padding(
-                                                padding: EdgeInsets.only(
-                                                    bottom: 1, right: 5),
-                                                child: Image.asset(
-                                                  'assets/images/calendar.png',
-                                                  width: 22,
-                                                  height: 22,
-                                                  alignment: Alignment.center,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                      Container(
+                                        child: Text(
+                                          "WORKFLOW",
+                                          style: AppFonts.headerStyle(
+                                              fontSize:
+                                                  ResponsiveFlutter.of(context)
+                                                      .fontSize(2.3),
+                                              color: customcolor.title,
+                                              fontWeight: FontWeight.normal),
                                         ),
                                       ),
-                                      SizedBox(
-                                        width: 10,
-                                      ),
-                                      GlobalLists.operationalmainlisttab
-                                                  .length >
-                                              0
-                                          ? _buildChoicemainopertaionalListForTab()
-                                          : SizedBox()
+                                      // hidedate
+                                      (role == GlobalLists.unitrole ||
+                                              role == GlobalLists.headrole ||
+                                              role ==
+                                                  GlobalLists
+                                                      .reginalmanagerrole ||
+                                              role == GlobalLists.clientrole ||
+                                              role ==
+                                                  GlobalLists.operationrole ||
+                                              role ==
+                                                  GlobalLists
+                                                      .operationmanagerrole ||
+                                              role ==
+                                                  GlobalLists.supervisorrole)
+                                          ? Row(
+                                              children: [
+                                                new Container(
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20)),
+                                                  width: SizeConfig
+                                                          .blockSizeHorizontal *
+                                                      32,
+                                                  height: 30,
+                                                  // padding: EdgeInsets.only(left: 6,bottom: 5,top:3,right: 5),
+                                                  child: new Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: <Widget>[
+                                                      // new Expanded(child: new Text("Bemerkung",)),
+                                                      new Expanded(
+                                                        child: new TextField(
+                                                          textAlignVertical:
+                                                              TextAlignVertical
+                                                                  .center,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: AppFonts.headerStyle(
+                                                              fontSize:
+                                                                  ResponsiveFlutter.of(
+                                                                          context)
+                                                                      .fontSize(
+                                                                          1.6),
+                                                              color: customcolor
+                                                                  .black,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w300),
+                                                          readOnly: true,
+                                                          onTap: () async {
+                                                            DateTime? pickedDate = await showDatePicker(
+                                                                context:
+                                                                    context,
+                                                                initialDate: selectedDateTime ??
+                                                                        GlobalLists
+                                                                            .multiday
+                                                                    ? DateTime.now().subtract(
+                                                                        const Duration(
+                                                                            days:
+                                                                                1))
+                                                                    : DateTime
+                                                                        .now(),
+                                                                firstDate:
+                                                                    DateTime(
+                                                                        1950),
+                                                                lastDate:
+                                                                    DateTime(
+                                                                        2050));
+
+                                                            if (pickedDate !=
+                                                                null) {
+                                                              var datefrom = DateFormat(
+                                                                      'dd-MM-yyyy')
+                                                                  .format(
+                                                                      pickedDate);
+                                                              finaldateselecter =
+                                                                  DateFormat(
+                                                                          'yyyy-MM-dd')
+                                                                      .format(
+                                                                          pickedDate);
+                                                              GlobalLists
+                                                                  .datecontroller
+                                                                  .text = datefrom;
+                                                                  final DateFormat formatter = DateFormat('dd-MM-yyyy');
+
+setState(() {
+final DateFormat formatter = DateFormat('dd-MM-yyyy');
+
+DateTime selectedDate = formatter.parse(datefrom);
+
+DateTime today = DateTime(
+  DateTime.now().year,
+  DateTime.now().month,
+  DateTime.now().day,
+);
+
+isUpdateButtonVisible = !selectedDate.isBefore(today);
+
+print("isUpdateButtonVisible");
+print(isUpdateButtonVisible);
+print(selectedDate);
+print("TODAYS $today");
+print(isUpdateButtonVisible);
+});
+                                                              print(GlobalLists
+                                                                  .datecontroller
+                                                                  .text);
+                                                              setState(() =>
+                                                                  selectedDateTime =
+                                                                      pickedDate);
+                                                              if (role == GlobalLists.operationrole ||
+                                                                  role ==
+                                                                      GlobalLists
+                                                                          .headrole ||
+                                                                  role ==
+                                                                      GlobalLists
+                                                                          .reginalmanagerrole ||
+                                                                  role ==
+                                                                      GlobalLists
+                                                                          .operationmanagerrole) {
+                                                                operationlManagerworkflowstatusApi();
+                                                              } else if (role ==
+                                                                  GlobalLists
+                                                                      .clientrole) {
+                                                                operationlworkflowstatusApi();
+                                                              } else {
+                                                                workflowstatusApi(
+                                                                    widget
+                                                                        .shiftid);
+                                                              }
+                                                              
+
+                                                            }
+                                                          },
+                                                          controller: GlobalLists
+                                                              .datecontroller,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            border: InputBorder
+                                                                .none,
+                                                            contentPadding:
+                                                                EdgeInsets.zero,
+                                                            isDense: true,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      GestureDetector(
+                                                        onTap: () async {
+                                                          DateTime? pickedDate =
+                                                              await showDatePicker(
+                                                                  context:
+                                                                      context,
+                                                                  initialDate:
+                                                                      selectedDateTime ??
+                                                                          DateTime
+                                                                              .now(),
+                                                                  firstDate:
+                                                                      DateTime(
+                                                                          1950),
+                                                                  lastDate:
+                                                                      DateTime(
+                                                                          2050));
+
+                                                          if (pickedDate !=
+                                                              null) {
+                                                            var datefrom = DateFormat(
+                                                                    'dd-MM-yyyy')
+                                                                .format(
+                                                                    pickedDate);
+                                                            GlobalLists
+                                                                .datecontroller
+                                                                .text = datefrom;
+                                                            finaldateselecter =
+                                                                DateFormat(
+                                                                        'yyyy-MM-dd')
+                                                                    .format(
+                                                                        pickedDate);
+                                                                          final DateFormat formatter = DateFormat('dd-MM-yyyy');
+
+setState(() {
+final DateFormat formatter = DateFormat('dd-MM-yyyy');
+
+DateTime selectedDate = formatter.parse(datefrom);
+
+DateTime today = DateTime(
+  DateTime.now().year,
+  DateTime.now().month,
+  DateTime.now().day,
+);
+
+isUpdateButtonVisible = !selectedDate.isBefore(today);
+
+
+print("isUpdateButtonVisible");
+print(isUpdateButtonVisible);
+print(selectedDate);
+print("TODAYS $today");
+print(isUpdateButtonVisible);
+});
+                                                            setState(() =>
+                                                                selectedDateTime =
+                                                                    pickedDate);
+                                                            print(GlobalLists
+                                                                .datecontroller
+                                                                .text);
+                                                            if (role == GlobalLists.operationrole ||
+                                                                role ==
+                                                                    GlobalLists
+                                                                        .headrole ||
+                                                                role ==
+                                                                    GlobalLists
+                                                                        .reginalmanagerrole ||
+                                                                role ==
+                                                                    GlobalLists
+                                                                        .operationmanagerrole) {
+                                                              operationlManagerworkflowstatusApi();
+                                                            } else if (role ==
+                                                                GlobalLists
+                                                                    .clientrole) {
+                                                              operationlworkflowstatusApi();
+                                                            } else {
+                                                              workflowstatusApi(
+                                                                  widget
+                                                                      .shiftid);
+                                                            }
+                                                          }
+                                                        },
+                                                        child: Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  bottom: 1,
+                                                                  right: 5),
+                                                          child: Image.asset(
+                                                            'assets/images/calendar.png',
+                                                            width: 22,
+                                                            height: 22,
+                                                            alignment: Alignment
+                                                                .center,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 10,
+                                                ),
+                                                GlobalLists.operationalmainlisttab
+                                                            .length >
+                                                        0
+                                                    ? _buildChoicemainopertaionalListForTab()
+                                                    : SizedBox()
+                                              ],
+                                            )
+                                          : Container()
                                     ],
-                                  )
-                                : Container()
-                          ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                (role == GlobalLists.headrole ||
+                                        role ==
+                                            GlobalLists.reginalmanagerrole ||
+                                        role == GlobalLists.operationrole ||
+                                        role ==
+                                            GlobalLists.operationmanagerrole)
+                                    ? isdataloaded == false
+                                        ? ShowDialogs.norecordwidget(0.0,
+                                            SizeConfig.blockSizeVertical * 30)
+                                        : newoperationalmodule()
+                                    : (role == GlobalLists.clientrole)
+                                        ? headmodule()
+                                        : isdataloaded == false
+                                            ? ShowDialogs.norecordwidget(
+                                                0.0,
+                                                SizeConfig.blockSizeVertical *
+                                                    30)
+                                            :GlobalLists.isShiftActive==0?ShowDialogs.norecordwidget(
+                                                0.0,
+                                                SizeConfig.blockSizeVertical *
+                                                    30): supervisormodule()
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      (role == GlobalLists.headrole ||
-                              role == GlobalLists.reginalmanagerrole ||
-                              role == GlobalLists.operationrole ||
-                              role == GlobalLists.operationmanagerrole)
-                          ? isdataloaded == false
-                              ? ShowDialogs.norecordwidget(
-                                  0.0, SizeConfig.blockSizeVertical * 30)
-                              : newoperationalmodule()
-                          : (role == GlobalLists.clientrole)
-                              ? headmodule()
-                              : isdataloaded == false
-                                  ? ShowDialogs.norecordwidget(
-                                      0.0, SizeConfig.blockSizeVertical * 30)
-                                  : supervisormodule()
                     ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-  }),
+                  );
+                }),
       ),
     );
   }
@@ -1214,7 +1321,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                           //   indicator:
                           // //  GlobalLists.tabControllermain.index==GlobalLists.selectedindex?
                           decoration: BoxDecoration(
-                              color: customcolor.blue.withOpacity(0.2),
+                              color: customcolor.skyblue.withOpacity(0.9),
+                              //12dec
+                              //  customcolor.blue.withOpacity(0.2),
                               borderRadius:
                                   BorderRadius.all(Radius.circular(10))
                               //  BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight:Radius.circular(10) )
@@ -1282,7 +1391,11 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
                                                           style: AppFonts.headerStyle(
                                                               fontSize:
-                                                                  17.sp,
+                                                                  ResponsiveFlutter
+                                                                          .of(
+                                                                              context)
+                                                                      .fontSize(
+                                                                          2.2),
                                                               color: customcolor
                                                                   .blue,
                                                               fontWeight:
@@ -1301,7 +1414,10 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                               .ellipsis,
                                                           style: AppFonts.headerStyle(
                                                               fontSize:
-                                                              17.sp,
+                                                                  ResponsiveFlutter.of(
+                                                                          context)
+                                                                      .fontSize(
+                                                                          1.6),
                                                               color: customcolor
                                                                   .black,
                                                               fontWeight:
@@ -1676,9 +1792,10 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                       //  customcolor.red
                       //:customcolor.bg
                       //),
-                      color:
-                          //  GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].status=="Pending"? customcolor.red:
-                          customcolor.blue.withOpacity(0.2),
+                      color: customcolor.skyblue.withOpacity(0.9),
+                      //12dec
+                      //  GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].status=="Pending"? customcolor.red:
+                      // customcolor.blue.withOpacity(0.2),
                       // border: Border.all(color:  customcolor.red,),
                       borderRadius: BorderRadius.all(
                         Radius.circular(10),
@@ -1741,7 +1858,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
                                                   style: AppFonts.headerStyle(
                                                       fontSize:
-                                                          17.sp,
+                                                          ResponsiveFlutter.of(
+                                                                  context)
+                                                              .fontSize(2.2),
                                                       color: customcolor.blue,
                                                       fontWeight:
                                                           FontWeight.w600),
@@ -1773,7 +1892,10 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
                                                         style: AppFonts.headerStyle(
                                                             fontSize:
-                                                               17.sp,
+                                                                ResponsiveFlutter.of(
+                                                                        context)
+                                                                    .fontSize(
+                                                                        2.2),
                                                             color: customcolor
                                                                 .black,
                                                             fontWeight:
@@ -1895,7 +2017,10 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                             .ellipsis,
                                                         style: AppFonts.headerStyle(
                                                             fontSize:
-                                                               20.sp,
+                                                                ResponsiveFlutter.of(
+                                                                        context)
+                                                                    .fontSize(
+                                                                        2),
                                                             color: customcolor
                                                                 .appbarcolor,
                                                             fontWeight:
@@ -2250,6 +2375,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   scrollDirection: Axis.horizontal,
                   controller: _scrollControllerbuttontab,
                   child: ButtonsTabBar(
+                    //ruchi12dec
+                    // backgroundColor: customcolor.appbarcolor,
                     labelStyle: AppFonts.headerStyle(
                         fontSize: 12,
                         color:
@@ -2295,28 +2422,14 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                       });
                     },
 
-                    //   indicator:
-                    // //  GlobalLists.tabControllermain.index==GlobalLists.selectedindex?
                     decoration: BoxDecoration(
-                        // border: Border.all(color:
-                        //GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].status=="Pending"?
-                        //  customcolor.red
-                        //:customcolor.bg
-                        //),
-                        color:
-                            //  GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].status=="Pending"? customcolor.red:
-                            customcolor.blue.withOpacity(0.2),
-                        // border: Border.all(color:  customcolor.red,),
+                        color: customcolor.skyblue.withOpacity(0.9),
                         borderRadius: BorderRadius.all(
                           Radius.circular(10),
-                        )
-                        //  BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight:Radius.circular(10) )
-                        ),
+                        )),
                     unselectedDecoration: BoxDecoration(
                         color: customcolor.white,
-                        borderRadius: BorderRadius.all(Radius.circular(10))
-                        // borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight:Radius.circular(10) )
-                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
 
                     tabs: GlobalLists.tabsmain,
 
@@ -2370,7 +2483,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
                                                   style: AppFonts.headerStyle(
                                                       fontSize:
-                                                         17.sp,
+                                                          ResponsiveFlutter.of(
+                                                                  context)
+                                                              .fontSize(2.2),
                                                       color: customcolor.blue,
                                                       fontWeight:
                                                           FontWeight.w600),
@@ -2402,7 +2517,10 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
                                                         style: AppFonts.headerStyle(
                                                             fontSize:
-                                                              17.sp,
+                                                                ResponsiveFlutter.of(
+                                                                        context)
+                                                                    .fontSize(
+                                                                        2.2),
                                                             color: customcolor
                                                                 .black,
                                                             fontWeight:
@@ -2522,7 +2640,10 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                             .ellipsis,
                                                         style: AppFonts.headerStyle(
                                                             fontSize:
-                                                               17.sp,
+                                                                ResponsiveFlutter.of(
+                                                                        context)
+                                                                    .fontSize(
+                                                                        2),
                                                             color: customcolor
                                                                 .appbarcolor,
                                                             fontWeight:
@@ -2797,6 +2918,577 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
             ],
           );
   }
+  // newscroll() {
+  //   return GlobalLists.detailopeermainlisttab.length == 0
+  //       ? ShowDialogs.norecordwidget(
+  //           // vishu 13 aug 24
+  //           // SizeConfig.blockSizeHorizontal * 30,
+  //           0.0,
+  //           SizeConfig.blockSizeVertical * 30)
+  //       : Column(
+  //           mainAxisAlignment: MainAxisAlignment.start,
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             //wait1
+  //             //1april
+  //             Container(
+  //               height: 30,
+  //               child: SingleChildScrollView(
+  //                 scrollDirection: Axis.horizontal,
+  //                 controller: _scrollControllerbuttontab,
+  //                 child: ButtonsTabBar(
+  //                   labelStyle: AppFonts.headerStyle(
+  //                       fontSize: 12,
+  //                       color:
+  //                           //   GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].status=="Pending"? customcolor.red:
+  //                           customcolor.blue,
+  //                       fontWeight: FontWeight.normal),
+  //                   unselectedLabelStyle: AppFonts.headerStyle(
+  //                       fontSize: 12,
+  //                       color:
+  //                           //   GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].status=="Pending"? customcolor.red:
+  //                           customcolor.greytext,
+  //                       fontWeight: FontWeight.normal),
+
+  //                   height: 150,
+
+  //                   onTap: (val) {
+  //                     setState(() {
+  //                       print("ontap");
+  //                       print(val.toString());
+  //                       GlobalLists.selectedindex = val; //21feb
+  //                       tag = 0;
+  //                       print("ontaptag");
+  //                       print(tag);
+  //                       //26mar
+  //                       GlobalLists.card_startcurrentdatevalue = GlobalLists
+  //                           .detailopeermainlisttab[0]
+  //                           .details[GlobalLists.selectedindex]
+  //                           .startTimeStr
+  //                           .toString();
+  //                       GlobalLists.card_endcurrentdatevalue = GlobalLists
+  //                           .detailopeermainlisttab[0]
+  //                           .details[GlobalLists.selectedindex]
+  //                           .endTimeStr
+  //                           .toString();
+  //                       GlobalLists.card_superviorfirtvalue = GlobalLists
+  //                           .detailopeermainlisttab[0]
+  //                           .details[GlobalLists.selectedindex]
+  //                           .supervisorName
+  //                           .toString();
+  //                       GlobalLists.card_percentvalue = GlobalLists
+  //                           .detailopeermainlisttab[0].totalPercentage
+  //                           .toString();
+  //                     });
+  //                   },
+
+  //                   //   indicator:
+  //                   // //  GlobalLists.tabControllermain.index==GlobalLists.selectedindex?
+  //                   decoration: BoxDecoration(
+
+  //                       color:
+  //                           //  GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].status=="Pending"? customcolor.red:
+  //                           customcolor.blue.withOpacity(0.2),
+  //                       // border: Border.all(color:  customcolor.red,),
+  //                       borderRadius: BorderRadius.all(
+  //                         Radius.circular(10),
+  //                       )
+  //                       //  BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight:Radius.circular(10) )
+  //                       ),
+
+  //                   unselectedDecoration: BoxDecoration(
+  //                       color: customcolor.white,
+  //                       borderRadius: BorderRadius.all(Radius.circular(10))
+  //                       // borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight:Radius.circular(10) )
+  //                       ),
+
+  //                   tabs: GlobalLists.tabsmain,
+
+  //                   controller: GlobalLists.tabControllermain,
+  //                 ),
+  //               ),
+  //             ),
+  //             //wait4
+  //             isdataloaded
+  //                 ? Padding(
+  //                     padding: const EdgeInsets.all(6.0),
+  //                     child: Stack(
+  //                       children: [
+  //                         Padding(
+  //                             padding: EdgeInsets.only(
+  //                               right: 0.0,
+  //                               left: 0.0,
+  //                               top: 15,
+  //                               bottom: 4,
+  //                             ),
+  //                             child: GestureDetector(
+  //                               onTap: () {},
+  //                               child: IntrinsicHeight(
+  //                                 child: Row(
+  //                                   crossAxisAlignment:
+  //                                       CrossAxisAlignment.start,
+  //                                   mainAxisAlignment: MainAxisAlignment.start,
+  //                                   children: [
+  //                                     Material(
+  //                                       elevation: 2,
+  //                                       borderRadius: BorderRadius.circular(10),
+  //                                       child: Padding(
+  //                                         padding: const EdgeInsets.all(10),
+  //                                         child: Container(
+  //                                           width:
+  //                                               SizeConfig.blockSizeHorizontal *
+  //                                                   60,
+  //                                           child: Column(
+  //                                             crossAxisAlignment:
+  //                                                 CrossAxisAlignment.start,
+  //                                             mainAxisAlignment:
+  //                                                 MainAxisAlignment.start,
+  //                                             children: [
+  //                                               Text(
+  //                                                 "${GlobalLists.card_startcurrentdatevalue}-${GlobalLists.card_endcurrentdatevalue}",
+  //                                                 // "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].startTimeStr} - ${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].endTimeStr}",
+  //                                                 maxLines: 2,
+  //                                                 textAlign: TextAlign.start,
+  //                                                 overflow:
+  //                                                     TextOverflow.ellipsis,
+
+  //                                                 style: AppFonts.headerStyle(
+  //                                                     fontSize:
+  //                                                         ResponsiveFlutter.of(
+  //                                                                 context)
+  //                                                             .fontSize(2.2),
+  //                                                     color: customcolor.blue,
+  //                                                     fontWeight:
+  //                                                         FontWeight.w600),
+  //                                               ),
+  //                                               SizedBox(
+  //                                                 height: 10,
+  //                                               ),
+  //                                               (role == GlobalLists.headrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .reginalmanagerrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .clientrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .operationrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .operationmanagerrole)
+  //                                                   ? Text(
+  //                                                       "${GlobalLists.card_superviorfirtvalue}",
+  //                                                       //  "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].supervisorName}",
+  //                                                       maxLines: 2,
+  //                                                       textAlign:
+  //                                                           TextAlign.start,
+  //                                                       overflow: TextOverflow
+  //                                                           .ellipsis,
+
+  //                                                       style: AppFonts.headerStyle(
+  //                                                           fontSize:
+  //                                                               ResponsiveFlutter.of(
+  //                                                                       context)
+  //                                                                   .fontSize(
+  //                                                                       2.2),
+  //                                                           color: customcolor
+  //                                                               .black,
+  //                                                           fontWeight:
+  //                                                               FontWeight
+  //                                                                   .w400),
+  //                                                     )
+  //                                                   : Container(),
+  //                                             ],
+  //                                           ),
+  //                                         ),
+  //                                       ),
+  //                                     ),
+  //                                     SizedBox(
+  //                                       width: 8,
+  //                                     ),
+  //                                     Expanded(
+  //                                       child: Material(
+  //                                         elevation: 2,
+  //                                         borderRadius:
+  //                                             BorderRadius.circular(10),
+  //                                         child: Padding(
+  //                                           padding: EdgeInsets.symmetric(
+  //                                               vertical: SizeConfig
+  //                                                       .blockSizeHorizontal *
+  //                                                   1.5),
+  //                                           child: Column(
+  //                                             crossAxisAlignment:
+  //                                                 CrossAxisAlignment.center,
+  //                                             mainAxisAlignment:
+  //                                                 MainAxisAlignment.center,
+  //                                             children: [
+  //                                               Container(
+  //                                                 // color: customcolor.appbarcolor,
+  //                                                 child:
+  //                                                     CircularPercentIndicator(
+  //                                                   animationDuration: 500,
+  //                                                   //   radius: 35.0,
+  //                                                   lineWidth: 4.0,
+  //                                                   radius: 34.0,
+  //                                                   //   lineWidth: 5.0,
+  //                                                   animation: true,
+  //                                                   percent:
+  //                                                       //0.0,
+  //                                                       //double.parse(GlobalLists.card_percentvalue)>100.0?0.0:double.parse(GlobalLists.card_percentvalue)/100,
+  //                                                       // GlobalLists.card_percentvalue=="101.0"? 0.0:
+  //                                                       double.parse(GlobalLists
+  //                                                                   .card_percentvalue) >
+  //                                                               100.0
+  //                                                           ? 0.0
+  //                                                           : double.parse(
+  //                                                                   GlobalLists
+  //                                                                       .card_percentvalue) /
+  //                                                               100,
+  //                                                   //  GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].percentage>100.0?0.0: GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].percentage/100,
+  //                                                   center: new Text(
+  //                                                     // "",
+  //                                                     GlobalLists.card_percentvalue ==
+  //                                                             "101.0"
+  //                                                         ? 'NA'
+  //                                                         : "${double.parse(GlobalLists.card_percentvalue).toStringAsFixed(0)}%",
+  //                                                     //  "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].percentage.toStringAsFixed(0)}%",
+  //                                                     style:
+  //                                                         AppFonts.headerStyle(
+  //                                                             fontSize: 15,
+  //                                                             color: customcolor
+  //                                                                 .yellow,
+  //                                                             fontWeight:
+  //                                                                 FontWeight
+  //                                                                     .bold),
+  //                                                   ),
+
+  //                                                   circularStrokeCap:
+  //                                                       CircularStrokeCap.round,
+  //                                                   progressColor:
+  //                                                       customcolor.blue,
+  //                                                 ),
+  //                                               ),
+  //                                               (role == GlobalLists.headrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .reginalmanagerrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .clientrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .operationrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .operationmanagerrole)
+  //                                                   ? SizedBox(
+  //                                                       height: 0,
+  //                                                     )
+  //                                                   : SizedBox(
+  //                                                       height: 7,
+  //                                                     ),
+  //                                               (role == GlobalLists.headrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .reginalmanagerrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .clientrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .operationrole ||
+  //                                                       role ==
+  //                                                           GlobalLists
+  //                                                               .operationmanagerrole)
+  //                                                   ? Container()
+  //                                                   : Text(
+  //                                                       "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[0].uncheckCount.toString()} Task Pending",
+  //                                                       maxLines: 2,
+  //                                                       textAlign:
+  //                                                           TextAlign.start,
+  //                                                       overflow: TextOverflow
+  //                                                           .ellipsis,
+  //                                                       style: AppFonts.headerStyle(
+  //                                                           fontSize:
+  //                                                               ResponsiveFlutter.of(
+  //                                                                       context)
+  //                                                                   .fontSize(
+  //                                                                       2),
+  //                                                           color: customcolor
+  //                                                               .appbarcolor,
+  //                                                           fontWeight:
+  //                                                               FontWeight
+  //                                                                   .bold),
+  //                                                     ),
+  //                                             ],
+  //                                           ),
+  //                                         ),
+  //                                       ),
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //                               ),
+  //                               /*child: Material(
+  //                                 elevation: 2,
+  //                                 borderRadius: BorderRadius.circular(10),
+  //                                 child: Container(
+  //                                   width: SizeConfig.blockSizeHorizontal * 100,
+  //                                   decoration: BoxDecoration(
+  //                                     borderRadius: BorderRadius.circular(10),
+  //                                   ),
+  //                                   child: Padding(
+  //                                     padding: const EdgeInsets.all(10.0),
+  //                                     child: Column(
+  //                                       crossAxisAlignment:
+  //                                           CrossAxisAlignment.start,
+  //                                       mainAxisAlignment:
+  //                                           MainAxisAlignment.start,
+  //                                       children: [
+  //                                         // SizedBox(height: 20,),
+  //                                         Row(
+  //                                           crossAxisAlignment:
+  //                                               CrossAxisAlignment.start,
+  //                                           mainAxisAlignment:
+  //                                               MainAxisAlignment.spaceBetween,
+  //                                           children: [
+  //                                             Padding(
+  //                                               padding: const EdgeInsets.only(
+  //                                                   top: 10),
+  //                                               child: Container(
+  //                                                 width: SizeConfig
+  //                                                         .blockSizeHorizontal *
+  //                                                     50,
+  //                                                 child: Column(
+  //                                                   crossAxisAlignment:
+  //                                                       CrossAxisAlignment
+  //                                                           .start,
+  //                                                   mainAxisAlignment:
+  //                                                       MainAxisAlignment.start,
+  //                                                   children: [
+  //                                                     Text(
+  //                                                       "${GlobalLists.card_startcurrentdatevalue}-${GlobalLists.card_endcurrentdatevalue}",
+  //                                                       // "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].startTimeStr} - ${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].endTimeStr}",
+  //                                                       maxLines: 2,
+  //                                                       textAlign:
+  //                                                           TextAlign.start,
+  //                                                       overflow: TextOverflow
+  //                                                           .ellipsis,
+
+  //                                                       style: AppFonts.headerStyle(
+  //                                                           fontSize:
+  //                                                               ResponsiveFlutter.of(
+  //                                                                       context)
+  //                                                                   .fontSize(
+  //                                                                       2.2),
+  //                                                           color: customcolor
+  //                                                               .blue,
+  //                                                           fontWeight:
+  //                                                               FontWeight
+  //                                                                   .w600),
+  //                                                     ),
+  //                                                     SizedBox(
+  //                                                       height: 10,
+  //                                                     ),
+  //                                                     (role ==  GlobalLists  .headrole ||
+  //                                                             role ==  GlobalLists  .reginalmanagerrole ||
+  //                                                             role ==  GlobalLists .clientrole ||
+  //                                                             role == GlobalLists   .operationrole ||
+  //                                                             role == GlobalLists .operationmanagerrole)
+  //                                                         ? Text(
+  //                                                             "$GlobalLists.card_superviorfirtvalue",
+  //                                                             //  "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].supervisorName}",
+  //                                                             maxLines: 2,
+  //                                                             textAlign:
+  //                                                                 TextAlign
+  //                                                                     .start,
+  //                                                             overflow:
+  //                                                                 TextOverflow
+  //                                                                     .ellipsis,
+
+  //                                                             style: AppFonts.headerStyle(
+  //                                                                 fontSize: ResponsiveFlutter.of(
+  //                                                                         context)
+  //                                                                     .fontSize(
+  //                                                                         2.2),
+  //                                                                 color:
+  //                                                                     customcolor
+  //                                                                         .black,
+  //                                                                 fontWeight:
+  //                                                                     FontWeight
+  //                                                                         .w400),
+  //                                                           )
+  //                                                         : Container(),
+  //                                                   ],
+  //                                                 ),
+  //                                               ),
+  //                                             ),
+  //                                             Column(
+  //                                               crossAxisAlignment:
+  //                                                   CrossAxisAlignment.end,
+  //                                               mainAxisAlignment:
+  //                                                   MainAxisAlignment.start,
+  //                                               children: [
+  //                                                 Container(
+  //                                                   // color: customcolor.appbarcolor,
+  //                                                   child:
+  //                                                       CircularPercentIndicator(
+  //                                                     animationDuration: 500,
+  //                                                     //   radius: 35.0,
+  //                                                     lineWidth: 4.0,
+  //                                                     radius: 34.0,
+  //                                                     //   lineWidth: 5.0,
+  //                                                     animation: true,
+  //                                                     percent:
+  //                                                         //  0.0,
+  //                                                         //double.parse(GlobalLists.card_percentvalue)>100.0?0.0:double.parse(GlobalLists.card_percentvalue)/100,
+  //                                                     // GlobalLists.card_percentvalue=="101.0"? 0.0 :
+  //                                                         double.parse(  GlobalLists.card_percentvalue) > 100.0 ? 0.0 : double.parse( GlobalLists.card_percentvalue) / 100,
+  //                                                     //  GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].percentage>100.0?0.0: GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].percentage/100,
+  //                                                     center: new Text(
+  //                                                       // "",
+  //                                                       // GlobalLists.card_percentvalue=="101.0"? 'NA':gb
+  //                                                       "${double.parse(GlobalLists.card_percentvalue).toStringAsFixed(0)}%",
+  //                                                       //  "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[GlobalLists.selectedindex].percentage.toStringAsFixed(0)}%",
+  //                                                       style: AppFonts
+  //                                                           .headerStyle(
+  //                                                               fontSize: 15,
+  //                                                               color:
+  //                                                                   customcolor
+  //                                                                       .yellow,
+  //                                                               fontWeight:
+  //                                                                   FontWeight
+  //                                                                       .bold),
+  //                                                     ),
+
+  //                                                     circularStrokeCap:
+  //                                                         CircularStrokeCap
+  //                                                             .round,
+  //                                                     progressColor:
+  //                                                         customcolor.blue,
+  //                                                   ),
+  //                                                 ),
+  //                                                 (role ==
+  //                                                             GlobalLists
+  //                                                                 .headrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .reginalmanagerrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .clientrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .operationrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .operationmanagerrole)
+  //                                                     ? SizedBox(
+  //                                                         height: 0,
+  //                                                       )
+  //                                                     : SizedBox(
+  //                                                         height: 7,
+  //                                                       ),
+  //                                                 (role ==
+  //                                                             GlobalLists
+  //                                                                 .headrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .reginalmanagerrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .clientrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .operationrole ||
+  //                                                         role ==
+  //                                                             GlobalLists
+  //                                                                 .operationmanagerrole)
+  //                                                     ? Container()
+  //                                                     : Text(
+  //                                                         "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[0].uncheckCount.toString()} Task Pending",
+  //                                                         maxLines: 2,
+  //                                                         textAlign:
+  //                                                             TextAlign.start,
+  //                                                         overflow: TextOverflow
+  //                                                             .ellipsis,
+  //                                                         style: AppFonts.headerStyle(
+  //                                                             fontSize:
+  //                                                                 ResponsiveFlutter.of(
+  //                                                                         context)
+  //                                                                     .fontSize(
+  //                                                                         2),
+  //                                                             color: customcolor
+  //                                                                 .appbarcolor,
+  //                                                             fontWeight:
+  //                                                                 FontWeight
+  //                                                                     .bold),
+  //                                                       ),
+  //                                               ],
+  //                                             ),
+  //                                           ],
+  //                                         ),
+
+  //                                         // Container(
+  //                                         //   height: 5,
+  //                                         // ),
+  //                                       ],
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                               ),*/
+  //                             )),
+  //                         //
+  //                       ],
+  //                     ),
+  //                   )
+  //                 : Container(),
+  //             //  StatefulBuilder(builder: (thisLowerContext, innerSetState) {
+  //             Expanded(
+  //               flex: 3,
+  //               child: TabBarView(
+  //                 physics: ScrollPhysics(),
+  //                 controller: GlobalLists.tabControllermain,
+  //                 children: List.generate(GlobalLists.tabsmain.length,
+  //                     (tabindexmain) {
+  //                   // setState(() {
+  //                   // tag=0;
+  //                   // });
+  //                   return Column(
+  //                     //  shrinkWrap: true,
+  //                     //  physics: ScrollPhysics(),
+  //                     children: [
+  //                       SizedBox(
+  //                         height: 10,
+  //                       ),
+  //                       // Container()
+  //                       //7dec
+  //                       //26june
+  //                       Container(
+  //                           // color: customcolor.blue,
+  //                           height: Platform.isAndroid
+  //                               ? SizeConfig.blockSizeVertical * 42
+  //                               : SizeConfig.blockSizeVertical * 40, //42
+  //                           child:
+  //                               //  Container(child: Text(" ${GlobalLists.tabsmain.length}"),)
+  //                               //wait2
+  //                               GlobalLists.detailopeermainlisttab.length == 0
+  //                                   ? Container()
+  //                                   : Padding(
+  //                                       padding: EdgeInsets.only(bottom: 6),
+  //                                       child: newoperationmasterarea(
+  //                                           tabindexmain),
+  //                                     ))
+  //                     ],
+  //                   );
+  //                 }),
+  //               ),
+  //             )
+  //             //  }
+  //             //   ),
+  //           ],
+  //         );
+  // }
 
   masterarea(int tabindexmain) {
     //selectedindexmain=1;
@@ -2821,43 +3513,43 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
             GlobalLists
                 .workflowstatuslist[tabindexmain].masterAreaWiseList.length;
         j++) {
-   //   setState(() {
-        listtab.add(
-            GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j]);
-        status = GlobalLists
-            .workflowstatuslist[tabindexmain].masterAreaWiseList[j].status;
-        tabs.add(
-          new Tab(
-            ///    text: GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName,
-            child: Container(
-              // height: 35,
-              width: SizeConfig.blockSizeHorizontal * 25,
-              decoration: j == selectedindexmain
-                  ? BoxDecoration(
-                      color: customcolor.blue,
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    )
-                  : BoxDecoration(
-                      color: GlobalLists.workflowstatuslist[tabindexmain]
-                                  .masterAreaWiseList[j].status ==
-                              "Pending"
-                          ? customcolor.darkorange
-                          : customcolor.blue.withOpacity(0.2),
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    ),
-              child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    "${GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName}",
-                    style: AppFonts.headerStyle(
-                        fontSize: 12,
-                        color: customcolor.white,
-                        fontWeight: FontWeight.normal),
-                  )),
-            ),
+      //   setState(() {
+      listtab.add(
+          GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j]);
+      status = GlobalLists
+          .workflowstatuslist[tabindexmain].masterAreaWiseList[j].status;
+      tabs.add(
+        new Tab(
+          ///    text: GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName,
+          child: Container(
+            // height: 35,
+            width: SizeConfig.blockSizeHorizontal * 25,
+            decoration: j == selectedindexmain
+                ? BoxDecoration(
+                    color: customcolor.blue,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  )
+                : BoxDecoration(
+                    color: GlobalLists.workflowstatuslist[tabindexmain]
+                                .masterAreaWiseList[j].status ==
+                            "Pending"
+                        ? customcolor.darkorange
+                        : customcolor.blue.withOpacity(0.2),
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
+            child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  "${GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName}",
+                  style: AppFonts.headerStyle(
+                      fontSize: 12,
+                      color: customcolor.white,
+                      fontWeight: FontWeight.normal),
+                )),
           ),
-        );
-    //  });
+        ),
+      );
+      //  });
       print("forloop");
       print("tab of masrter");
       print(tabs.length);
@@ -2868,21 +3560,21 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   .blockData.length;
           k++) {
         //setState(() {
-          mainlist.add(PendingTask(
-            maintaskname: GlobalLists.workflowstatuslist[tabindexmain]
-                .masterAreaWiseList[j].blockData[k].masterAreaName,
-            listvalue: GlobalLists.workflowstatuslist[tabindexmain]
-                .masterAreaWiseList[j].blockData[k].checklist,
-            multipleSelected: [],
-            isenabledclick: false,
-            masterareaid: GlobalLists.workflowstatuslist[tabindexmain]
-                .masterAreaWiseList[j].blockData[k].masterArea
-                .toString(),
-            masterblockid: GlobalLists.workflowstatuslist[tabindexmain]
-                .masterAreaWiseList[j].blockData[k].masterBlock
-                .toString(),
-          ));
-       // });
+        mainlist.add(PendingTask(
+          maintaskname: GlobalLists.workflowstatuslist[tabindexmain]
+              .masterAreaWiseList[j].blockData[k].masterAreaName,
+          listvalue: GlobalLists.workflowstatuslist[tabindexmain]
+              .masterAreaWiseList[j].blockData[k].checklist,
+          multipleSelected: [],
+          isenabledclick: false,
+          masterareaid: GlobalLists.workflowstatuslist[tabindexmain]
+              .masterAreaWiseList[j].blockData[k].masterArea
+              .toString(),
+          masterblockid: GlobalLists.workflowstatuslist[tabindexmain]
+              .masterAreaWiseList[j].blockData[k].masterBlock
+              .toString(),
+        ));
+        // });
       }
     }
 
@@ -2901,7 +3593,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   child: Text(
                     "Master Area",
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                         color: customcolor.black,
                         fontWeight: FontWeight.w400),
                   ),
@@ -2991,81 +3683,77 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                 .masterAreaWiseList.length;
         j++) {
       // setState(() {
-        detailoperationlisttab.add(GlobalLists.detailopeermainlisttab[0]
-            .details[tabindexmain].masterAreaWiseList[j]);
-        //  status=GlobalLists.mainlisttabs[GlobalLists.maintag].details[tabindexmain].masterAreaWiseList[j].pendingArea.toString();
-        tabs.add(
-          new Tab(
-            ///    text: GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName,
-            child: Container(
-              // height: 35,
-              width: SizeConfig.blockSizeHorizontal * 25,
-              decoration: j == selectedindexmain
-                  ? BoxDecoration(
-                      color: customcolor.blue,
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    )
-                  : BoxDecoration(
-                      color: GlobalLists
-                                  .detailopeermainlisttab[0]
-                                  .details[tabindexmain]
-                                  .masterAreaWiseList[j]
-                                  .status ==
-                              "Pending"
-                          ? customcolor.darkorange
-                          : customcolor.blue.withOpacity(0.2),
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    ),
-              child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    "${GlobalLists.detailopeermainlisttab[0].details[tabindexmain].masterAreaWiseList[j].masterAreaName}",
-                    style: AppFonts.headerStyle(
-                        fontSize: 12,
-                        color: customcolor.white,
-                        fontWeight: FontWeight.normal),
-                  )),
-            ),
+      detailoperationlisttab.add(GlobalLists.detailopeermainlisttab[0]
+          .details[tabindexmain].masterAreaWiseList[j]);
+      //  status=GlobalLists.mainlisttabs[GlobalLists.maintag].details[tabindexmain].masterAreaWiseList[j].pendingArea.toString();
+      tabs.add(
+        new Tab(
+          ///    text: GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName,
+          child: Container(
+            // height: 35,
+            width: SizeConfig.blockSizeHorizontal * 25,
+            decoration: j == selectedindexmain
+                ? BoxDecoration(
+                    color: customcolor.blue,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  )
+                : BoxDecoration(
+                    color: GlobalLists
+                                .detailopeermainlisttab[0]
+                                .details[tabindexmain]
+                                .masterAreaWiseList[j]
+                                .status ==
+                            "Pending"
+                        ? customcolor.darkorange
+                        : customcolor.blue.withOpacity(0.2),
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
+            child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  "${GlobalLists.detailopeermainlisttab[0].details[tabindexmain].masterAreaWiseList[j].masterAreaName}",
+                  style: AppFonts.headerStyle(
+                      fontSize: 12,
+                      color: customcolor.white,
+                      fontWeight: FontWeight.normal),
+                )),
           ),
-        );
+        ),
+      );
       // });
       for (int k = 0;
           k <
               GlobalLists.detailopeermainlisttab[0].details[tabindexmain]
                   .masterAreaWiseList[j].blockData.length;
           k++) {
-      //  setState(() {
-          mainlist.add(NewOperationalPendingTask(
-            maintaskname: GlobalLists
-                .detailopeermainlisttab[0]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .masterAreaName,
-            listvalue: GlobalLists
-                .detailopeermainlisttab[0]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .checklist,
-            multipleSelected: [],
-            isenabledclick: false,
-            masterareaid: GlobalLists
-                .detailopeermainlisttab[0]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .masterArea
-                .toString(),
-            masterblockid: GlobalLists
-                .detailopeermainlisttab[0]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .masterBlock
-                .toString(),
-          ));
-       // });
+        //  setState(() {
+        mainlist.add(NewOperationalPendingTask(
+          maintaskname: GlobalLists
+              .detailopeermainlisttab[0]
+              .details[tabindexmain]
+              .masterAreaWiseList[j]
+              .blockData[k]
+              .masterAreaName,
+          listvalue: GlobalLists.detailopeermainlisttab[0].details[tabindexmain]
+              .masterAreaWiseList[j].blockData[k].checklist,
+          multipleSelected: [],
+          isenabledclick: false,
+          masterareaid: GlobalLists
+              .detailopeermainlisttab[0]
+              .details[tabindexmain]
+              .masterAreaWiseList[j]
+              .blockData[k]
+              .masterArea
+              .toString(),
+          masterblockid: GlobalLists
+              .detailopeermainlisttab[0]
+              .details[tabindexmain]
+              .masterAreaWiseList[j]
+              .blockData[k]
+              .masterBlock
+              .toString(),
+        ));
+        // });
       }
     }
 
@@ -3084,7 +3772,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   child: Text(
                     "Master Area",
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                         color: customcolor.black,
                         fontWeight: FontWeight.w400),
                   ),
@@ -3162,50 +3850,48 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
             GlobalLists.mainlisttabs[GlobalLists.maintag].details[tabindexmain]
                 .masterAreaWiseList.length;
         j++) {
-     // setState(() {
-        operationlisttab.add(GlobalLists.mainlisttabs[GlobalLists.maintag]
-            .details[tabindexmain].masterAreaWiseList[j]);
-        status = GlobalLists.mainlisttabs[GlobalLists.maintag]
-            .details[tabindexmain].masterAreaWiseList[j].pendingArea
-            .toString();
-        tabs.add(
-          new Tab(
-            ///    text: GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName,
-            child: Container(
-              // height: 35,
-              width: SizeConfig.blockSizeHorizontal * 25,
-              decoration: j == selectedindexmain
-                  ? BoxDecoration(
-                      color: customcolor.blue,
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    )
-                  : BoxDecoration(
-                      color: GlobalLists
-                                  .mainlisttabs[GlobalLists.maintag]
-                                  .details[tabindexmain]
-                                  .masterAreaWiseList[j]
-                                  .status ==
-                              "Pending"
-                          ? customcolor.darkorange
-                          : customcolor.blue.withOpacity(0.2),
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    ),
-              child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[tabindexmain].masterAreaWiseList[j].masterAreaName}",
-                    style: AppFonts.headerStyle(
-                        fontSize: 12,
-                        color: customcolor.white,
-                        fontWeight: FontWeight.normal),
-                  )),
-            ),
+      // setState(() {
+      operationlisttab.add(GlobalLists.mainlisttabs[GlobalLists.maintag]
+          .details[tabindexmain].masterAreaWiseList[j]);
+      status = GlobalLists.mainlisttabs[GlobalLists.maintag]
+          .details[tabindexmain].masterAreaWiseList[j].pendingArea
+          .toString();
+      tabs.add(
+        new Tab(
+          ///    text: GlobalLists.workflowstatuslist[tabindexmain].masterAreaWiseList[j].masterAreaName,
+          child: Container(
+            // height: 35,
+            width: SizeConfig.blockSizeHorizontal * 25,
+            decoration: j == selectedindexmain
+                ? BoxDecoration(
+                    color: customcolor.blue,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  )
+                : BoxDecoration(
+                    color: GlobalLists
+                                .mainlisttabs[GlobalLists.maintag]
+                                .details[tabindexmain]
+                                .masterAreaWiseList[j]
+                                .status ==
+                            "Pending"
+                        ? customcolor.darkorange
+                        : customcolor.blue.withOpacity(0.2),
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
+            child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[tabindexmain].masterAreaWiseList[j].masterAreaName}",
+                  style: AppFonts.headerStyle(
+                      fontSize: 12,
+                      color: customcolor.white,
+                      fontWeight: FontWeight.normal),
+                )),
           ),
-        );
-     // });
-      print("forloop");
-      print("tab of masrter");
-      print(tabs.length);
+        ),
+      );
+      // });
+  
       //  print(GlobalLists.workflowstatuslist[i].masterAreaWiseList[j]);
       for (int k = 0;
           k <
@@ -3213,37 +3899,37 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   .details[tabindexmain].masterAreaWiseList[j].blockData.length;
           k++) {
         //setState(() {
-          mainlist.add(OperationalPendingTask(
-            maintaskname: GlobalLists
-                .mainlisttabs[GlobalLists.maintag]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .masterAreaName,
-            listvalue: GlobalLists
-                .mainlisttabs[GlobalLists.maintag]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .checklist,
-            multipleSelected: [],
-            isenabledclick: false,
-            masterareaid: GlobalLists
-                .mainlisttabs[GlobalLists.maintag]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .masterArea
-                .toString(),
-            masterblockid: GlobalLists
-                .mainlisttabs[GlobalLists.maintag]
-                .details[tabindexmain]
-                .masterAreaWiseList[j]
-                .blockData[k]
-                .masterBlock
-                .toString(),
-          ));
-       // });
+        mainlist.add(OperationalPendingTask(
+          maintaskname: GlobalLists
+              .mainlisttabs[GlobalLists.maintag]
+              .details[tabindexmain]
+              .masterAreaWiseList[j]
+              .blockData[k]
+              .masterAreaName,
+          listvalue: GlobalLists
+              .mainlisttabs[GlobalLists.maintag]
+              .details[tabindexmain]
+              .masterAreaWiseList[j]
+              .blockData[k]
+              .checklist,
+          multipleSelected: [],
+          isenabledclick: false,
+          masterareaid: GlobalLists
+              .mainlisttabs[GlobalLists.maintag]
+              .details[tabindexmain]
+              .masterAreaWiseList[j]
+              .blockData[k]
+              .masterArea
+              .toString(),
+          masterblockid: GlobalLists
+              .mainlisttabs[GlobalLists.maintag]
+              .details[tabindexmain]
+              .masterAreaWiseList[j]
+              .blockData[k]
+              .masterBlock
+              .toString(),
+        ));
+        // });
       }
     }
 
@@ -3262,7 +3948,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   child: Text(
                     "Master Area",
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                         color: customcolor.black,
                         fontWeight: FontWeight.w400),
                   ),
@@ -3335,7 +4021,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
             child: Text(
               "Master Blocks",
               style: AppFonts.headerStyle(
-                  fontSize: 17.sp,
+                  fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                   color: customcolor.black,
                   fontWeight: FontWeight.w400),
             ),
@@ -3454,7 +4140,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
           child: Text(
             "Master Blocks",
             style: AppFonts.headerStyle(
-                fontSize: 17.sp,
+                fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                 color: customcolor.black,
                 fontWeight: FontWeight.w400),
           ),
@@ -3572,7 +4258,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
           child: Text(
             "Master Blocks",
             style: AppFonts.headerStyle(
-                fontSize: 17.sp,
+                fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                 color: customcolor.black,
                 fontWeight: FontWeight.w400),
           ),
@@ -3789,12 +4475,12 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                       : checkboxeslist.length <= 3
                           ? SizeConfig.blockSizeHorizontal * 40
                           : SizeConfig.blockSizeHorizontal * 70,
-                        //  expandedlistview
+              //  expandedlistview
               child: Scrollbar(
                 thumbVisibility: true,
-                // isAlwaysShown: true,
+                // thumbVisibility: true,
                 child: Padding(
-                 padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(right: 6),
                   child: ListView(
                     shrinkWrap: true,
                     physics: ScrollPhysics(),
@@ -3830,9 +4516,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Container(
-                                              width:
-                                                  SizeConfig.blockSizeHorizontal *
-                                                      65,
+                                              width: SizeConfig
+                                                      .blockSizeHorizontal *
+                                                  65,
                                               child: Text(
                                                 checkboxeslist[indexcheck]
                                                     .pointerName,
@@ -3858,7 +4544,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                               true
                                                           ? customcolor.green
                                                           : customcolor.red,
-                                                  fontWeight: FontWeight.normal),
+                                                  fontWeight:
+                                                      FontWeight.normal),
                                             ),
                                           ],
                                         ),
@@ -3878,7 +4565,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                               customcolor.greytext),
                                       child: //mainlist[indexvalue].isenabledclick?
                                           CheckboxListTile(
-                                        // enabled:shiftavaialble == "0" ? false : true,
+                                         //enabled:GlobalLists.shiftavaialble == "0" ? false : true,
                                         enabled: true,
                                         activeColor: customcolor.green,
                                         visualDensity: VisualDensity.compact,
@@ -3887,7 +4574,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                         contentPadding: EdgeInsets.all(0),
                                         dense: true,
                                         title: Text(
-                                          checkboxeslist[indexcheck].pointerName,
+                                          checkboxeslist[indexcheck]
+                                              .pointerName,
                                           style: AppFonts.headerStyle(
                                               fontSize: 14,
                                               color: checkboxeslist[indexcheck]
@@ -3897,8 +4585,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                   : Colors.black,
                                               fontWeight: FontWeight.normal),
                                         ),
-                                        value: checkboxeslist[indexcheck].checked,
-                                        onChanged: (value) {
+                                        value:
+                                            checkboxeslist[indexcheck].checked,
+                                        onChanged:isUpdateButtonVisible? (value) {
                                           // String startTime = "08:00 PM";
                                           // String endTime = "06:00 AM";
                                           // String current_time= "01:40 AM";
@@ -3920,14 +4609,15 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                           endTime = cleanUpTimeString(endTime);
                                           current_time =
                                               cleanUpTimeString(current_time);
-                
+
                                           // Extract AM or PM from the time strings
                                           String startPeriod =
                                               extractAMPM(startTime);
-                                          String endPeriod = extractAMPM(endTime);
+                                          String endPeriod =
+                                              extractAMPM(endTime);
                                           String currentPeriod =
                                               extractAMPM(current_time);
-                
+
                                           if (GlobalLists.multidays == true &&
                                               (startPeriod == 'PM' &&
                                                   endPeriod == 'AM')) {
@@ -3951,9 +4641,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                   }
                                                   print("multipleSelectedlist");
                                                   print(multipleSelectedlist);
-                                                  print(
-                                                      checkboxeslist[indexcheck]);
-                
+                                                  print(checkboxeslist[
+                                                      indexcheck]);
+
                                                   if (multipleSelectedlist
                                                       .contains(checkboxeslist[
                                                           indexcheck])) {
@@ -3979,15 +4669,19 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                 }
                                                 print("multipleSelectedlist");
                                                 print(multipleSelectedlist);
-                                                print(checkboxeslist[indexcheck]);
-                
-                                                if (multipleSelectedlist.contains(
-                                                    checkboxeslist[indexcheck])) {
+                                                print(
+                                                    checkboxeslist[indexcheck]);
+
+                                                if (multipleSelectedlist
+                                                    .contains(checkboxeslist[
+                                                        indexcheck])) {
                                                   multipleSelectedlist.remove(
-                                                      checkboxeslist[indexcheck]);
+                                                      checkboxeslist[
+                                                          indexcheck]);
                                                 } else {
                                                   multipleSelectedlist.add(
-                                                      checkboxeslist[indexcheck]);
+                                                      checkboxeslist[
+                                                          indexcheck]);
                                                 }
                                               });
                                             }
@@ -4003,7 +4697,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                               print("multipleSelectedlist");
                                               print(multipleSelectedlist);
                                               print(checkboxeslist[indexcheck]);
-                
+
                                               if (multipleSelectedlist.contains(
                                                   checkboxeslist[indexcheck])) {
                                                 multipleSelectedlist.remove(
@@ -4014,7 +4708,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                               }
                                             });
                                           }
-                                        },
+                                        }:null,
                                       )),
                                 ),
                               ),
@@ -4025,65 +4719,73 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                               role == GlobalLists.operationrole ||
                               role == GlobalLists.operationmanagerrole)
                           ? Container()
-                          : Column(
+                          :isUpdateButtonVisible? Column(
                               children: [
                                 SizedBox(
                                   height: 15,
                                 ),
-                                //Update Button Master Block
-                          isworkflowUpdated? CircularProgressIndicator(color: customcolor.blue,):       MyElevatedButton(
-                                  setStyleStr: 'home',
-                                  width: 120,
-                                  height: SizeConfig.blockSizeVertical * 6,
-                                  onPressed: () {
-                                    print("multipleSelectedlist");
-                                    // print(multipleSelectedlist.checklistId.toString());
-                                    List<String> checkedid = [];
-                                    List<String> uncheckedid = [];
-                                    //  for(int i=0;i<multipleSelectedlist.length;i++)
-                                    //  {
-                                    //   checkedid.add(multipleSelectedlist[i].id.toString());
-                                    //  }
-                                    for (int i = 0;
-                                        i < checkboxeslist.length;
-                                        i++) {
-                                      if (!checkboxeslist[i].checked) {
-                                        uncheckedid
-                                            .add(checkboxeslist[i].id.toString());
-                                      } else {
-                                        checkedid
-                                            .add(checkboxeslist[i].id.toString());
-                                      }
-                                    }
-                                    log('click on update');
-                                    print("checkedid");
-                                    print("Calledupdate");
-                                    print("check $checkedid");
-                                    print("uncheck $uncheckedid");
-                                    print(masterareaid);
-                                    print(bloackareaid);
-                                    print("shiftid $shiftid");
-                                    print(
-                                        "shiftid ${GlobalLists.workflowstatuslist[tabindex].masterAreaWiseList[tabindexmain].blockData[indexvalue].shift.toString()}");
-                                    updatedworkflowstatusApi(
-                                        GlobalLists
-                                            .workflowstatuslist[tabindex]
-                                            .masterAreaWiseList[tabindexmain]
-                                            .blockData[indexvalue]
-                                            .shift
-                                            .toString(),
-                                        checkedid,
-                                        uncheckedid,
-                                        masterareaid,
-                                        bloackareaid);
-                                  },
-                                  borderRadius: BorderRadius.circular(5),
-                                  colorvalue: customcolor.blue,
-                                  child:Text('Update'),
-                                ),
+                                //Updated Button Master Block
+                                isworkflowUpdated
+                                    ? CircularProgressIndicator(
+                                        color: customcolor.blue,
+                                      )
+                                    :isUpdateButtonVisible?  MyElevatedButton(
+                                        setStyleStr: 'home',
+                                        width: 120,
+                                        height:
+                                            SizeConfig.blockSizeVertical * 6,
+                                        onPressed: () {
+                                          print("multipleSelectedlist");
+                                          // print(multipleSelectedlist.checklistId.toString());
+                                          List<String> checkedid = [];
+                                          List<String> uncheckedid = [];
+                                          //  for(int i=0;i<multipleSelectedlist.length;i++)
+                                          //  {
+                                          //   checkedid.add(multipleSelectedlist[i].id.toString());
+                                          //  }
+                                          for (int i = 0;
+                                              i < checkboxeslist.length;
+                                              i++) {
+                                            if (!checkboxeslist[i].checked) {
+                                              uncheckedid.add(checkboxeslist[i]
+                                                  .id
+                                                  .toString());
+                                            } else {
+                                              checkedid.add(checkboxeslist[i]
+                                                  .id
+                                                  .toString());
+                                            }
+                                          }
+                                          log('click on update');
+                                          print("checkedid");
+                                          print("Calledupdate");
+                                          print("check $checkedid");
+                                          print("uncheck $uncheckedid");
+                                          print(masterareaid);
+                                          print(bloackareaid);
+                                          print("shiftid $shiftid");
+                                          print(
+                                              "shiftid ${GlobalLists.workflowstatuslist[tabindex].masterAreaWiseList[tabindexmain].blockData[indexvalue].shift.toString()}");
+                                          updatedworkflowstatusApi(
+                                              GlobalLists
+                                                  .workflowstatuslist[tabindex]
+                                                  .masterAreaWiseList[
+                                                      tabindexmain]
+                                                  .blockData[indexvalue]
+                                                  .shift
+                                                  .toString(),
+                                              checkedid,
+                                              uncheckedid,
+                                              masterareaid,
+                                              bloackareaid);
+                                        },
+                                        borderRadius: BorderRadius.circular(5),
+                                        colorvalue: customcolor.blue,
+                                        child: Text('Update'),
+                                      ):Container(),
                               ],
-                            ),
-                
+                            ):Container(),
+
                       //22april
                       isExpanded
                           ? SizedBox(
@@ -4238,12 +4940,12 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   : checkboxeslist.length <= 2
                       ? SizeConfig.blockSizeHorizontal * 40
                       : SizeConfig.blockSizeHorizontal * 70,
-                     // operation
+              // operation
               child: Scrollbar(
                 thumbVisibility: true,
-                // isAlwaysShown: true,
+                // thumbVisibility: true,
                 child: Padding(
-                 padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(right: 6),
                   child: ListView(
                     shrinkWrap: true,
                     physics: ScrollPhysics(),
@@ -4279,9 +4981,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Container(
-                                              width:
-                                                  SizeConfig.blockSizeHorizontal *
-                                                      60,
+                                              width: SizeConfig
+                                                      .blockSizeHorizontal *
+                                                  60,
                                               child: Text(
                                                 checkboxeslist[indexcheck]
                                                     .pointerName,
@@ -4306,7 +5008,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                               true
                                                           ? customcolor.green
                                                           : customcolor.red,
-                                                  fontWeight: FontWeight.normal),
+                                                  fontWeight:
+                                                      FontWeight.normal),
                                             ),
                                           ],
                                         ),
@@ -4331,7 +5034,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                         contentPadding: EdgeInsets.zero,
                                         dense: true,
                                         title: Text(
-                                          checkboxeslist[indexcheck].pointerName,
+                                          checkboxeslist[indexcheck]
+                                              .pointerName,
                                           style: AppFonts.headerStyle(
                                               fontSize: 14,
                                               color: checkboxeslist[indexcheck]
@@ -4341,15 +5045,16 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                   : Colors.black,
                                               fontWeight: FontWeight.normal),
                                         ),
-                                        value: checkboxeslist[indexcheck].checked,
-                                        onChanged: (value) {
+                                        value:
+                                            checkboxeslist[indexcheck].checked,
+                                        onChanged:isUpdateButtonVisible? (value) {
                                           setStateDialgoue(() {
                                             checkboxeslist[indexcheck].checked =
                                                 value!;
                                             print("multipleSelectedlist");
                                             print(multipleSelectedlist);
                                             print(checkboxeslist[indexcheck]);
-                
+
                                             if (multipleSelectedlist.contains(
                                                 checkboxeslist[indexcheck])) {
                                               multipleSelectedlist.remove(
@@ -4359,12 +5064,12 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                   checkboxeslist[indexcheck]);
                                             }
                                           });
-                                        },
+                                        }:null,
                                       )),
                                 ),
                               ),
                       ),
-                
+
                       (role == GlobalLists.headrole ||
                               role == GlobalLists.reginalmanagerrole ||
                               role == GlobalLists.clientrole ||
@@ -4376,7 +5081,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                 SizedBox(
                                   height: 15,
                                 ),
-                                MyElevatedButton(
+                             isUpdateButtonVisible?    MyElevatedButton(
                                   setStyleStr: 'home',
                                   width: 120,
                                   height: SizeConfig.blockSizeVertical * 6,
@@ -4393,11 +5098,11 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                         i < checkboxeslist.length;
                                         i++) {
                                       if (!checkboxeslist[i].checked) {
-                                        uncheckedid
-                                            .add(checkboxeslist[i].id.toString());
+                                        uncheckedid.add(
+                                            checkboxeslist[i].id.toString());
                                       } else {
-                                        checkedid
-                                            .add(checkboxeslist[i].id.toString());
+                                        checkedid.add(
+                                            checkboxeslist[i].id.toString());
                                       }
                                     }
                                     print("checkedid");
@@ -4416,7 +5121,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                   borderRadius: BorderRadius.circular(5),
                                   colorvalue: customcolor.blue,
                                   child: Text('Update'),
-                                ),
+                                ):Container(),
                               ],
                             ),
                       SizedBox(
@@ -4548,10 +5253,10 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                   : checkboxeslist.length <= 2
                       ? SizeConfig.blockSizeHorizontal * 40
                       : SizeConfig.blockSizeHorizontal * 70,
-                      //new opertaion
+              //new opertaion
               child: Scrollbar(
                 thumbVisibility: true,
-                // isAlwaysShown: true,
+                // thumbVisibility: true,
                 child: Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: ListView(
@@ -4589,9 +5294,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Container(
-                                              width:
-                                                  SizeConfig.blockSizeHorizontal *
-                                                      60,
+                                              width: SizeConfig
+                                                      .blockSizeHorizontal *
+                                                  60,
                                               child: Text(
                                                 checkboxeslist[indexcheck]
                                                     .pointerName,
@@ -4616,7 +5321,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                               true
                                                           ? customcolor.green
                                                           : customcolor.red,
-                                                  fontWeight: FontWeight.normal),
+                                                  fontWeight:
+                                                      FontWeight.normal),
                                             ),
                                           ],
                                         ),
@@ -4641,7 +5347,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                         contentPadding: EdgeInsets.zero,
                                         dense: true,
                                         title: Text(
-                                          checkboxeslist[indexcheck].pointerName,
+                                          checkboxeslist[indexcheck]
+                                              .pointerName,
                                           style: AppFonts.headerStyle(
                                               fontSize: 14,
                                               color: checkboxeslist[indexcheck]
@@ -4651,15 +5358,16 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                   : Colors.black,
                                               fontWeight: FontWeight.normal),
                                         ),
-                                        value: checkboxeslist[indexcheck].checked,
-                                        onChanged: (value) {
+                                        value:
+                                            checkboxeslist[indexcheck].checked,
+                                        onChanged:isUpdateButtonVisible? (value) {
                                           setStateDialgoue(() {
                                             checkboxeslist[indexcheck].checked =
                                                 value!;
                                             print("multipleSelectedlist");
                                             print(multipleSelectedlist);
                                             print(checkboxeslist[indexcheck]);
-                
+
                                             if (multipleSelectedlist.contains(
                                                 checkboxeslist[indexcheck])) {
                                               multipleSelectedlist.remove(
@@ -4669,12 +5377,12 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                                   checkboxeslist[indexcheck]);
                                             }
                                           });
-                                        },
+                                        }:null,
                                       )),
                                 ),
                               ),
                       ),
-                
+
                       (role == GlobalLists.headrole ||
                               role == GlobalLists.reginalmanagerrole ||
                               role == GlobalLists.clientrole ||
@@ -4703,11 +5411,11 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                         i < checkboxeslist.length;
                                         i++) {
                                       if (!checkboxeslist[i].checked) {
-                                        uncheckedid
-                                            .add(checkboxeslist[i].id.toString());
+                                        uncheckedid.add(
+                                            checkboxeslist[i].id.toString());
                                       } else {
-                                        checkedid
-                                            .add(checkboxeslist[i].id.toString());
+                                        checkedid.add(
+                                            checkboxeslist[i].id.toString());
                                       }
                                     }
                                     print("checkedid");
@@ -4746,7 +5454,6 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
   //new manager
 
   _buildChoiceList() {
-    print("calling buildChoiceList");
     List<Widget> choices = [];
     listtab.forEachIndexed((item, value) {
       choices.add(Container(
@@ -4757,7 +5464,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
               item.masterAreaName),
 
           labelStyle: AppFonts.headerStyle(
-              fontSize: 14.sp,
+              fontSize: ResponsiveFlutter.of(context).fontSize(1.6),
               color: tag == value
                   ? customcolor.white
                   : item.status == "Pending"
@@ -4805,7 +5512,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
         child: ChoiceChip(
           label: Text(item.masterAreaName),
           labelStyle: AppFonts.headerStyle(
-              fontSize: 14.sp,
+              fontSize: ResponsiveFlutter.of(context).fontSize(1.6),
               color: tag == value
                   ? customcolor.white
                   : item.status == "Pending"
@@ -4853,7 +5560,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
         child: ChoiceChip(
           label: Text(item.masterAreaName),
           labelStyle: AppFonts.headerStyle(
-              fontSize: 14.sp,
+              fontSize: ResponsiveFlutter.of(context).fontSize(1.6),
               color: tag == value
                   ? customcolor.white
                   : item.status == "Pending"
@@ -4963,7 +5670,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
     // ShowDialogs.showLoadingDialog(context, _keyLoader);
 
     setState(() {
-      GlobalLists.isWorflowLoading.value=true;
+      GlobalLists.isWorflowLoading.value = true;
       // GlobalLists.workflowstatuslist = [];
     });
 
@@ -4982,12 +5689,13 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
         if (resp.status != 1) {
           setState(() => isdataloaded = false);
-          GlobalLists.isWorflowLoading.value=false;
+          GlobalLists.isWorflowLoading.value = false;
           // Navigator.of(context).pop();
           return;
         }
 
         setState(() {
+          GlobalLists.isShiftActive=resp.shiftActive;
           GlobalLists.workflowstatuslist = resp.data;
           GlobalLists.shiftavaialble = resp.shiftActive.toString();
           GlobalLists.multidays = resp.multidays;
@@ -5043,14 +5751,14 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
           'workflowstatusApi',
           jsonEncode(resp.toJson()),
         );
- setState(() {
-           GlobalLists.isWorflowLoading.value=false;
+        setState(() {
+          GlobalLists.isWorflowLoading.value = false;
         });
         // Navigator.of(context).pop();
       },
       (error) {
         setState(() {
-           GlobalLists.isWorflowLoading.value=false;
+          GlobalLists.isWorflowLoading.value = false;
         });
         // Navigator.of(context).pop();
         ShowDialogs.showToast("Server Not Responding");
@@ -5085,9 +5793,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
     }
 
     if (status1) {
-     
- setState(() {
-        GlobalLists.isWorflowLoading.value=true;
+      setState(() {
+        GlobalLists.isWorflowLoading.value = true;
       });
       APIManager().apiRequest(context, API.operationalworkflow,
           (response) async {
@@ -5117,13 +5824,13 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
             );
 
             isdataloaded = true;
-             setState(() {
-        GlobalLists.isWorflowLoading.value=false;
-      });
+            setState(() {
+              GlobalLists.isWorflowLoading.value = false;
+            });
             // Navigator.of(context).pop();
           });
 
-          //      Cache response locally
+          // ✅ Cache response locally
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             'cached_operationalworkflow',
@@ -5134,9 +5841,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
             isdataloaded = false;
           });
           // Navigator.of(context).pop();
-           setState(() {
-        GlobalLists.isWorflowLoading.value=false;
-      });
+          setState(() {
+            GlobalLists.isWorflowLoading.value = false;
+          });
         }
       }, (error) {
         print('ERR msg is $error');
@@ -5229,7 +5936,6 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
     }
   }
 
- 
   //new manager apis
   operationlManagerworkflowstatusApi() async {
     var status1 = await ConnectionDetector.checkInternetConnection();
@@ -5241,7 +5947,6 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
     };
 
     if (status1) {
-      
       setState(() {
         GlobalLists.isWorflowLoading.value = true;
       });
@@ -5337,9 +6042,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
       if (status1) {
         setState(() {
-          GlobalLists.isWorflowLoading.value=true;
+          GlobalLists.isWorflowLoading.value = true;
         });
-      
+
         setState(() {
           GlobalLists.detailopeermainlisttab = [];
         });
@@ -5359,46 +6064,46 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
                   updateTabData(resp);
                   isdataloaded = true;
-                   setState(() {
-          GlobalLists.isWorflowLoading.value=false;
-        });
+                  setState(() {
+                    GlobalLists.isWorflowLoading.value = false;
+                  });
                   // Navigator.of(this.context).pop();
                 });
 
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 prefs.setString("workflow_response", jsonEncode(resp.toJson()));
 
-                ///      FIX: Store the entire response, not just `data`
+                /// ✅ FIX: Store the entire response, not just `data`
                 String clientIdKey = client_id;
                 if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
                   GlobalLists.clientDetailsMap[clientIdKey] = [];
                 }
                 GlobalLists.clientDetailsMap[clientIdKey]!
-                    .addAll(resp.data); //      Correct
+                    .addAll(resp.data); // ✅ Correct
 // 👈 FIXED LINE
               } else {
                 setState(() {
                   isdataloaded = true;
                 });
-                 setState(() {
-          GlobalLists.isWorflowLoading.value=false;
-        });
+                setState(() {
+                  GlobalLists.isWorflowLoading.value = false;
+                });
                 // Navigator.of(this.context).pop();
               }
             } catch (e) {
               print("Parsing Error: $e");
-               setState(() {
-          GlobalLists.isWorflowLoading.value=false;
-        });
+              setState(() {
+                GlobalLists.isWorflowLoading.value = false;
+              });
               // Navigator.of(this.context).pop();
               ShowDialogs.showToast("Something went wrong");
             }
           },
           (error) {
             print('ERR msg is $error');
-             setState(() {
-          GlobalLists.isWorflowLoading.value=false;
-        });
+            setState(() {
+              GlobalLists.isWorflowLoading.value = false;
+            });
             // Navigator.of(this.context).pop();
             ShowDialogs.showToast("Server Not Responding");
           },
@@ -5425,13 +6130,13 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
               isdataloaded = true;
             });
 
-            ///      FIX: Add full response object, not just `data`
+            /// ✅ FIX: Add full response object, not just `data`
             String clientIdKey = client_id;
             if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
               GlobalLists.clientDetailsMap[clientIdKey] = [];
             }
             GlobalLists.clientDetailsMap[clientIdKey]!
-                .addAll(resp.data); //      Correct
+                .addAll(resp.data); // ✅ Correct
             // 👈 FIXED LINE
           } catch (e) {
             print("Error reading offline data: $e");
@@ -5444,9 +6149,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
     } catch (e) {
       print("API Exception: $e");
       ShowDialogs.showToast("Unexpected error occurred");
-       setState(() {
-          GlobalLists.isWorflowLoading.value=false;
-        });
+      setState(() {
+        GlobalLists.isWorflowLoading.value = false;
+      });
       // Navigator.of(this.context).pop();
     }
   }
@@ -5508,7 +6213,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
       curve: Curves.easeInOut,
     );
   }
- bool isworkflowUpdated=false;
+
+  bool isworkflowUpdated = false;
   updatedworkflowstatusApi(
     String shiftid,
     List<String> checklistid,
@@ -5529,9 +6235,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 
     if (isOnline) {
       // ShowDialogs.showLoadingDialog(context, _keyLoader);
-setState(() {
-  isworkflowUpdated=true;
-});
+      setState(() {
+        isworkflowUpdated = true;
+      });
       APIManager().apiRequest(
         context,
         API.updatedworkflowstatus,
@@ -5541,10 +6247,10 @@ setState(() {
           if (resp.status == 1) {
             ShowDialogs.showToast(resp.msg);
             // Navigator.of(context).pop();
-setState(() {
-  isworkflowUpdated=false;
-});
-            //      Update local GlobalLists.workflowstatuslist
+            setState(() {
+              isworkflowUpdated = false;
+            });
+            // ✅ Updated local GlobalLists.workflowstatuslist
             for (var area in GlobalLists.workflowstatuslist) {
               if (area.shift.toString() == shiftid) {
                 for (var masterArea in area.masterAreaWiseList) {
@@ -5568,7 +6274,7 @@ setState(() {
               }
             }
 
-            //      Save updated list to SharedPreferences
+            // ✅ Save updated list to SharedPreferences
             await saveWorkflowStatusToPrefs();
 
             Navigator.pushReplacement(
@@ -5587,8 +6293,8 @@ setState(() {
           } else {
             ShowDialogs.showToast(resp.msg);
             setState(() {
-  isworkflowUpdated=false;
-});
+              isworkflowUpdated = false;
+            });
             // Navigator.of(context).pop();
           }
         },
@@ -5608,7 +6314,7 @@ setState(() {
         isMultipart: false,
       );
 
-      //      Update in-memory list
+      // ✅ Updated in-memory list
       for (var area in GlobalLists.workflowstatuslist) {
         if (area.shift.toString() == shiftid) {
           for (var masterArea in area.masterAreaWiseList) {
@@ -5630,7 +6336,7 @@ setState(() {
         }
       }
 
-      //      Save updated list to SharedPreferences
+      // ✅ Save updated list to SharedPreferences
       await saveWorkflowStatusToPrefs();
 
       ShowDialogs.showToast("📴 Offline update saved. UI updated.");
@@ -5671,7 +6377,7 @@ setState(() {
 
     if (existingJson != newJson) {
       await prefs.setString('workflowstatusApi', newJson);
-      print("     workflowstatusApi updated in SharedPreferences");
+      print("✅ workflowstatusApi updated in SharedPreferences");
     } else {
       print("ℹ️ No change detected. Skipping SharedPreferences update.");
     }

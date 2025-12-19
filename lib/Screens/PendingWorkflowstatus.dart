@@ -16,6 +16,7 @@ import 'package:janpro/Utitlity/Dropbutton.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -30,7 +31,7 @@ import 'package:janpro/model/OperationalPrioritylistResponse.dart'
 import 'package:janpro/model/UpdatedworkflowResponse.dart';
 
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 // import 'package:syncfusion_flutter_sliders/sliders.dart';
 
@@ -206,7 +207,8 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                                   child: Text(
                                     "${widget.title}",
                                     style: AppFonts.headerStyle(
-                                        fontSize: 17.sp,
+                                        fontSize: ResponsiveFlutter.of(context)
+                                            .fontSize(2.3),
                                         color: customcolor.title,
                                         fontWeight: FontWeight.normal),
                                   ),
@@ -238,7 +240,9 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                                                 TextAlignVertical.center,
                                             textAlign: TextAlign.center,
                                             style: AppFonts.headerStyle(
-                                                fontSize:14.sp,
+                                                fontSize: ResponsiveFlutter.of(
+                                                        context)
+                                                    .fontSize(1.6),
                                                 color: customcolor.black,
                                                 fontWeight: FontWeight.w300),
                                             readOnly: true,
@@ -402,7 +406,8 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                                       "${widget.title}",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              17.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(2.3),
                                           color: customcolor.title,
                                           fontWeight: FontWeight.normal),
                                     ),
@@ -578,7 +583,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                   child: Text(
                     "Master Area",
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                         color: customcolor.black,
                         fontWeight: FontWeight.w400),
                   ),
@@ -709,7 +714,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                   child: Text(
                     "Master Area",
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                         color: customcolor.black,
                         fontWeight: FontWeight.w400),
                   ),
@@ -774,7 +779,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
           child: Text(
             "Master Blocks",
             style: AppFonts.headerStyle(
-                fontSize: 17.sp,
+                fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                 color: customcolor.black,
                 fontWeight: FontWeight.w400),
           ),
@@ -870,7 +875,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
           child: Text(
             "Master Blocks",
             style: AppFonts.headerStyle(
-                fontSize: 17.sp,
+                fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                 color: customcolor.black,
                 fontWeight: FontWeight.w400),
           ),
@@ -1551,7 +1556,7 @@ setState(() {
         child: ChoiceChip(
           label: Text(item.masterAreaName),
           labelStyle: AppFonts.headerStyle(
-              fontSize: 14.sp,
+              fontSize: ResponsiveFlutter.of(context).fontSize(1.6),
               color: tag == value
                   ? customcolor.white
                   : item.status == "Pending"

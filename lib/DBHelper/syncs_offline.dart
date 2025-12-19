@@ -64,7 +64,7 @@ Future<void> syncOfflineRequests() async {
         if (response.statusCode == 200) {
           await DBHelper.markRequestAsSynced(req['id']);
           await DBHelper.deleteRequest(req['id']);
-          log('     Synced Multipart: $respStr');
+          log('✅ Synced Multipart: $respStr');
         } else {
           log('❌ Error [${response.statusCode}]: $respStr');
 
@@ -87,7 +87,7 @@ Future<void> syncOfflineRequests() async {
         if (response.statusCode == 200) {
           await DBHelper.markRequestAsSynced(req['id']);
           await DBHelper.deleteRequest(req['id']);
-          log('     Synced JSON: ${response.body}');
+          log('✅ Synced JSON: ${response.body}');
         } else {
           log('❌ Error JSON: ${response.statusCode} => ${response.body}');
         }

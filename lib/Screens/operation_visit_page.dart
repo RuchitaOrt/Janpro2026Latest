@@ -6,6 +6,7 @@ import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geocoding/geocoding.dart';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -69,7 +70,7 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
     print("Current Permission Status: $status");
 
     if (status.isGranted) {
-      //      Already granted
+      // ✅ Already granted
       print("Location permission granted");
       getLocation();
     } else if (status.isDenied) {
@@ -146,7 +147,7 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
     getLocation();
   }
 
-Future<Placemark> getLocation() async {
+ Future<Placemark> getLocation() async {
   print("Fetching location...");
 
   // Get current position
@@ -165,13 +166,14 @@ Future<Placemark> getLocation() async {
 
   Placemark first = placemarks.first;
 
-  String lat = position.latitude.toString();
-  String long = position.longitude.toString();
+   lat = position.latitude.toString();
+   long = position.longitude.toString();
 
   print("${first.name} : ${first.street}, ${first.locality}, ${first.country}");
 
   return first;
 }
+ 
   final GlobalKey<ScaffoldState> _scaffoldKey2 = new GlobalKey<ScaffoldState>();
 
   final GlobalKey<State> _submitkeyLoader = GlobalKey<State>();
@@ -265,19 +267,37 @@ Future<Placemark> getLocation() async {
               },
             ),
 
+            // ListTile(
+            //   leading: Icon(Icons.photo_library_outlined),
+            //   title: Text('Choose from Gallery'),
+            //   onTap: () async {
+            //     Navigator.pop(context);
+            //     final result =
+            //         await FilePicker.platform.pickFiles(type: FileType.image);
+            //     if (result != null && result.files.single.path != null) {
+            //       setState(
+            //           () => selectedImage = File(result.files.single.path!));
+            //     }
+            //   },
+            // ),
             ListTile(
-              leading: Icon(Icons.photo_library_outlined),
-              title: Text('Choose from Gallery'),
-              onTap: () async {
-                Navigator.pop(context);
-                final result =
-                    await FilePicker.platform.pickFiles(type: FileType.image);
-                if (result != null && result.files.single.path != null) {
-                  setState(
-                      () => selectedImage = File(result.files.single.path!));
-                }
-              },
-            ),
+  leading: const Icon(Icons.photo_library_outlined),
+  title: const Text('Choose from Gallery'),
+  onTap: () async {
+    Navigator.pop(context);
+
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile =
+        await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        selectedImage = File(pickedFile.path);
+      });
+    }
+  },
+),
+
           ],
         );
       },
@@ -927,7 +947,7 @@ Future<Placemark> getLocation() async {
     print("Site Dropdown Request: $map");
 
     if (status1) {
-      //      Online: Fetch from API
+      // ✅ Online: Fetch from API
       APIManager().apiRequest(context, API.sitedropdown, (response) async {
         SiteDropDown resp = response;
 
@@ -937,7 +957,7 @@ Future<Placemark> getLocation() async {
             GlobalLists.sitedropdown = resp.data ?? [];
           });
 
-          //      Save to local storage
+          // ✅ Save to local storage
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
               'cached_site_dropdown', siteDropDownToJson(resp));

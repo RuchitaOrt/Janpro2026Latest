@@ -18,6 +18,7 @@ import 'package:janpro/Utitlity/FormTextField.dart';
 
 import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/LocationService.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -37,11 +38,12 @@ import 'package:janpro/model/unitGraphAttendanceResponse.dart' as graph;
 import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart' as permishan;
+
 import 'package:janpro/model/UnitsiteMasterResponse.dart' as sitemaster;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dart:math' as math;
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../DBHelper/db_helper.dart';
 import '../const/global.dart';
 import '../model/AddDailyCountResponse.dart';
@@ -273,6 +275,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
     final Map<String, List<dynamic>> groupedByMonth = {};
     for (var shift in _attendanceRosterData) {
+      log('shift.employeeList ${shift.shiftName}');
       for (var emp in shift.employeeList) {
         for (var att in emp.attendData) {
           final monthYear = getMonthYear(att.date);
@@ -310,6 +313,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             final allDates = <String>{};
 
             for (var shift in shifts) {
+              // log('shift.employeeList ${shift.shiftName}');
               for (var emp in shift.employeeList) {
                 for (var att in emp.attendData) {
                   if (getMonthYear(att.date) == selectedMonth) {
@@ -320,6 +324,137 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             }
 
             final sortedDates = allDates.toList()..sort();
+
+            // Function to show reason dialog
+            void _showReasonDialog({bool isMultiSelect = false}) {
+              final reasonController = TextEditingController();
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Row(
+                    children: [
+                      Icon(Icons.report_problem, color: Colors.redAccent),
+                      SizedBox(width: 8),
+                      Text(
+                        "Mark as Absent",
+                        style: TextStyle(
+                          fontFamily: AppFonts.semibold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isMultiSelect
+                            ? "Please enter a reason for marking ${selectedCells.length} employee(s) as absent."
+                            : "Please enter a reason for marking this employee as absent.",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: AppFonts.regular,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: reasonController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: "Enter reason here...",
+                          hintStyle: TextStyle(
+                            fontFamily: AppFonts.regular,
+                            color: Colors.grey[500],
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: customcolor.blue),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actionsPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontFamily: AppFonts.regular,
+                          color: customcolor.darkgrey,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        log("Reason: ${reasonController.text}");
+                        log("Selected cells: $selectedCells");
+                        // Here you would typically submit the data
+                        setState(() {
+                          selectedCells.clear();
+                          multiSelectMode = false;
+                        });
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: customcolor.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                      ),
+                      child: Text(
+                        "Submit",
+                        style: TextStyle(
+                          fontFamily: AppFonts.semibold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Function to handle single tap
+            void _handleSingleTap(String key, AttendanceData? day) {
+              final isAlreadyAbsent = day?.attendanceStatus == 'no';
+
+              if (isAlreadyAbsent) {
+                setState(() {
+                  selectedCells.remove(key);
+                });
+              } else {
+                setState(() {
+                  selectedCells.clear();
+                  selectedCells.add(key);
+                });
+                // Then show reason dialog
+              }
+              _showReasonDialog(isMultiSelect: false);
+            }
 
             return Scaffold(
               backgroundColor: Colors.black54,
@@ -400,18 +535,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                   if (val == null) return;
                                   setState(() {
                                     selectedMonth = val;
-                                    print("selectedMonth $selectedMonth");
-                                    final parts = val.split(' ');
-                                    month =
-                                        monthMap[parts[0]] ??
-                                        '01'; // Default to '01'
-                                    year = parts[1];
-
-                                    print("month: $month, year: $year");
-                                    final shiftsForMonth =
-                                        groupedByMonth[selectedMonth] ?? [];
-                                    selectedShift = shiftsForMonth.isNotEmpty
-                                        ? shiftsForMonth[0]
+                                    selectedShift =
+                                        groupedByMonth[val]?.isNotEmpty == true
+                                        ? groupedByMonth[val]![0]
                                         : null;
                                   });
                                 },
@@ -472,6 +598,54 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                           ),
                         ),
                       const SizedBox(height: 16),
+
+                      if (multiSelectMode)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: customcolor.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Multi-select mode: ${selectedCells.length} selected",
+                                style: TextStyle(
+                                  fontFamily: AppFonts.semibold,
+                                  color: customcolor.blue,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.clear_all, size: 20),
+                                    color: customcolor.blue,
+                                    onPressed: () {
+                                      setState(() {
+                                        selectedCells.clear();
+                                        multiSelectMode = false;
+                                      });
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.done, size: 20),
+                                    color: customcolor.blue,
+                                    onPressed: () {
+                                      if (selectedCells.isNotEmpty) {
+                                        _showReasonDialog(isMultiSelect: true);
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
                       if (selectedShift != null)
                         Expanded(
                           child: SingleChildScrollView(
@@ -562,25 +736,36 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                         ...selectedShift.employeeList.map(
                                           (emp) => Row(
                                             children: sortedDates.map((date) {
-                                              final day = emp.attendData
-                                                  .firstWhere(
-                                                    (d) => d.date == date,
-                                                    orElse: () => null,
-                                                  );
+                                              AttendanceData? day;
+
+                                              try {
+                                                day = emp.attendData.firstWhere(
+                                                  (d) => d.date == date,
+                                                );
+                                              } catch (e) {
+                                                log(
+                                                  'No attendance data for ${emp.empName} on $date',
+                                                );
+                                                day = null;
+                                              }
+
                                               final key =
-                                                  '${emp.empName}|$date|${day.attendanceStatus}';
+                                                  '${emp.empName},$date,${day?.attendanceStatus ?? ''}';
                                               final selected = selectedCells
                                                   .contains(key);
                                               final isFuture = DateTime.parse(
                                                 date,
                                               ).isAfter(DateTime.now());
-
+                                              final canEdit =
+                                                  role ==
+                                                      GlobalLists.clientrole &&
+                                                  !isFuture;
                                               return GestureDetector(
                                                 onLongPress: () {
-                                                  if (role ==
-                                                          GlobalLists
-                                                              .clientrole &&
-                                                      isFuture == false) {
+                                                  log(
+                                                    'Long-pressed cell: $key, canEdit: $canEdit',
+                                                  );
+                                                  if (canEdit) {
                                                     setState(() {
                                                       multiSelectMode = true;
                                                       selected
@@ -591,291 +776,25 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                             );
                                                     });
                                                   }
-                                                  log(selectedCells.toString());
                                                 },
                                                 onTap: () {
-                                                  print('on Tap');
-                                                  if (role ==
-                                                          GlobalLists
-                                                              .clientrole &&
-                                                      isFuture == false) {
-                                                    print('condition');
-                                                    if (multiSelectMode) {
-                                                      setState(() {
-                                                        selected
-                                                            ? selectedCells
-                                                                  .remove(key)
-                                                            : selectedCells.add(
-                                                                key,
-                                                              );
-                                                      });
-                                                      final reasonController =
-                                                          TextEditingController();
-                                                      showDialog(
-                                                        context: context,
-                                                        builder: (_) => AlertDialog(
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  16,
-                                                                ),
-                                                          ),
-                                                          title: Row(
-                                                            children: [
-                                                              Icon(
-                                                                Icons
-                                                                    .report_problem,
-                                                                color: Colors
-                                                                    .redAccent,
-                                                              ),
-                                                              SizedBox(
-                                                                width: 8,
-                                                              ),
-                                                              Text(
-                                                                "Mark as Absent",
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          content: Column(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              Text(
-                                                                "Please enter a reason for marking this employee as absent.",
-                                                                style: TextStyle(
-                                                                  fontSize: 14,
-                                                                  color: Colors
-                                                                      .grey[700],
-                                                                ),
-                                                              ),
-                                                              SizedBox(
-                                                                height: 16,
-                                                              ),
-                                                              TextField(
-                                                                controller:
-                                                                    reasonController,
-                                                                maxLines: 3,
-                                                                decoration: InputDecoration(
-                                                                  hintText:
-                                                                      "Enter reason here...",
-                                                                  filled: true,
-                                                                  fillColor: Colors
-                                                                      .grey[100],
-                                                                  contentPadding:
-                                                                      EdgeInsets.symmetric(
-                                                                        vertical:
-                                                                            12,
-                                                                        horizontal:
-                                                                            12,
-                                                                      ),
-                                                                  border: OutlineInputBorder(
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                          12,
-                                                                        ),
-                                                                    borderSide: BorderSide(
-                                                                      color: Colors
-                                                                          .grey
-                                                                          .shade300,
-                                                                    ),
-                                                                  ),
-                                                                  focusedBorder: OutlineInputBorder(
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                          12,
-                                                                        ),
-                                                                    borderSide:
-                                                                        BorderSide(
-                                                                          color:
-                                                                              Colors.blueAccent,
-                                                                        ),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          actionsPadding:
-                                                              EdgeInsets.symmetric(
-                                                                horizontal: 16,
-                                                                vertical: 8,
-                                                              ),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () =>
-                                                                  Navigator.pop(
-                                                                    context,
-                                                                  ),
-                                                              child: Text(
-                                                                "Cancel",
-                                                              ),
-                                                            ),
-                                                            ElevatedButton(
-                                                              onPressed: () {
-                                                                log(
-                                                                  "Reason: ${reasonController.text}",
-                                                                );
-                                                                Navigator.pop(
-                                                                  context,
-                                                                );
-                                                              },
-                                                              style: ElevatedButton.styleFrom(
-                                                                backgroundColor:
-                                                                    customcolor
-                                                                        .blue,
-                                                                shape: RoundedRectangleBorder(
-                                                                  borderRadius:
-                                                                      BorderRadius.circular(
-                                                                        8,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              child: Text(
-                                                                "Submit",
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    } else {
-                                                      if (selected) {
-                                                        setState(
-                                                          () => selectedCells
-                                                              .remove(key),
-                                                        );
-                                                      } else {
-                                                        final reasonController =
-                                                            TextEditingController();
-                                                        showDialog(
-                                                          context: context,
-                                                          builder: (_) => AlertDialog(
-                                                            shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    16,
-                                                                  ),
-                                                            ),
-                                                            title: Row(
-                                                              children: [
-                                                                Icon(
-                                                                  Icons
-                                                                      .report_problem,
-                                                                  color: Colors
-                                                                      .redAccent,
-                                                                ),
-                                                                SizedBox(
-                                                                  width: 8,
-                                                                ),
-                                                                Text(
-                                                                  "Mark as Absent",
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            content: Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                Text(
-                                                                  "Please enter a reason for marking this employee as absent.",
-                                                                  style: TextStyle(
-                                                                    fontSize:
-                                                                        14,
-                                                                    color: Colors
-                                                                        .grey[700],
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                  height: 16,
-                                                                ),
-                                                                TextField(
-                                                                  controller:
-                                                                      reasonController,
-                                                                  maxLines: 3,
-                                                                  decoration: InputDecoration(
-                                                                    hintText:
-                                                                        "Enter reason here...",
-                                                                    filled:
-                                                                        true,
-                                                                    fillColor:
-                                                                        Colors
-                                                                            .grey[100],
-                                                                    contentPadding: EdgeInsets.symmetric(
-                                                                      vertical:
-                                                                          12,
-                                                                      horizontal:
-                                                                          12,
-                                                                    ),
-                                                                    border: OutlineInputBorder(
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                            12,
-                                                                          ),
-                                                                      borderSide: BorderSide(
-                                                                        color: Colors
-                                                                            .grey
-                                                                            .shade300,
-                                                                      ),
-                                                                    ),
-                                                                    focusedBorder: OutlineInputBorder(
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                            12,
-                                                                          ),
-                                                                      borderSide: BorderSide(
-                                                                        color: Colors
-                                                                            .blueAccent,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            actionsPadding:
-                                                                EdgeInsets.symmetric(
-                                                                  horizontal:
-                                                                      16,
-                                                                  vertical: 8,
-                                                                ),
-                                                            actions: [
-                                                              TextButton(
-                                                                onPressed: () =>
-                                                                    Navigator.pop(
-                                                                      context,
-                                                                    ),
-                                                                child: Text(
-                                                                  "Cancel",
-                                                                ),
-                                                              ),
-                                                              ElevatedButton(
-                                                                onPressed: () {
-                                                                  log(
-                                                                    "Reason: ${reasonController.text}",
-                                                                  );
-                                                                  Navigator.pop(
-                                                                    context,
-                                                                  );
-                                                                },
-                                                                style: ElevatedButton.styleFrom(
-                                                                  backgroundColor:
-                                                                      customcolor
-                                                                          .blue,
-                                                                  shape: RoundedRectangleBorder(
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                          8,
-                                                                        ),
-                                                                  ),
-                                                                ),
-                                                                child: Text(
-                                                                  "Submit",
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        );
-                                                      }
-                                                    }
+                                                  log('ontap modeOn: $key');
+
+                                                  if (!canEdit) return;
+
+                                                  if (multiSelectMode) {
+                                                    // In multi-select mode, just toggle selection
+                                                    setState(() {
+                                                      selected
+                                                          ? selectedCells
+                                                                .remove(key)
+                                                          : selectedCells.add(
+                                                              key,
+                                                            );
+                                                    });
+                                                  } else {
+                                                    // Single tap: handle single tap
+                                                    _handleSingleTap(key, day);
                                                   }
                                                 },
                                                 child: Container(
@@ -908,6 +827,18 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                           ? Colors.red
                                                           : Colors.grey[300],
                                                       shape: BoxShape.circle,
+                                                      border:
+                                                          //  multiSelectMode
+                                                          //     ?
+                                                          Border.all(
+                                                            color: selected
+                                                                ? customcolor
+                                                                      .blue
+                                                                : Colors
+                                                                      .transparent,
+                                                            width: 2,
+                                                          ),
+                                                      // : null,
                                                     ),
                                                     alignment: Alignment.center,
                                                     child: Text(
@@ -952,51 +883,28 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                           ),
                         ),
 
-                      if (selectedCells.isNotEmpty)
+                      if (selectedCells.isNotEmpty && multiSelectMode)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: ElevatedButton(
                             onPressed: () {
-                              final reasonController = TextEditingController();
-                              showDialog(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  title: Text("Submit Reason for Absent"),
-                                  content: TextField(
-                                    controller: reasonController,
-                                    maxLines: 3,
-                                    decoration: InputDecoration(
-                                      hintText: "Enter reason",
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text("Cancel"),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        log(
-                                          "Submit reason for selected: \$selectedCells",
-                                        );
-                                        log(
-                                          "Reason: \${reasonController.text}",
-                                        );
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text("Submit"),
-                                    ),
-                                  ],
-                                ),
-                              );
+                              _showReasonDialog(isMultiSelect: true);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: customcolor.blue,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
+                              minimumSize: Size(double.infinity, 48),
                             ),
-                            child: const Text("Submit"),
+                            child: Text(
+                              "Submit",
+                              style: TextStyle(
+                                fontFamily: AppFonts.semibold,
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                     ],
@@ -1069,7 +977,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         _locationMessage =
             "Latitude: ${position.latitude}, Longitude: ${position.longitude}";
 
-   
+        print(_locationMessage);
       });
     } catch (e) {
       // setState(() {
@@ -1082,18 +990,19 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   grantPermission() async {
     var status = await permishan.Permission.location.status;
- 
+    print("status");
+    print(status);
     if (status.isGranted) {
       getLocation();
     } else if (status.isPermanentlyDenied) {
-   
+      print("isUndetermined");
       //  ShowDialogs.showToast(
       //                       "Please Allow Your Location Permission From Setting  To Add your Attendance");
       getLocation();
       //await Permission.location.request();
     } else {
       // getLocation();
-  
+      print("status1");
       permishan.openAppSettings();
       //locatedCountryCode = null;
       //await Permission.location.request();
@@ -1303,7 +1212,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                           child: Text(
                                             "ATTENDANCE",
                                             style: AppFonts.headerStyle(
-                                              fontSize: 17.sp,
+                                              fontSize: ResponsiveFlutter.of(
+                                                context,
+                                              ).fontSize(2.3),
                                               color: customcolor.black,
                                               fontWeight: FontWeight.w300,
                                             ),
@@ -1360,17 +1271,19 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                     .center,
                                                             textAlign: TextAlign
                                                                 .center,
-                                                            style:
-                                                                AppFonts.headerStyle(
-                                                                  fontSize:
-                                                                      14.sp,
-                                                                  color:
-                                                                      customcolor
-                                                                          .black,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w300,
-                                                                ),
+                                                            style: AppFonts.headerStyle(
+                                                              fontSize:
+                                                                  ResponsiveFlutter.of(
+                                                                    context,
+                                                                  ).fontSize(
+                                                                    1.6,
+                                                                  ),
+                                                              color: customcolor
+                                                                  .black,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w300,
+                                                            ),
                                                             readOnly: true,
                                                             onTap: () async {
                                                               DateTime?
@@ -1402,7 +1315,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                         .datecontroller
                                                                         .text =
                                                                     datefrom;
-                                                            
+                                                                print(
+                                                                  GlobalLists
+                                                                      .datecontroller
+                                                                      .text,
+                                                                );
                                                                 setState(
                                                                   () => selectedDateTime =
                                                                       pickedDate,
@@ -1544,8 +1461,24 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       ],
                                     ),
 
+                                    SizedBox(height: 10),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        _fetchAttendanceRoster();
+                                      },
+                                      child: Text('View Attendance Roster'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: customcolor.blue,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
                                     //workflow
-                                    SizedBox(height: 20),
+                                    // SizedBox(height: 10),
                                     unitmodule(),
                                   ],
                                 ),
@@ -1614,7 +1547,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                             child: Text(
                                               "ATTENDANCE",
                                               style: AppFonts.headerStyle(
-                                                fontSize: 17.sp,
+                                                fontSize: ResponsiveFlutter.of(
+                                                  context,
+                                                ).fontSize(2.3),
                                                 color: customcolor.black,
                                                 fontWeight: FontWeight.w300,
                                               ),
@@ -1672,7 +1607,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                         .center,
                                                                 style: AppFonts.headerStyle(
                                                                   fontSize:
-                                                                      17.sp,
+                                                                      ResponsiveFlutter.of(
+                                                                        context,
+                                                                      ).fontSize(
+                                                                        1.6,
+                                                                      ),
                                                                   color:
                                                                       customcolor
                                                                           .black,
@@ -1849,7 +1788,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     GlobalLists.mainlisttab.length > 0
                                         ? Wrap(
                                             children:
-                                                _buildChoicemainList(), //      correct usage
+                                                _buildChoicemainList(), // ✅ correct usage
                                           )
                                         : Container(),
                                     //workflow
@@ -1945,7 +1884,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                         .ellipsis,
                                                                 style: AppFonts.headerStyle(
                                                                   fontSize:
-                                                                      17.sp,
+                                                                      ResponsiveFlutter.of(
+                                                                        context,
+                                                                      ).fontSize(
+                                                                        2.5,
+                                                                      ),
                                                                   color: customcolor
                                                                       .textblue,
                                                                   fontWeight:
@@ -2002,6 +1945,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                 ? GestureDetector(
                                                                     onTap: () {
                                                                       showStaffCountBottomSheet(
+                                                                        GlobalLists
+                                                                            .shiftid,
                                                                         context,
                                                                         GlobalLists
                                                                             .attendancedata
@@ -2129,7 +2074,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 shrinkWrap: true,
                                 physics: ScrollPhysics(),
                                 children:
-                                    _buildChoicemainList(), //      now returns List<Widget>
+                                    _buildChoicemainList(), // ✅ now returns List<Widget>
                               ),
                             ),
                           )
@@ -2170,7 +2115,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                             textAlign: TextAlign.start,
                             overflow: TextOverflow.ellipsis,
                             style: AppFonts.headerStyle(
-                              fontSize: 17.sp,
+                              fontSize: ResponsiveFlutter.of(
+                                context,
+                              ).fontSize(2),
                               color: customcolor.title,
                               fontWeight: FontWeight.normal,
                             ),
@@ -2224,7 +2171,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       textAlign: TextAlign.start,
                                       overflow: TextOverflow.ellipsis,
                                       style: AppFonts.headerStyle(
-                                        fontSize: 20.sp,
+                                        fontSize: ResponsiveFlutter.of(
+                                          context,
+                                        ).fontSize(2.5),
                                         color: customcolor.textblue,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -2362,7 +2311,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         textAlign: TextAlign.start,
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.headerStyle(
-                          fontSize: 17.sp,
+                          fontSize: ResponsiveFlutter.of(context).fontSize(2),
                           color: customcolor.title,
                           fontWeight: FontWeight.normal,
                         ),
@@ -3006,18 +2955,13 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 "Please Enter Valid Mobile No",
                               );
                             } else {
-                              
                               addattendanceApi();
                             }
                           } else {
                             // Navigator.pop(context);
-                            log("Checking location before adding attendance");
-                             if (lat == null || long == null) {
+                            if (lat == null || long == null) {
                               grantPermission();
-                               log("Latitude: $lat, Longitude: $long"); 
-                            }
-                            
-                           else if (namecontroller.text.isEmpty) {
+                            } else if (namecontroller.text.isEmpty) {
                               ShowDialogs.showToast("Please Enter Name");
                             } else if (mobilecontroller.text.isEmpty) {
                               ShowDialogs.showToast("Please Enter Mobile No");
@@ -3026,7 +2970,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 "Please Enter Valid Mobile No",
                               );
                             } else {
-                              log("Calling addattendanceApi c");                           
+                              print("RUCHIADD");
                               addattendanceApi();
                             }
                           }
@@ -3163,7 +3107,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             "Offline: Deleted from local cache & saved delete request.",
           );
         } catch (e) {
-         
+          print("❌ Error updating offline cache: $e");
           ShowDialogs.showToast("Failed to delete offline data");
         }
       } else {
@@ -3300,7 +3244,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         API.unitsitemaster,
         (response) async {
           sitemaster.UnitsiteMasterResponse resp = response;
-       
+          print('called API ${resp}');
           if (resp.status == "success") {
             setState(() {
               GlobalLists.sitemasterlist = resp.data;
@@ -3313,7 +3257,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           }
         },
         (error) {
-     
+          print('ERR msg is $error');
           //  Navigator.of(this.context).pop();
         },
         false,
@@ -3354,7 +3298,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               ? ""
                               : employeelist[index].name,
                           style: AppFonts.headerStyle(
-                            fontSize: 17.sp,
+                            fontSize: ResponsiveFlutter.of(
+                              context,
+                            ).fontSize(2.3),
                             color: customcolor.black,
                             fontWeight: FontWeight.w500,
                           ),
@@ -3362,8 +3308,12 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                       ),
                       GestureDetector(
                         onTap: () {
+                          print("PRINT DELETE");
                           if (GlobalLists.attendance_delete_permission ==
                               false) {
+                            print(
+                              "PRINT DELETE ${GlobalLists.attendance_delete_permission}",
+                            );
                             ShowDialogs.showToast('No Active Shift');
                           } else {
                             ShowDialogs.showConfirmDialog(
@@ -3413,7 +3363,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 Text(
                                   "Mobile",
                                   style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(
+                                      context,
+                                    ).fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -3422,7 +3374,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 Text(
                                   employeelist[index].contact,
                                   style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(
+                                      context,
+                                    ).fontSize(1.7),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -3436,7 +3390,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 Text(
                                   "Login Timing",
                                   style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(
+                                      context,
+                                    ).fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -3445,7 +3401,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                 Text(
                                   "${employeelist[index].loginTime}",
                                   style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(
+                                      context,
+                                    ).fontSize(1.7),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -3491,7 +3449,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                       child: Text(
                         employee.name,
                         style: AppFonts.headerStyle(
-                          fontSize: 17.sp,
+                          fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
                           color: customcolor.black,
                           fontWeight: FontWeight.w500,
                         ),
@@ -3501,18 +3459,21 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         ? Container()
                         : GestureDetector(
                             onTap: () {
-                              if (!delete_permission) {
-                                ShowDialogs.showToast('No Active Shift');
-                              } else {
-                                ShowDialogs.showConfirmDialog(
-                                  context,
-                                  "Delete",
-                                  "Are you sure you want to delete this attendance?",
-                                  () {
-                                    deleteattendanceApi(employee.id.toString());
-                                  },
-                                );
-                              }
+                              print("delete_permission ${delete_permission}");
+
+                              //COMMENTED AS DISCUSSED WITH SUSHMA16 DEC 2025
+                              // if (delete_permission==false) {
+                              //   ShowDialogs.showToast('No Active Shift');
+                              // } else {
+                              ShowDialogs.showConfirmDialog(
+                                context,
+                                "Delete",
+                                "Are you sure you want to delete this attendance?",
+                                () {
+                                  deleteattendanceApi(employee.id.toString());
+                                },
+                              );
+                              // }
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -3616,7 +3577,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   //                         employeelist[index].name,
   //                         style: AppFonts.headerStyle(
   //                             fontSize:
-  //                                 17.sp,
+  //                                 ResponsiveFlutter.of(context).fontSize(2.3),
   //                             color: customcolor.black,
   //                             fontWeight: FontWeight.w500),
   //                       ),
@@ -3796,7 +3757,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               attendencelistResponseToJson(resp),
             );
 
-            //      Save JSON to SharedPreferences
+            // ✅ Save JSON to SharedPreferences
             //29OctRUCHI
             setState(() {
               isattendanceLoadin = false;
@@ -3867,7 +3828,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
           ShowDialogs.showToast("Offline attendance data loaded");
         } catch (e) {
-          print("     Error parsing cached attendance: $e");
+          print("❌ Error parsing cached attendance: $e");
           ShowDialogs.showToast("Failed to load offline data");
         }
       } else {
@@ -3877,7 +3838,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   }
 
   unitattendanceApi() async {
-    print('unitattendanceApi called');
     var status1 = await ConnectionDetector.checkInternetConnection();
     final prefs = await SharedPreferences.getInstance();
 
@@ -3936,8 +3896,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           }
         },
         (error) {
-          // Navigator.of(context).pop();
-          log('API error checking : $error');
+          Navigator.of(context).pop();
+          print('API error: $error');
           ShowDialogs.showToast("API failed. Loading offline...");
           _loadCachedUnitAttendance(prefs, cacheKey);
         },
@@ -4105,8 +4065,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   }
 
   Future<Placemark> getLocation() async {
-
-
     // Request permission if needed
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -4126,8 +4084,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
     var first = placemarks.first;
 
-     lat = position.latitude.toString();
-     long = position.longitude.toString();
+    lat = position.latitude.toString();
+    long = position.longitude.toString();
 
     print(
       "${first.name} : ${first.street}, ${first.locality}, ${first.country}",
@@ -4137,6 +4095,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   }
 
   void showStaffCountBottomSheet(
+    String id,
     BuildContext context,
 
     int initialCount,
@@ -4248,6 +4207,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         // onSubmit(currentCount);
 
                         addNoOFStaffApi(
+                          id,
                           initialCount.toString(),
                           currentCount.toString(),
                           numeratorCount.toString(),
@@ -4273,20 +4233,21 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     );
   }
 
-  addNoOFStaffApi(String noofstaff, String newstaff, String staffcount) async {
+  addNoOFStaffApi(
+    String id,
+    String noofstaff,
+    String newstaff,
+    String staffcount,
+  ) async {
     log(' In side addNoOFStaffApi');
     var status1 = await ConnectionDetector.checkInternetConnection();
     var map = <String, dynamic>{};
     var supervisorid = await SPManager().getsupervisorid();
 
-    // map['Client'] = GlobalLists.clientid;
-    // map['Site'] = GlobalLists.siteid;
+    //      id:684
+    // number_of_staff:4
+    map['id'] = id;
     map['number_of_staff'] = newstaff;
-    // map['new_no_of_staff'] = newstaff;
-    // map['attanded_staff_count'] = staffcount;
-    map['id'] = GlobalLists.shiftid;
-    // map["supervisor"] = supervisorid;
-    // map["multidays"] = "false";
 
     if (status1) {
       setState(() {
@@ -4302,7 +4263,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             setState(() {
               // Navigator.of(this.context).pop();
               isattendanceLoadin = false;
-            
+              print("RUCHIIF");
 
               Timer(
                 Duration(seconds: 1),
@@ -4315,8 +4276,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               );
             });
           } else {
-            ShowDialogs.showToast(resp.message);
-       
+            ShowDialogs.showToast(resp.message!);
+            print("RUCHIELSE");
             setState(() {
               isattendanceLoadin = false;
             });
@@ -4376,7 +4337,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
     if (status1) {
       log(' In side called');
- 
+      // ✅ Online mode
       // ShowDialogs.showLoadingDialog(context, _keyLoader);
       setState(() {
         GlobalLists.isaddAttendance.value = true;
@@ -4390,6 +4351,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             setState(() {
               // Navigator.of(this.context).pop();
               GlobalLists.isaddAttendance.value = false;
+              print("RUCHIIF");
               // Timer(Duration(seconds: 1), () => Navigator.pop(context));
               ShowDialogs().confirmationdone(
                 context,
@@ -4407,7 +4369,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             });
           } else {
             ShowDialogs.showToast(resp.msg);
-       
+            print("RUCHIELSE");
             setState(() {
               GlobalLists.isaddAttendance.value = false;
             });
@@ -4422,7 +4384,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         jsonval: map,
       );
     } else {
-      //  Offline Mode
+      print("RUCHIELSE offline");
+      // 🚫 Offline Mode
       await DBHelper.insertOfflineRequest(
         '${Global.baseUrl}/api/attendancemaster/Add_AttendanceMaster',
         map,
@@ -4438,7 +4401,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         loginTime: map['time'],
       );
 
-      //      Check duplicate in GlobalLists
+      // ✅ Check duplicate in GlobalLists
       bool exists = GlobalLists.attendanceemployeelist.any(
         (e) => e.contact == newEmployee.contact,
       );
@@ -4449,7 +4412,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         GlobalLists.attendancedata.employeeList.add(newEmployee);
         // });
 
-        //      Update SharedPreferences cache
+        // ✅ Update SharedPreferences cache
         final prefs = await SharedPreferences.getInstance();
         String? cachedData = prefs.getString('cached_attendance_data');
 
@@ -4472,7 +4435,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               );
             }
           } catch (e) {
-
+            print("❌ Error updating cache: $e");
           }
         }
       } else {
@@ -4508,7 +4471,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     final cacheKey = 'cached_janitor_${idclient}_$idsite';
 
     if (status1) {
-      //      ONLINE mode
+      // ✅ ONLINE mode
       APIManager().apiRequest(
         context,
         API.janitorslist,
@@ -4541,7 +4504,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               print('called JANITOR LENGTH ${GlobalLists.dropdownList.length}');
             });
 
-            //      Save response to local cache
+            // ✅ Save response to local cache
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(cacheKey, json.encode(resp.toJson()));
           } else {

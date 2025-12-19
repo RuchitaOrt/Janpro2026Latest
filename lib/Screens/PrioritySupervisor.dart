@@ -16,6 +16,7 @@ import 'package:janpro/Utitlity/Dropbutton.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -30,7 +31,6 @@ import 'package:janpro/model/WorkfowstatusResponse.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:chips_choice/chips_choice.dart';
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 
 import 'dart:math' as math;
@@ -258,7 +258,8 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                               child: Text(
                                 "Priority Tasks",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(2.3),
                                     color: customcolor.title,
                                     fontWeight: FontWeight.normal),
                               ),
@@ -290,7 +291,8 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                         textAlign: TextAlign.center,
                                         style: AppFonts.headerStyle(
                                             fontSize:
-                                                14.sp,
+                                                ResponsiveFlutter.of(context)
+                                                    .fontSize(1.6),
                                             color: customcolor.black,
                                             fontWeight: FontWeight.w300),
                                         readOnly: true,
@@ -678,7 +680,10 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                                                   TextOverflow
                                                                       .ellipsis,
                                                               style: AppFonts.headerStyle(
-                                                                  fontSize: 17.sp,
+                                                                  fontSize: ResponsiveFlutter.of(
+                                                                          context)
+                                                                      .fontSize(
+                                                                          2.2),
                                                                   color:
                                                                       customcolor
                                                                           .blue,
@@ -700,7 +705,10 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                                                   TextOverflow
                                                                       .ellipsis,
                                                               style: AppFonts.headerStyle(
-                                                                  fontSize:14.sp,
+                                                                  fontSize: ResponsiveFlutter.of(
+                                                                          context)
+                                                                      .fontSize(
+                                                                          1.6),
                                                                   color:
                                                                       customcolor
                                                                           .black,
@@ -770,7 +778,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                                         //                                                                           textAlign: TextAlign.start,
                                                         //                                                                           overflow: TextOverflow.ellipsis,
                                                         //                                                                           style:
-                                                        //                                                                            AppFonts.headerStyle(fontSize:17.sp,
+                                                        //                                                                            AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(2),
                                                         //  color: customcolor.appbarcolor,fontWeight: FontWeight.bold  ),
 
                                                         //                                                                          ),
@@ -795,7 +803,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                 //                                                                 child:
                                 //                                                                     ElevatedButton(
                                 //                                                                             style: ElevatedButton.styleFrom(
-                                //                             primary: customcolor.lightgreen,
+                                //                             backgroundColor: customcolor.lightgreen,
                                 //                             minimumSize: Size(
                                 //                                 SizeConfig.blockSizeHorizontal * 25,
                                 //                                 23),
@@ -969,7 +977,10 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                                             .ellipsis,
                                                         style: AppFonts.headerStyle(
                                                             fontSize:
-                                                                17.sp,
+                                                                ResponsiveFlutter.of(
+                                                                        context)
+                                                                    .fontSize(
+                                                                        2.2),
                                                             color: customcolor
                                                                 .blue,
                                                             fontWeight:
@@ -1004,7 +1015,10 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                                                   TextOverflow
                                                                       .ellipsis,
                                                               style: AppFonts.headerStyle(
-                                                                  fontSize:17.sp,
+                                                                  fontSize: ResponsiveFlutter.of(
+                                                                          context)
+                                                                      .fontSize(
+                                                                          2.2),
                                                                   color:
                                                                       customcolor
                                                                           .black,
@@ -1109,7 +1123,10 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                                                               .ellipsis,
                                                           style: AppFonts.headerStyle(
                                                               fontSize:
-                                                                 17.sp,
+                                                                  ResponsiveFlutter.of(
+                                                                          context)
+                                                                      .fontSize(
+                                                                          2),
                                                               color: customcolor
                                                                   .appbarcolor,
                                                               fontWeight:
@@ -1272,7 +1289,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                   child: Text(
                     "Master Area",
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                         color: customcolor.black,
                         fontWeight: FontWeight.w400),
                   ),
@@ -1445,7 +1462,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
                   child: Text(
                     "Master Area",
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                         color: customcolor.black,
                         fontWeight: FontWeight.w400),
                   ),
@@ -1513,7 +1530,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
           child: Text(
             "Master Blocks",
             style: AppFonts.headerStyle(
-                fontSize: 17.sp,
+                fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                 color: customcolor.black,
                 fontWeight: FontWeight.w400),
           ),
@@ -1626,7 +1643,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
           child: Text(
             "Master Blocks",
             style: AppFonts.headerStyle(
-                fontSize: 17.sp,
+                fontSize: ResponsiveFlutter.of(context).fontSize(2.2),
                 color: customcolor.black,
                 fontWeight: FontWeight.w400),
           ),
@@ -2272,7 +2289,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
         child: ChoiceChip(
           label: Text(item.masterAreaName),
           labelStyle: AppFonts.headerStyle(
-              fontSize: 14.sp,
+              fontSize: ResponsiveFlutter.of(context).fontSize(1.6),
               color: tag == value
                   ? customcolor.white
                   : item.status == "Pending"
@@ -2309,7 +2326,7 @@ class _PrioritySupervisorState extends State<PrioritySupervisor>
         child: ChoiceChip(
           label: Text(item.masterAreaName),
           labelStyle: AppFonts.headerStyle(
-              fontSize:14.sp,
+              fontSize: ResponsiveFlutter.of(context).fontSize(1.6),
               color: tag == value
                   ? customcolor.white
                   : item.pendingArea == 0

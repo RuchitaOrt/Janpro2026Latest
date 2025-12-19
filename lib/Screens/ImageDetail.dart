@@ -20,6 +20,7 @@ import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -34,7 +35,7 @@ import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart' as permishan;
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 import 'dart:math' as math;
 
@@ -256,7 +257,8 @@ class _ImageDetailState extends State<ImageDetail>
                               child: Text(
                                 "${widget.title}",
                                 style: AppFonts.headerStyle(
-                                    fontSize:17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(2.3),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w300),
                               ),
@@ -345,7 +347,7 @@ Widget gifcontainer(BuildContext context) {
                     : "After",
                 style: AppFonts.headerStyle(
                   fontSize:
-                      17.sp,
+                      ResponsiveFlutter.of(context).fontSize(2),
                   color: customcolor.tabblue,
                   fontWeight: FontWeight.w500,
                 ),
@@ -420,7 +422,7 @@ Widget gifcontainer(BuildContext context) {
 //                             ? "Before"
 //                             : "After",
 //                         style: AppFonts.headerStyle(
-//                             fontSize: 17.sp,
+//                             fontSize: ResponsiveFlutter.of(context).fontSize(2),
 //                             color: customcolor.tabblue,
 //                             fontWeight: FontWeight.normal),
 //                       ),

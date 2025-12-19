@@ -1,17 +1,15 @@
+// ignore_for_file: unused_field
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:another_flushbar/flushbar.dart';
-import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:geocoding/geocoding.dart';
 
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
@@ -21,17 +19,16 @@ import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
-import 'package:janpro/Utitlity/button.dart';
-import 'package:janpro/Utitlity/customBottomNavigationBar.dart';
+
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
-import 'package:janpro/Utitlity/linechart.dart';
+
 import 'package:janpro/Utitlity/sizeConfig.dart';
-import 'package:janpro/model/AddAttendanceResponse.dart' as addattten;
-import 'package:janpro/model/AddSpecialActivityResponse.dart' as addactivity;
+
 import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:janpro/model/FullDetailSpecialActivityResponse.dart'
     as mainactivity;
@@ -40,8 +37,6 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart' as permishan;
 import 'package:permission_handler/permission_handler.dart';
-
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:image_picker/image_picker.dart';
@@ -50,7 +45,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-import 'dart:math' as math;
+
 
 import '../services/camera_capture_screen.dart';
 import '../services/permission_helper.dart';
@@ -223,24 +218,19 @@ class _SpecialActivityState extends State<SpecialActivity>
     var status = await permishan.Permission.locationWhenInUse.status;
     if (status != permishan.PermissionStatus.granted) {
       //show Dialog or route to specific page (or route to Application Manager)
-      print("notgranted");
+ 
       grantPermission();
       ShowDialogs.showToast(
           "Please Allow Your Location Permission From Setting  To Add your Attendance");
       // openAppSettings();
     } else {
-      print("granted");
+     
 
       getLocation().then((value) {
-        print("hii");
+   
         if (value != null) {
-          print("notnull");
+       
           getLocation();
-        } else {
-          print("null");
-          grantPermission();
-          ShowDialogs.showToast(
-              "Please Allow Your Location Permission From Setting  To Add your Attendance");
         }
 
         // _getLocation();
@@ -383,7 +373,8 @@ class _SpecialActivityState extends State<SpecialActivity>
                                       "SPECIALS",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              17.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(2.3),
                                           color: customcolor.black,
                                           fontWeight: FontWeight.w300),
                                     ),
@@ -1418,7 +1409,8 @@ class _SpecialActivityState extends State<SpecialActivity>
                             Text(
                               detaillist[index].activityType,
                               style: AppFonts.headerStyle(
-                                  fontSize:17.sp,
+                                  fontSize: ResponsiveFlutter.of(context)
+                                      .fontSize(2.2),
                                   color: customcolor.black,
                                   fontWeight: FontWeight.w500),
                             ),
@@ -1463,7 +1455,8 @@ class _SpecialActivityState extends State<SpecialActivity>
                                   child: Text(
                                     "View Image",
                                     style: AppFonts.headerStyle(
-                                        fontSize: 17.sp,
+                                        fontSize: ResponsiveFlutter.of(context)
+                                            .fontSize(1.8),
                                         color: customcolor.tabblue,
                                         fontWeight: FontWeight.w500),
                                   ),
@@ -1502,7 +1495,8 @@ class _SpecialActivityState extends State<SpecialActivity>
                                       "Site",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              15.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.5),
                                           color: customcolor.greytext,
                                           fontWeight: FontWeight.w600),
                                     ),
@@ -1513,7 +1507,8 @@ class _SpecialActivityState extends State<SpecialActivity>
                                       detaillist[index].site,
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              17.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.7),
                                           color: customcolor.black,
                                           fontWeight: FontWeight.w400),
                                     ),
@@ -1527,7 +1522,8 @@ class _SpecialActivityState extends State<SpecialActivity>
                                       "Date",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              15.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.5),
                                           color: customcolor.greytext,
                                           fontWeight: FontWeight.w600),
                                     ),
@@ -1538,7 +1534,8 @@ class _SpecialActivityState extends State<SpecialActivity>
                                       "${detaillist[index].date}",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              17.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.7),
                                           color: customcolor.black,
                                           fontWeight: FontWeight.w400),
                                     ),
@@ -1596,7 +1593,6 @@ class _SpecialActivityState extends State<SpecialActivity>
   // }
 
   Future<Placemark> getLocation() async {
-  print("Fetching location...");
 
   // Get current position
   Position position = await Geolocator.getCurrentPosition(
@@ -1614,13 +1610,14 @@ class _SpecialActivityState extends State<SpecialActivity>
 
   Placemark first = placemarks.first;
 
-  String lat = position.latitude.toString();
-  String long = position.longitude.toString();
+   lat = position.latitude.toString();
+   long = position.longitude.toString();
 
   print("${first.name} : ${first.street}, ${first.locality}, ${first.country}");
 
   return first;
 }
+ 
   //operationalspecialactivity
 bool isSpecialActivityLoaded=false;
   getoperationalactivityApi() async {
@@ -1928,74 +1925,106 @@ setState(() {
     });
   }
 }
+void _openFileExplorer(int imageno) async {
+  setState(() => _loadingPath = true);
 
-  void _openFileExplorer(int imageno) async {
-    setState(() => _loadingPath = true);
-    try {
-      _directoryPath = null;
-      _paths = (await FilePicker.platform.pickFiles(
-        type: _pickingType,
-        allowMultiple: false,
+  try {
+    final ImagePicker picker = ImagePicker();
 
-        allowedExtensions: [
-          'jpg',
-          'jpeg',
-          'png',
-        ],
-        // allowedExtensions: (_extension?.isNotEmpty ?? false)
-        //     ? _extension?.replaceAll(' ', '')?.split(',')
-        //     : null,
-      ))
-          ?.files;
-    } on PlatformException catch (e) {
-      print("Unsupported operation" + e.toString());
-    } catch (ex) {
-      print(ex);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    // User cancelled
+    if (image == null) {
+      setState(() => _loadingPath = false);
+      return;
     }
+
+    final String fileName = image.name;
+    final String originalPath = image.path;
+
+    // 🔥 Compress image (async OUTSIDE setState)
+    final String compressedPath =
+        await compressimagepath(originalPath);
+
     if (!mounted) return;
-    setState(() async {
+
+    setState(() {
       _loadingPath = false;
-      _fileName = _paths != null
-          ? _paths!.map((e) => e.name).toString()
-          : 'Select Document';
-      print("File name is${_fileName}");
-      // if(imageno==1)
-      // {
-      //   beforeimage1 = _paths![0].path;
-      //   beforeimage1controller.text=_fileName!;
-      // }else if(imageno==2)
-      // {
-      //   beforeimage2 = _paths![0].path;
-      //   beforeimage2controller.text=_fileName!;
-      // }else if(imageno==3)
-      // {
-      //   afterimage1 = _paths![0].path;
-      //   afterimage1controller.text=_fileName!;
-      // }else if(imageno==4)
-      // {
-      // afterimage2 = _paths![0].path;
-      //   afterimage2controller.text=_fileName!;
-      // }
+
       if (imageno == 1) {
-        // beforeimage1 = _paths![0].path; old
-        beforeimage1 = await compressimagepath(_paths![0].path!);
-        print("new File name is ${beforeimage1}");
-        beforeimage1controller.text = _fileName!;
+        beforeimage1 = compressedPath;
+        beforeimage1controller.text = fileName;
       } else if (imageno == 2) {
-        // beforeimage2 = _paths![0].path; old
-        beforeimage2 = await compressimagepath(_paths![0].path!);
-        beforeimage2controller.text = _fileName!;
+        beforeimage2 = compressedPath;
+        beforeimage2controller.text = fileName;
       } else if (imageno == 3) {
-        // afterimage1 = _paths![0].path; old
-        afterimage1 = await compressimagepath(_paths![0].path!);
-        afterimage1controller.text = _fileName!;
+        afterimage1 = compressedPath;
+        afterimage1controller.text = fileName;
       } else if (imageno == 4) {
-        // afterimage2 = _paths![0].path; old
-        afterimage2 = await compressimagepath(_paths![0].path!);
-        afterimage2controller.text = _fileName!;
+        afterimage2 = compressedPath;
+        afterimage2controller.text = fileName;
       }
     });
+
+  } catch (e) {
+    setState(() => _loadingPath = false);
+    debugPrint("ImagePicker error: $e");
   }
+}
+
+  // void _openFileExplorer(int imageno) async {
+  //   setState(() => _loadingPath = true);
+  //   try {
+  //     _directoryPath = null;
+  //     _paths = (await FilePicker.platform.pickFiles(
+  //       type: _pickingType,
+  //       allowMultiple: false,
+
+  //       allowedExtensions: [
+  //         'jpg',
+  //         'jpeg',
+  //         'png',
+  //       ],
+  //       // allowedExtensions: (_extension?.isNotEmpty ?? false)
+  //       //     ? _extension?.replaceAll(' ', '')?.split(',')
+  //       //     : null,
+  //     ))
+  //         ?.files;
+  //   } on PlatformException catch (e) {
+  //     print("Unsupported operation" + e.toString());
+  //   } catch (ex) {
+  //     print(ex);
+  //   }
+  //   if (!mounted) return;
+  //   setState(() async {
+  //     _loadingPath = false;
+  //     _fileName = _paths != null
+  //         ? _paths!.map((e) => e.name).toString()
+  //         : 'Select Document';
+  //     print("File name is${_fileName}");
+    
+  //     if (imageno == 1) {
+  //       // beforeimage1 = _paths![0].path; old
+  //       beforeimage1 = await compressimagepath(_paths![0].path!);
+  //       print("new File name is ${beforeimage1}");
+  //       beforeimage1controller.text = _fileName!;
+  //     } else if (imageno == 2) {
+  //       // beforeimage2 = _paths![0].path; old
+  //       beforeimage2 = await compressimagepath(_paths![0].path!);
+  //       beforeimage2controller.text = _fileName!;
+  //     } else if (imageno == 3) {
+  //       // afterimage1 = _paths![0].path; old
+  //       afterimage1 = await compressimagepath(_paths![0].path!);
+  //       afterimage1controller.text = _fileName!;
+  //     } else if (imageno == 4) {
+  //       // afterimage2 = _paths![0].path; old
+  //       afterimage2 = await compressimagepath(_paths![0].path!);
+  //       afterimage2controller.text = _fileName!;
+  //     }
+  //   });
+  // }
 }
 
 extension ExtendedIterable<E> on Iterable<E> {

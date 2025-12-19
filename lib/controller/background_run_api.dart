@@ -46,7 +46,7 @@ class backGroundRun {
     final cacheKey = 'cached_janitor_${idclient}_$idsite';
 
     if (status1) {
-      //      ONLINE mode
+      // ✅ ONLINE mode
       APIManager().apiRequest(context, API.janitorslist, (response) async {
         JanitorslistResponse resp = response;
 
@@ -58,7 +58,7 @@ class backGroundRun {
 
           log('called JANITOR LENGTH ${GlobalLists.dropdownList}');
 
-          //      Save response to local cache
+          // ✅ Save response to local cache
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(cacheKey, json.encode(resp.toJson()));
 
@@ -218,7 +218,7 @@ class backGroundRun {
           //   maintag = 1;
           // }
 
-          //      Save JSON to SharedPreferences
+          // ✅ Save JSON to SharedPreferences
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
               'cached_attendance_data', attendencelistResponseToJson(resp));
@@ -394,13 +394,13 @@ class backGroundRun {
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 prefs.setString("workflow_response", jsonEncode(resp.toJson()));
 
-                ///      FIX: Store the entire response, not just `data`
+                /// ✅ FIX: Store the entire response, not just `data`
                 String clientIdKey = client_id;
                 if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
                   GlobalLists.clientDetailsMap[clientIdKey] = [];
                 }
                 GlobalLists.clientDetailsMap[clientIdKey]!
-                    .addAll(resp.data); //      Correct
+                    .addAll(resp.data); // ✅ Correct
 // 👈 FIXED LINE
               } else {
                 // setState(() {
@@ -442,13 +442,13 @@ class backGroundRun {
             // isdataloaded = true;
             // });
 
-            ///      FIX: Add full response object, not just `data`
+            /// ✅ FIX: Add full response object, not just `data`
             String clientIdKey = client_id;
             if (!GlobalLists.clientDetailsMap.containsKey(clientIdKey)) {
               GlobalLists.clientDetailsMap[clientIdKey] = [];
             }
             GlobalLists.clientDetailsMap[clientIdKey]!
-                .addAll(resp.data); //      Correct
+                .addAll(resp.data); // ✅ Correct
             // 👈 FIXED LINE
           } catch (e) {
             log("Error reading offline data: $e");
@@ -542,7 +542,7 @@ class backGroundRun {
           //   initialIndex: GlobalLists.selectedindex,
           // );
 
-          //      Cache response locally
+          // ✅ Cache response locally
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             'cached_operationalworkflow',

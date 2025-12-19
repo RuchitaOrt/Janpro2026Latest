@@ -55,7 +55,7 @@ class ShiftData {
 
 class EmployeeData {
   final String empName;
-  final int empId;
+  final dynamic empId;
 
   final List<AttendanceData> attendData;
 

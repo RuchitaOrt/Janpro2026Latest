@@ -1,50 +1,43 @@
+// ignore_for_file: unused_field, use_key_in_widget_constructors
+
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+
 import 'dart:ui';
 
-import 'package:buttons_tabbar/buttons_tabbar.dart';
+
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
-import 'package:janpro/model/OperationalWorkflowResponse.dart' as operwf;
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
+
 import 'package:janpro/model/ClientsiteDashboardResponse.dart' as clientdash;
 import 'package:janpro/Screens/Training.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
-import 'package:janpro/Utitlity/FormTextField.dart';
-import 'package:janpro/Utitlity/FormTextFieldButton.dart';
+
 import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
-import 'package:janpro/Utitlity/button.dart';
+
 import 'package:janpro/Utitlity/customBottomNavigationBar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
 import 'package:janpro/Utitlity/linechart.dart';
 import 'package:janpro/Utitlity/sizeConfig.dart';
-import 'package:janpro/model/AddAttendanceResponse.dart' as addattten;
+
 import 'package:janpro/model/AttendencelistResponse.dart';
-import 'package:janpro/model/DeleteAttendance.dart' as deleteatt;
-import 'package:janpro/model/JanitorContactFetchResponse.dart';
-import 'package:janpro/model/JanitorslistResponse.dart';
+
 import 'package:janpro/model/TrendGraphResponse.dart' as trend;
 import 'package:janpro/model/Workflowoperationalmodel.dart' as trendmain;
-import 'package:janpro/model/unitAttendanceResponse.dart' as unitatt;
-import 'package:page_transition/page_transition.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:permission_handler/permission_handler.dart' as permishan;
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:janpro/model/UnitsiteMasterResponse.dart' as sitemaster;
 
-import 'dart:math' as math;
+import 'package:page_transition/page_transition.dart';
+
 
 class MainList {
   final String name;
@@ -64,15 +57,15 @@ class AttendanceTrend extends StatefulWidget {
 
 class _AttendanceTrendState extends State<AttendanceTrend>
     with TickerProviderStateMixin {
-  var searchcontroller = new TextEditingController();
-  var namecontroller = new TextEditingController();
-  var sitenamecontroller = new TextEditingController();
-  final GlobalKey<State> _keyLoader = new GlobalKey<State>();
-  final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
+  var searchcontroller = TextEditingController();
+  var namecontroller = TextEditingController();
+  var sitenamecontroller = TextEditingController();
+  final GlobalKey<State> _keyLoader = GlobalKey<State>();
+  final GlobalKey<ScaffoldState> _scaffoldKey1 = GlobalKey<ScaffoldState>();
 
-  var mobilecontroller = new TextEditingController();
-  var datecontroller = new TextEditingController();
-  var clientnamecontroller = new TextEditingController();
+  var mobilecontroller = TextEditingController();
+  var datecontroller = TextEditingController();
+  var clientnamecontroller = TextEditingController();
   List<EmployeeList> unitemployeelist = [];
   List<Janitorcheckbox> dropdownList = [];
   var selectedDateTime;
@@ -141,7 +134,7 @@ class _AttendanceTrendState extends State<AttendanceTrend>
             pageBuilder: (context, animation1, animation2) => HomePage(),
           ),
         );
-        return await false;
+        return  false;
       },
       child: Scaffold(
         key: _scaffoldKey1,
@@ -252,98 +245,13 @@ class _AttendanceTrendState extends State<AttendanceTrend>
                                 child: Text(
                                   "ATTENDANCE TRENDS",
                                   style: AppFonts.headerStyle(
-                                      fontSize: 17.sp,
+                                      fontSize: ResponsiveFlutter.of(context)
+                                          .fontSize(2.3),
                                       color: customcolor.black,
                                       fontWeight: FontWeight.w300),
                                 ),
                               ),
-                              //                      Container(
-                              //                                         decoration: BoxDecoration(
-                              //                                   color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                              //                             width:SizeConfig.blockSizeHorizontal*32,
-                              //                             height: 30,
-                              //                               //  padding: EdgeInsets.only(left: 6,bottom: 5,top:5,right: 5),
-                              //                             child: new Row(
-                              //                               mainAxisAlignment: MainAxisAlignment.center,
-                              //                                                      crossAxisAlignment: CrossAxisAlignment.center,
-                              //                               children: <Widget>[
-                              //                                 // new Expanded(child: new Text("Bemerkung",)),
-                              //                                 new  Expanded(
-                              //                                       child: new TextField(
-                              //                                         textAlignVertical: TextAlignVertical.center,
-                              //                                         textAlign: TextAlign.center,
-                              //                                         style:
-
-                              //                                          AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.6),
-                              //                                                   color: customcolor.black,fontWeight: FontWeight.w300  ),
-                              //                                      readOnly: true,
-                              //                                      onTap: ()
-                              //                                      async {
-                              //                                        DateTime? pickedDate = await showDatePicker(
-                              //                                       context: context,
-                              //                                       initialDate: selectedDateTime ?? DateTime.now(),
-                              //                                       firstDate: DateTime(1950),
-                              //                                       lastDate: DateTime(2050));
-
-                              //                                   if (pickedDate != null) {
-                              //                                   var  datefrom =
-                              //                                         DateFormat('dd-MM-yyyy').format(pickedDate);
-                              //                                     datecontroller.text =datefrom;
-                              //                                     print(datecontroller.text);
-                              //                                     setState(() => selectedDateTime = pickedDate);
-                              //                                        if(role==GlobalLists.clientrole)
-                              //  {
-                              //   clientdashboardApi();
-
-                              //  }else
-                              //  {
-                              //    attendancemainstatusApi();
-
-                              //  }
-                              //                                   }
-                              //                                      },
-                              //                                         controller: datecontroller,
-                              //                                                   decoration: InputDecoration( border: InputBorder.none,
-                              //                                                    contentPadding: EdgeInsets.zero,
-                              //                      isDense: true,),
-                              //                                       ),
-                              //                                     ),
-                              //                                      GestureDetector(
-                              //                                       onTap: ()
-                              //                                       async {
-                              //                                             DateTime? pickedDate = await showDatePicker(
-
-                              //                                       context: context,
-                              //                                       initialDate: selectedDateTime ?? DateTime.now(),
-                              //                                       firstDate: DateTime(1950),
-                              //                                       lastDate: DateTime(2050));
-
-                              //                                   if (pickedDate != null) {
-                              //                                   var  datefrom =
-                              //                                         DateFormat('dd-MM-yyyy').format(pickedDate);
-                              //                                     datecontroller.text =datefrom;
-                              //                                     setState(() => selectedDateTime = pickedDate);
-                              //                                     print(datecontroller.text);
-                              //                                      if(role==GlobalLists.clientrole)
-                              //  {
-                              //   clientdashboardApi();
-
-                              //  }else
-                              //  {
-                              //    attendancemainstatusApi();
-
-                              //  }
-
-                              //                                   }
-                              //                                       },
-                              //                                        child: Padding(
-                              //                                        padding:  EdgeInsets.only(bottom: 1,right: 5),
-                              //                                        child:   Image.asset('assets/images/calendar.png',width: 22,height: 22,alignment: Alignment.center,),
-                              //                                      ),
-                              //                                      ),
-                              //                               ],
-                              //                             ),
-                              //                           )
+                             
                               mainlisttab.length > 0
                                   ? _buildChoicemainListDropdown()
                                   : SizedBox()
@@ -460,7 +368,7 @@ class _AttendanceTrendState extends State<AttendanceTrend>
                   textAlign: TextAlign.start,
                   overflow: TextOverflow.ellipsis,
                   style: AppFonts.headerStyle(
-                      fontSize: 17.sp,
+                      fontSize: ResponsiveFlutter.of(context).fontSize(2),
                       color: customcolor.title,
                       fontWeight: FontWeight.normal),
                 ),
@@ -522,7 +430,7 @@ bool isAttendanceTrendLoading=false;
 setState(() {
   isAttendanceTrendLoading=true;
 });
-      var map = new Map<String, dynamic>();
+      var map = Map<String, dynamic>();
 
       var supervisorid = await SPManager().getsupervisorid();
       print(supervisorid);
@@ -530,7 +438,7 @@ setState(() {
       // client
       // new vishu 13 aug 24
       map['clientid'] = clientid;
-      print("UNIT");
+   
 
       APIManager().apiRequest(context, API.clientsitedependentdashboard,
           (response) async {
@@ -884,7 +792,7 @@ setState(() {
   setState(() {
   isAttendanceTrendLoading=true;
 });
-      var map = new Map<String, dynamic>();
+      var map = Map<String, dynamic>();
 
       var supervisorid = await SPManager().getsupervisorid();
       print(supervisorid);
@@ -941,7 +849,7 @@ bool isoverAllGraphLoaded=false;
       });
 
     
-      var map = new Map<String, dynamic>();
+      var map = Map<String, dynamic>();
       var emp_id = await SPManager().getclientid();
       print('UserRole: ${role}');
       // 3 OM

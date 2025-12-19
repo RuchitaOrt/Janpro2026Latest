@@ -414,7 +414,7 @@
 //                 child: Text(
 //                   "COMPLAINTS",
 //                   style: AppFonts.headerStyle(
-//                       fontSize: 17.sp,
+//                       fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
 //                       color: customcolor.title,
 //                       fontWeight: FontWeight.normal),
 //                 ),
@@ -701,7 +701,7 @@
 
 //           //                   :
 
-//           //                    AppFonts.headerStyle(fontSize:17.sp,
+//           //                    AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(2.6),
 
 //           // color: customcolor.black,fontWeight: FontWeight.w600  ),
 
@@ -717,7 +717,7 @@
 //                 child: Text(
 //                   "COMPLAINTS",
 //                   style: AppFonts.headerStyle(
-//                       fontSize: 17.sp,
+//                       fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
 //                       color: customcolor.title,
 //                       fontWeight: FontWeight.normal),
 //                 ),
@@ -1100,7 +1100,7 @@
 //                                         shape: RoundedRectangleBorder(
 //                                             borderRadius:
 //                                                 BorderRadius.circular(15)),
-//                                         primary: tab == "3"
+//                                         backgroundColor: tab == "3"
 //                                             ? customcolor.green
 //                                             : tab == "2"
 //                                                 ? customcolor.tabblue
@@ -1944,7 +1944,7 @@
 //                                     shape: RoundedRectangleBorder(
 //                                         borderRadius:
 //                                             BorderRadius.circular(15)),
-//                                     primary: tab == "3"
+//                                     backgroundColor: tab == "3"
 //                                         ? customcolor.green
 //                                         : tab == "2"
 //                                             ? customcolor.tabblue
@@ -3772,7 +3772,7 @@
 //                   child: Text(
 //                     "IMax",
 //                     style: AppFonts.headerStyle(
-//                         fontSize: 17.sp,
+//                         fontSize: ResponsiveFlutter.of(context).fontSize(2),
 //                         color: customcolor.black,
 //                         fontWeight: FontWeight.w500),
 //                   ),
@@ -4562,7 +4562,7 @@
 //                         "Select TAT",
 //                         style: AppFonts.headerStyle(
 //                             fontSize:
-//                                 17.sp,
+//                                 ResponsiveFlutter.of(context).fontSize(2.6),
 //                             color: customcolor.black,
 //                             fontWeight: FontWeight.w600),
 //                       ),
@@ -4716,7 +4716,7 @@
 // //               height: 80,
 // //               color: Colors.blue,
 // //               child: Center(
-// //                 child: Text('Item $index', style: AppFonts.headerStyle(fontSize:17.sp,
+// //                 child: Text('Item $index', style: AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(2.6),
 // // color: customcolor.white,fontWeight: FontWeight.normal  ),),
 // //               ),
 // //             ),

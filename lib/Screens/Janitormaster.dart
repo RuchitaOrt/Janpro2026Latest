@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+
 import 'package:another_flushbar/flushbar.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
@@ -11,26 +10,28 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
-import 'package:janpro/Screens/SpecialActivityImage.dart';
+
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
-import 'package:janpro/Utitlity/FormTextFieldButton.dart';
+
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
-import 'package:janpro/Utitlity/button.dart';
+
 import 'package:janpro/Utitlity/customBottomNavigationBar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
-import 'package:janpro/Utitlity/linechart.dart';
+
 import 'package:janpro/Utitlity/sizeConfig.dart';
-import 'package:janpro/model/AddAttendanceResponse.dart' as addattten;
-import 'package:janpro/model/AddSpecialActivityResponse.dart' as addactivity;
+
 import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:janpro/model/FullDetailSpecialActivityResponse.dart'
     as mainactivity;
@@ -41,11 +42,12 @@ import 'package:janpro/model/JanitorDetials.dart';
 import 'package:janpro/model/JanitorUpdate.dart';
 import 'package:janpro/model/UnitclientMasterResponse.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart' as permishan;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+
 import 'package:file_picker/file_picker.dart';
 
 import 'package:image_picker/image_picker.dart';
@@ -53,7 +55,6 @@ import 'package:janpro/model/ActivitylistResponse.dart' as actilist;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'dart:math' as math;
 
 import '../DBHelper/db_helper.dart';
 import '../const/global.dart';
@@ -243,15 +244,10 @@ class _JanitormasterState extends State<Janitormaster>
       print("granted");
 
       getLocation().then((value) {
-        print("hii");
+     
         if (value != null) {
-          print("notnull");
+        
           getLocation();
-        } else {
-          print("null");
-          grantPermission();
-          ShowDialogs.showToast(
-              "Please Allow Your Location Permission From Setting  To Add your Attendance");
         }
 
         // _getLocation();
@@ -407,7 +403,9 @@ class _JanitormasterState extends State<Janitormaster>
                                           child: Text(
                                             "JANITOR'S MASTER",
                                             style: AppFonts.headerStyle(
-                                                fontSize: 17.sp,
+                                                fontSize: ResponsiveFlutter.of(
+                                                        context)
+                                                    .fontSize(2.3),
                                                 color: customcolor.black,
                                                 fontWeight: FontWeight.w300),
                                           ),
@@ -1015,7 +1013,8 @@ class _JanitormasterState extends State<Janitormaster>
                                   textAlign: TextAlign.center,
                                   overflow: TextOverflow.ellipsis,
                                   style: AppFonts.headerStyle(
-                                      fontSize: 17.sp,
+                                      fontSize: ResponsiveFlutter.of(context)
+                                          .fontSize(2.2),
                                       color: customcolor.black,
                                       fontWeight: FontWeight.w500),
                                 ),
@@ -1063,7 +1062,7 @@ class _JanitormasterState extends State<Janitormaster>
                             //         },
                             //         child: Text("View Image", style:
 
-                            //                                                   AppFonts.headerStyle(fontSize:17.sp,
+                            //                                                   AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.8),
                             //                                     color:  customcolor.tabblue,
                             //                                     fontWeight: FontWeight.w500  ),
                             //                                                   ),
@@ -1100,7 +1099,8 @@ class _JanitormasterState extends State<Janitormaster>
                                       "Janitor Name",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              15.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.5),
                                           color: customcolor.greytext,
                                           fontWeight: FontWeight.w600),
                                     ),
@@ -1112,7 +1112,8 @@ class _JanitormasterState extends State<Janitormaster>
                                           .janitormasterlist[index].janName,
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                             17.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.7),
                                           color: customcolor.black,
                                           fontWeight: FontWeight.w400),
                                     ),
@@ -1126,7 +1127,8 @@ class _JanitormasterState extends State<Janitormaster>
                                       "Mobile No",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              15.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.5),
                                           color: customcolor.greytext,
                                           fontWeight: FontWeight.w600),
                                     ),
@@ -1137,7 +1139,8 @@ class _JanitormasterState extends State<Janitormaster>
                                       "${GlobalLists.janitormasterlist[index].contact}",
                                       style: AppFonts.headerStyle(
                                           fontSize:
-                                              17.sp,
+                                              ResponsiveFlutter.of(context)
+                                                  .fontSize(1.7),
                                           color: customcolor.black,
                                           fontWeight: FontWeight.w400),
                                     ),
@@ -1228,7 +1231,7 @@ setState(() {
         jsonval: payload,
       );
     } else {
-      ///      Offline: Save to DB
+      /// ✅ Offline: Save to DB
       await DBHelper.insertOfflineRequest(
         '${Global.baseUrl}/api/attendancemaster/add_janitors',
         payload,
@@ -1298,7 +1301,7 @@ setState(() {
         jsonval: payload,
       );
     } else {
-      //      Save the update request to SQLite for later sync
+      // ✅ Save the update request to SQLite for later sync
       await DBHelper.insertOfflineRequest(
           '${Global.baseUrl}/api/attendancemaster/update_janitor', payload);
 
@@ -1422,7 +1425,7 @@ setState(() {
   }
 
 Future<Placemark> getLocation() async {
-  print("Fetching location...");
+
 
   // Get current position
   Position position = await Geolocator.getCurrentPosition(
@@ -1440,13 +1443,14 @@ Future<Placemark> getLocation() async {
 
   Placemark first = placemarks.first;
 
-  String lat = position.latitude.toString();
-  String long = position.longitude.toString();
+   lat = position.latitude.toString();
+   long = position.longitude.toString();
 
   print("${first.name} : ${first.street}, ${first.locality}, ${first.country}");
 
   return first;
 }
+ 
   //operationalspecialactivity
 
   // getoperationalactivityApi() async {
@@ -1597,7 +1601,7 @@ Future<Placemark> getLocation() async {
             GlobalLists.clientmasterlist = resp.data ?? [];
           });
 
-          //      Save to local cache
+          // ✅ Save to local cache
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             'cached_unit_client_master',
@@ -1784,52 +1788,96 @@ Future<Placemark> getLocation() async {
   }
 }
 
+void _openFileExplorer(int imageno) async {
+  setState(() => _loadingPath = true);
 
-  void _openFileExplorer(int imageno) async {
-    setState(() => _loadingPath = true);
-    try {
-      _directoryPath = null;
-      _paths = (await FilePicker.platform.pickFiles(
-        type: _pickingType,
-        allowMultiple: false,
+  try {
+    final ImagePicker picker = ImagePicker();
 
-        allowedExtensions: [
-          'jpg',
-          'jpeg',
-          'png',
-        ],
-        // allowedExtensions: (_extension?.isNotEmpty ?? false)
-        //     ? _extension?.replaceAll(' ', '')?.split(',')
-        //     : null,
-      ))
-          ?.files;
-    } on PlatformException catch (e) {
-      print("Unsupported operation" + e.toString());
-    } catch (ex) {
-      print(ex);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    // User cancelled
+    if (image == null) {
+      setState(() => _loadingPath = false);
+      return;
     }
+
+    final String fileName = image.name;
+    final String filePath = image.path;
+
     if (!mounted) return;
+
     setState(() {
       _loadingPath = false;
-      _fileName = _paths != null
-          ? _paths!.map((e) => e.name).toString()
-          : 'Select Document';
-      print("File name is${_fileName}");
+
       if (imageno == 1) {
-        beforeimage1 = _paths![0].path;
-        beforeimage1controller.text = _fileName!;
+        beforeimage1 = filePath;
+        beforeimage1controller.text = fileName;
       } else if (imageno == 2) {
-        beforeimage2 = _paths![0].path;
-        beforeimage2controller.text = _fileName!;
+        beforeimage2 = filePath;
+        beforeimage2controller.text = fileName;
       } else if (imageno == 3) {
-        afterimage1 = _paths![0].path;
-        afterimage1controller.text = _fileName!;
+        afterimage1 = filePath;
+        afterimage1controller.text = fileName;
       } else if (imageno == 4) {
-        afterimage2 = _paths![0].path;
-        afterimage2controller.text = _fileName!;
+        afterimage2 = filePath;
+        afterimage2controller.text = fileName;
       }
     });
+
+  } catch (e) {
+    setState(() => _loadingPath = false);
+    debugPrint("ImagePicker error: $e");
   }
+}
+
+  // void _openFileExplorer(int imageno) async {
+  //   setState(() => _loadingPath = true);
+  //   try {
+  //     _directoryPath = null;
+  //     _paths = (await FilePicker.platform.pickFiles(
+  //       type: _pickingType,
+  //       allowMultiple: false,
+
+  //       allowedExtensions: [
+  //         'jpg',
+  //         'jpeg',
+  //         'png',
+  //       ],
+  //       // allowedExtensions: (_extension?.isNotEmpty ?? false)
+  //       //     ? _extension?.replaceAll(' ', '')?.split(',')
+  //       //     : null,
+  //     ))
+  //         ?.files;
+  //   } on PlatformException catch (e) {
+  //     print("Unsupported operation" + e.toString());
+  //   } catch (ex) {
+  //     print(ex);
+  //   }
+  //   if (!mounted) return;
+  //   setState(() {
+  //     _loadingPath = false;
+  //     _fileName = _paths != null
+  //         ? _paths!.map((e) => e.name).toString()
+  //         : 'Select Document';
+  //     print("File name is${_fileName}");
+  //     if (imageno == 1) {
+  //       beforeimage1 = _paths![0].path;
+  //       beforeimage1controller.text = _fileName!;
+  //     } else if (imageno == 2) {
+  //       beforeimage2 = _paths![0].path;
+  //       beforeimage2controller.text = _fileName!;
+  //     } else if (imageno == 3) {
+  //       afterimage1 = _paths![0].path;
+  //       afterimage1controller.text = _fileName!;
+  //     } else if (imageno == 4) {
+  //       afterimage2 = _paths![0].path;
+  //       afterimage2controller.text = _fileName!;
+  //     }
+  //   });
+  // }
 }
 
 extension ExtendedIterable<E> on Iterable<E> {

@@ -9,7 +9,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
@@ -19,6 +18,7 @@ import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -35,7 +35,6 @@ import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart' as permishan;
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'dart:math' as math;
 
@@ -273,7 +272,8 @@ class _RatingState extends State<Rating> with TickerProviderStateMixin {
                                         "RATING",
                                         style: AppFonts.headerStyle(
                                             fontSize:
-                                               17.sp,
+                                                ResponsiveFlutter.of(context)
+                                                    .fontSize(2.3),
                                             color: customcolor.black,
                                             fontWeight: FontWeight.w300),
                                       ),
@@ -442,7 +442,7 @@ class _RatingState extends State<Rating> with TickerProviderStateMixin {
                           right: 60, left: 50, bottom: 30, top: 10),
                       /*child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          primary: customcolor.blue,
+                          backgroundColor: customcolor.blue,
                           minimumSize: Size(SizeConfig.blockSizeHorizontal * 40,
                               SizeConfig.blockSizeVertical * 6),
                           textStyle: AppFonts.headerStyle(
@@ -573,7 +573,7 @@ class _RatingState extends State<Rating> with TickerProviderStateMixin {
                       textAlign: TextAlign.start,
                       overflow: TextOverflow.ellipsis,
                       style: AppFonts.headerStyle(
-                          fontSize: 17.sp,
+                          fontSize: ResponsiveFlutter.of(context).fontSize(2),
                           color: customcolor.title,
                           fontWeight: FontWeight.normal),
                     ),

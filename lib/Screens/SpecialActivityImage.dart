@@ -8,13 +8,14 @@ import 'package:janpro/Screens/SpecialActivity.dart';
 import 'package:janpro/Screens/TrainingDetail.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/appbar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/sizeConfig.dart';
 import 'package:janpro/model/AttendencelistResponse.dart';
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 // class ImageList{
 // final String title;
@@ -200,7 +201,7 @@ async {
                               child: Icon(Icons.arrow_back)),
                               SizedBox(width: 10,),
                             Container(child: Text(widget.imagelist[0].name, style:
-                              AppFonts.headerStyle(fontSize:17.sp,
+                              AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(2.3),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w300  ),
                              ),
@@ -316,7 +317,7 @@ Widget maintab(int maintag)
                               child: Padding(
                                 padding: const EdgeInsets.only(left: 10,right: 10,top: 5,bottom: 5),
                                 child: Text(
-                                 widget.imagelist[index].imagevalue,style:  AppFonts.headerStyle(fontSize:17.sp,
+                                 widget.imagelist[index].imagevalue,style:  AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(2),
                               color: customcolor.white,fontWeight: FontWeight.normal  ),),
                               ),
                             ),

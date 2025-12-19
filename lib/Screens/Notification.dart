@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -17,7 +18,7 @@ import 'package:janpro/Utitlity/internetConnection.dart';
 import 'package:janpro/Utitlity/sizeConfig.dart';
 import 'package:janpro/model/NotificationlistResponse.dart';
 
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 
 
@@ -103,7 +104,7 @@ async {
                               child: Icon(Icons.arrow_back)),
                             SizedBox(width: 10,),
                             Container(child: Text("NOTIFICATIONS", 
-                            style: AppFonts.headerStyle(fontSize:17.sp,
+                            style: AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(2.3),
     color: customcolor.title,fontWeight: FontWeight.normal  ),
                         ),
                             ),
@@ -128,7 +129,7 @@ async {
                                           textAlign: TextAlign.center,
                                           style: 
                                           
-                                           AppFonts.headerStyle(fontSize:17.sp,
+                                           AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.6),
                                         color: customcolor.black,fontWeight: FontWeight.w300  ),
                                        readOnly: true,
                                        onTap: ()
@@ -272,7 +273,7 @@ complaintdetail()
                                                      Text(
                                                       "${GlobalLists.notifylist[index].complaintNo}"
                                                       //"${GlobalLists.notifylist[index].masterAreaName} ${GlobalLists.notifylist[index].masterBlockName}-(${GlobalLists.notifylist[index].complainantName})"
-                                                      , style:AppFonts.headerStyle(fontSize:17.sp,
+                                                      , style:AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.9),
         color: customcolor.title,fontWeight: FontWeight.normal  ),
                       ),
                                                                  
@@ -308,7 +309,7 @@ complaintdetail()
                                                           children: [
                                                      
                                                     Text("${GlobalLists.notifylist[index].comment}",
-                                                     style:AppFonts.headerStyle(fontSize:17.sp,
+                                                     style:AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.6),
                                                         color: customcolor.subtitle,fontWeight: FontWeight.normal  ),
                                                                                                   overflow: TextOverflow.ellipsis,
                                                                                                   maxLines: 3,),
@@ -331,7 +332,7 @@ complaintdetail()
                                                          Text(
                                                           "${GlobalLists.notifylist[index].complaintstatus}"
                                                           //"${GlobalLists.notifylist[index].masterAreaName} ${GlobalLists.notifylist[index].masterBlockName}-(${GlobalLists.notifylist[index].complainantName})"
-                                                          , style:AppFonts.headerStyle(fontSize:17.sp,
+                                                          , style:AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.9),
                                                      color: GlobalLists.notifylist[index].complaintstatus=="Pending"
                                                      ?customcolor.red:GlobalLists.notifylist[index].complaintstatus=="Dependent"?customcolor.blue:GlobalLists.notifylist[index].complaintstatus=="Resolved"?customcolor.green:
                                                      customcolor.title,fontWeight: FontWeight.normal  ),
@@ -347,7 +348,7 @@ complaintdetail()
                                                      ],
                                                    ),
                                                       Text("${GlobalLists.notifylist[index].loggedAt}",
-                                                                            style: AppFonts.headerStyle(fontSize:17.sp,
+                                                                            style: AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.6),
                                                      color: customcolor.hinttext,fontWeight: FontWeight.normal  ),)
                                                  ],
                                                ),
@@ -369,7 +370,7 @@ complaintdetail()
                                
         //                     //     ));
         //                     //                       },
-        //                     //                        child: Text('View Complaints',style: AppFonts.headerStyle(fontSize:17.sp,
+        //                     //                        child: Text('View Complaints',style: AppFonts.headerStyle(fontSize:ResponsiveFlutter.of(context).fontSize(1.8),
         //                     //                          color: customcolor.blue,fontWeight: FontWeight.normal  ),),
         // //                     //                      ),
         // //                                                                 Text("${GlobalLists.notifylist[index].loggedAt}",

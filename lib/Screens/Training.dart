@@ -16,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:geocoding/geocoding.dart';
-
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +27,7 @@ import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/FormTextFieldButton.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
@@ -37,25 +37,19 @@ import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
 import 'package:janpro/Utitlity/linechart.dart';
 import 'package:janpro/Utitlity/sizeConfig.dart';
-import 'package:janpro/model/AddAttendanceResponse.dart' as addattten;
-import 'package:janpro/model/AddtrainingResponse.dart' as addtraining;
+
 import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:janpro/model/ClientwisetrainingResponse.dart' as training;
 import 'package:janpro/model/JanitorslistResponse.dart';
 import 'package:janpro/model/MobilelisttrainingResponse.dart' as agen;
-import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart' as permishan;
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:image/image.dart' as img;
-
-import 'dart:math' as math;
-
 import '../DBHelper/db_helper.dart';
 import '../const/global.dart';
 import '../services/camera_capture_screen.dart';
@@ -296,7 +290,9 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                                           child: Text(
                                             "TRAINING",
                                             style: AppFonts.headerStyle(
-                                                fontSize: 17.sp,
+                                                fontSize: ResponsiveFlutter.of(
+                                                        context)
+                                                    .fontSize(2.3),
                                                 color: customcolor.black,
                                                 fontWeight: FontWeight.w300),
                                           ),
@@ -347,9 +343,6 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                               fontWeight: FontWeight.bold),
                         ),
                         onPressed: () {
-                          log("maintag :$maintag");
-                          log('widget.clientname :${widget.clientname}');
-                          log("mainlisttab[maintag].trainingData :${mainlisttab[maintag].trainingData}");
                           mainlisttab.length > 0
                               ? mainlisttab[maintag]
                                       .totalNumberOfTraning
@@ -537,7 +530,9 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
       ),
       child: Card(
         elevation: 5,
-        child: Padding(
+        child:dropdownList.length==0? Container(
+          width: SizeConfig.blockSizeHorizontal*90,
+          child: Center(child: Text("No Record Found")),): Padding(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Column(
             children: [
@@ -589,7 +584,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
               Divider(height: 10),
 
               // Sticky Submit Button
-              Center(
+             dropdownList.length==0?Container():    Center(
                 child: GestureDetector(
                   onTap: () {
                     setStateDialgoue(() {
@@ -1197,7 +1192,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                     textAlign: TextAlign.start,
                     overflow: TextOverflow.ellipsis,
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2),
                         color: customcolor.title,
                         fontWeight: FontWeight.normal),
                   ),
@@ -1227,7 +1222,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
               child: Text(
                 name,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2),
                     color: customcolor.black,
                     fontWeight: FontWeight.normal),
               ),
@@ -1237,7 +1232,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
               child: Text(
                 value,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2.6),
                     color: customcolor.textyellow,
                     fontWeight: FontWeight.bold),
               ),
@@ -1285,7 +1280,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
               child: Text(
                 ratinglist[index].name,
                 style: AppFonts.headerStyle(
-                    fontSize: 17.sp,
+                    fontSize: ResponsiveFlutter.of(context).fontSize(2),
                     color: customcolor.black,
                     fontWeight: FontWeight.bold),
               ),
@@ -1579,7 +1574,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                   child: Text(
                     employeelist[index].name,
                     style: AppFonts.headerStyle(
-                        fontSize: 17.sp,
+                        fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
                         color: customcolor.black,
                         fontWeight: FontWeight.w500),
                   ),
@@ -1604,14 +1599,16 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                               Text(
                                 "Mobile",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 employeelist[index].contact,
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -1624,14 +1621,16 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                               Text(
                                 "Login Timing",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 15.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.5),
                                     color: customcolor.greytext,
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 "${employeelist[index].loginTime}",
                                 style: AppFonts.headerStyle(
-                                    fontSize: 17.sp,
+                                    fontSize: ResponsiveFlutter.of(context)
+                                        .fontSize(1.8),
                                     color: customcolor.black,
                                     fontWeight: FontWeight.w400),
                               ),
@@ -1704,17 +1703,18 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
       var clientid = await SPManager().getclientid();
       var supervisorid = await SPManager().getsupervisorid();
 
-     
+      print("$clientid");
       if (role == GlobalLists.clientrole) {
         map['clientid'] = clientid;
       } else {
         map['emp_id'] = supervisorid;
       }
- 
+      print("map");
+      print(map);
       APIManager().apiRequest(context, API.clientwisetraininglist,
           (response) async {
         training.ClientwisetrainingResponse resp = response;
-   
+        print('called API ${resp}');
         if (resp.status == 1) {
           setState(() {
             isTrainingLoaded = false;
@@ -1726,9 +1726,11 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
             // GlobalLists.ratinggraphlist=resp.;
 
             for (int i = 0; i < resp.data.length; i++) {
-              log("mainlisttab.data :${resp.data[i]}");
+              log("resp.data :${resp.data[i]}");
               mainlisttab.add(resp.data[i]);
-           
+              print("TRAI");
+              print(widget.clientname);
+              print(resp.data[i].clientName);
               if (resp.data[i].clientName == widget.clientname) {
                 //  int selectindex = resp.data.indexWhere((item) => item.clientName == "RMALL - Mulund");
                 setState(() {
@@ -1772,7 +1774,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
     var map = <String, dynamic>{};
 
     if (status1) {
-      //  Online: Fetch from API
+      // ✅ Online: Fetch from API
       APIManager().apiRequest(context, API.mobilelisttrainingmaster,
           (response) async {
         agen.MobilelisttrainingResponse resp = response;
@@ -1785,7 +1787,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                 .toList();
           });
 
-          //      Save to cache
+          // ✅ Save to cache
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
               'cached_training_agenda', json.encode(resp.toJson()));
@@ -1830,10 +1832,10 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
     };
 
     if (status1) {
-      //      Online
+      // ✅ Online
       APIManager().apiRequest(context, API.janitorslist, (response) async {
         JanitorslistResponse resp = response;
-      
+        print('called Janitor1 $resp');
 
         if (resp.status == 1) {
           setState(() {
@@ -1843,7 +1845,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                 .toList();
           });
 
-          //      Save to local storage
+          // ✅ Save to local storage
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             'cached_janitor_agenda',
@@ -1884,7 +1886,7 @@ bool isAddTrainingLoaded=false;
     String train_agenda = agendaid.join(', ');
     String train_janitor = janitorid.join(', ');
 
-    ///      Create payload
+    /// ✅ Create payload
     final payload = {
       'Date_of_Training': datecontroller.text,
       'Training_Agenda': train_agenda,
@@ -2128,81 +2130,141 @@ void _onImageButtonPressed(
     int size = await file.length();
     return size;
   }
+void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
+  setState(() => _loadingPath = true);
 
-  void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
-    setState(() => _loadingPath = true);
-    try {
-      _directoryPath = null;
-      _paths = (await FilePicker.platform.pickFiles(
-        type: _pickingType,
-        allowMultiple: true,
+  try {
+    final ImagePicker picker = ImagePicker();
 
-        allowedExtensions: [
-          'jpg',
-          'jpeg',
-          'png',
-        ],
-        // allowedExtensions: (_extension?.isNotEmpty ?? false)
-        //     ? _extension?.replaceAll(' ', '')?.split(',')
-        //     : null,
-      ))
-          ?.files;
-    } on PlatformException catch (e) {
-      print("Unsupported operation" + e.toString());
-    } catch (ex) {
-      print(ex);
+    final List<XFile> images = await picker.pickMultiImage();
+
+    if (images.isEmpty) {
+      setState(() => _loadingPath = false);
+      return;
     }
-    if (!mounted) return;
-    setStateDialgoue(() async {
-      _loadingPath = false;
-      _fileName = _paths != null
-          ? _paths!.map((e) => e.name).toString()
-          : 'Select Document';
-      print("File name is${_fileName}");
-      if (_paths!.length > 2) {
-        ShowDialogs.showToast("You can upload upto 2 images");
-      } else {
-        // changes by vishu
-        for (int i = 0; i < _paths!.length; i++) {
-          File file = File(_paths![i].path!);
-          if (file.existsSync()) {
-            final dir = await path_provider.getTemporaryDirectory();
-            final targetPath =
-                '${dir.absolute.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-            // converting original image to compress it
-            final finalresult = await FlutterImageCompress.compressAndGetFile(
-              file.path,
-              targetPath,
-              minHeight: 1080, //you can play with this to reduce siz
-              minWidth: 1080,
-              quality:
-                  50, // keep this high to get the original quality of image
-            );
-            File newImage = File(finalresult!.path);
-            print(
-                'File: ${file} without Compress File Size: ${await getFileSize(file.path)}');
-            int count = await getFileSize(newImage.path);
-            print('File: ${newImage} with Compress File Size: ${count}');
-            result.add(newImage.path);
-          } else {
-            print('File does not exist: ${file.path}');
-            // Handle file not found errors
-          }
+
+    if (images.length > 2) {
+      setState(() => _loadingPath = false);
+      ShowDialogs.showToast("You can upload upto 2 images");
+      return;
+    }
+
+    result.clear();
+    List<String> fileNames = [];
+
+    // 🔥 Compress OUTSIDE UI update
+    for (XFile xfile in images) {
+      File file = File(xfile.path);
+
+      if (file.existsSync()) {
+        final dir = await path_provider.getTemporaryDirectory();
+        final targetPath =
+            '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        final compressedFile =
+            await FlutterImageCompress.compressAndGetFile(
+          file.path,
+          targetPath,
+          minHeight: 1080,
+          minWidth: 1080,
+          quality: 50,
+        );
+
+        if (compressedFile != null) {
+          result.add(compressedFile.path);
+          fileNames.add(compressedFile.path.split('/').last);
         }
-        List<String> filename = [];
-        uploadcontroller.text = "";
-        for (int i = 0; i < result.length; i++) {
-          filename.add(result[i].split('/').last);
-        }
-        print(filename);
-        String s = filename.join(', ');
-        print(s);
-        uploadcontroller.text = s;
-        //uploadcontroller.text=_fileName!;
       }
-      setStateDialgoue(() {});
+    }
+
+    if (!mounted) return;
+
+    // ✅ UI update ONLY
+    setStateDialgoue(() {
+      _loadingPath = false;
+      uploadcontroller.text = fileNames.join(', ');
     });
+
+  } catch (e) {
+    setState(() => _loadingPath = false);
+    debugPrint("ImagePicker error: $e");
   }
+}
+
+  // void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
+  //   setState(() => _loadingPath = true);
+  //   try {
+  //     _directoryPath = null;
+  //     _paths = (await FilePicker.platform.pickFiles(
+  //       type: _pickingType,
+  //       allowMultiple: true,
+
+  //       allowedExtensions: [
+  //         'jpg',
+  //         'jpeg',
+  //         'png',
+  //       ],
+  //       // allowedExtensions: (_extension?.isNotEmpty ?? false)
+  //       //     ? _extension?.replaceAll(' ', '')?.split(',')
+  //       //     : null,
+  //     ))
+  //         ?.files;
+  //   } on PlatformException catch (e) {
+  //     print("Unsupported operation" + e.toString());
+  //   } catch (ex) {
+  //     print(ex);
+  //   }
+  //   if (!mounted) return;
+  //   setStateDialgoue(() async {
+  //     _loadingPath = false;
+  //     _fileName = _paths != null
+  //         ? _paths!.map((e) => e.name).toString()
+  //         : 'Select Document';
+  //     print("File name is${_fileName}");
+  //     if (_paths!.length > 2) {
+  //       ShowDialogs.showToast("You can upload upto 2 images");
+  //     } else {
+  //       // changes by vishu
+  //       for (int i = 0; i < _paths!.length; i++) {
+  //         File file = File(_paths![i].path!);
+  //         if (file.existsSync()) {
+  //           final dir = await path_provider.getTemporaryDirectory();
+  //           final targetPath =
+  //               '${dir.absolute.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+  //           // converting original image to compress it
+  //           final finalresult = await FlutterImageCompress.compressAndGetFile(
+  //             file.path,
+  //             targetPath,
+  //             minHeight: 1080, //you can play with this to reduce siz
+  //             minWidth: 1080,
+  //             quality:
+  //                 50, // keep this high to get the original quality of image
+  //           );
+  //           File newImage = File(finalresult!.path);
+  //           print(
+  //               'File: ${file} without Compress File Size: ${await getFileSize(file.path)}');
+  //           int count = await getFileSize(newImage.path);
+  //           print('File: ${newImage} with Compress File Size: ${count}');
+  //           result.add(newImage.path);
+  //         } else {
+  //           print('File does not exist: ${file.path}');
+  //           // Handle file not found errors
+  //         }
+  //       }
+  //       List<String> filename = [];
+  //       uploadcontroller.text = "";
+  //       for (int i = 0; i < result.length; i++) {
+  //         filename.add(result[i].split('/').last);
+  //       }
+  //       print(filename);
+  //       String s = filename.join(', ');
+  //       print(s);
+  //       uploadcontroller.text = s;
+  //       //uploadcontroller.text=_fileName!;
+  //     }
+  //     setStateDialgoue(() {});
+  //   });
+  // }
 
   Future<void> requestStoragePermission() async {
     var status = await Permission.storage.status;
@@ -2215,14 +2277,14 @@ void _onImageButtonPressed(
     }
   }
 
+
 Future<Placemark> getLocation() async {
-  print("Fetching location...");
+
 
   // Get current position
   Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high);
 
-  print('Latitude: ${position.latitude}, Longitude: ${position.longitude}');
 
   // Get placemarks (address) from coordinates
   List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -2234,13 +2296,14 @@ Future<Placemark> getLocation() async {
 
   Placemark first = placemarks.first;
 
-  String lat = position.latitude.toString();
-  String long = position.longitude.toString();
+   lat = position.latitude.toString();
+   long = position.longitude.toString();
 
   print("${first.name} : ${first.street}, ${first.locality}, ${first.country}");
 
   return first;
 }}
+
 
 typedef void OnPickImageCallback(
     double? maxWidth, double? maxHeight, int? quality);
