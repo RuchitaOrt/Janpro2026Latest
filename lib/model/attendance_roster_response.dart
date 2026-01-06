@@ -15,7 +15,7 @@ class AttendanceRosterResponse {
       msg: json['msg'] ?? '',
       data: (json['data'] as List<dynamic>?)
               ?.map((e) => ShiftData.fromJson(e))
-              ?.toList() ??
+              .toList() ??
           [],
     );
   }
@@ -47,7 +47,7 @@ class ShiftData {
       supervisor: json['supervisor'] ?? '',
       employeeList: (json['employee_list'] as List<dynamic>?)
               ?.map((e) => EmployeeData.fromJson(e))
-              ?.toList() ??
+              .toList() ??
           [],
     );
   }
@@ -56,11 +56,13 @@ class ShiftData {
 class EmployeeData {
   final String empName;
   final dynamic empId;
-
   final List<AttendanceData> attendData;
 
-  EmployeeData(
-      {required this.empName, required this.attendData, required this.empId});
+  EmployeeData({
+    required this.empName,
+    required this.empId,
+    required this.attendData,
+  });
 
   factory EmployeeData.fromJson(Map<String, dynamic> json) {
     return EmployeeData(
@@ -68,7 +70,7 @@ class EmployeeData {
       empId: json['emp_id'],
       attendData: (json['attend_data'] as List<dynamic>?)
               ?.map((e) => AttendanceData.fromJson(e))
-              ?.toList() ??
+              .toList() ??
           [],
     );
   }
@@ -77,16 +79,39 @@ class EmployeeData {
 class AttendanceData {
   final String date;
   final String attendanceStatus;
+  final String? reason;
+  final String? om_oe_resson;
+  final String? om_oe_approval_status;
+  final String? client_approval_status;
+  final bool? act_deact_janitor;
+
+
+  final String? statusPresentAbsent;
+  final int? attendanceId;
 
   AttendanceData({
     required this.date,
     required this.attendanceStatus,
+    this.reason,
+    this.om_oe_resson,
+    this.om_oe_approval_status,
+    this.client_approval_status,
+    this.statusPresentAbsent,
+    this.attendanceId,
+     this.act_deact_janitor,
   });
 
   factory AttendanceData.fromJson(Map<String, dynamic> json) {
     return AttendanceData(
       date: json['date'] ?? '',
       attendanceStatus: json['attendance_status'] ?? '',
+      reason: json['reason'],
+      om_oe_resson: json['om_oe_resson'],
+      om_oe_approval_status: json['om_oe_approval_status'],
+      client_approval_status: json['client_approval_status'],
+      statusPresentAbsent: json['status_present_absent'],
+      attendanceId: json['attendance_id'],
+      act_deact_janitor: json['act_deact_janitor']??false,
     );
   }
 }

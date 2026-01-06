@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field, use_key_in_widget_constructors
 
 import 'dart:async';
+import 'dart:developer';
 
 import 'dart:ui';
 
@@ -851,7 +852,7 @@ bool isoverAllGraphLoaded=false;
     
       var map = Map<String, dynamic>();
       var emp_id = await SPManager().getclientid();
-      print('UserRole: ${role}');
+     
       // 3 OM
       if (role == GlobalLists.clientrole) {
         map['date'] = datecontroller.text;
@@ -868,6 +869,8 @@ bool isoverAllGraphLoaded=false;
         map['date'] = datecontroller.text;
         map['emp_id'] = emp_id;
       }
+
+      log('Attendance Graph Params: $map');
       // map['date'] = datecontroller.text;
       // map['clientid'] = clientid;
       // map['siteid'] = siteid;

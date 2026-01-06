@@ -10,6 +10,8 @@ import 'package:janpro/model/AddAttendanceResponse.dart';
 import 'package:janpro/model/AddSpecialActivityResponse.dart';
 import 'package:janpro/model/AddratingResponse.dart';
 import 'package:janpro/model/AddtrainingResponse.dart';
+import 'package:janpro/model/ApprovAttendanceRooster.dart';
+import 'package:janpro/model/ApproveRejectSubmit.dart';
 import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:janpro/model/ClientDashboardResponse.dart';
 import 'package:janpro/model/ClientsiteDashboardResponse.dart';
@@ -38,6 +40,8 @@ import 'package:janpro/model/OperationalRatinggraphwiseResponse.dart';
 import 'package:janpro/model/OperationalWorkflowResponse.dart';
 import 'package:janpro/model/ProfileResponse.dart';
 import 'package:janpro/model/RatinglistResponse.dart';
+import 'package:janpro/model/RejectAttendanceRooster.dart';
+import 'package:janpro/model/SubmitAttendanceRooster.dart';
 import 'package:janpro/model/TicketllistResponse.dart' as ticket;
 import 'package:janpro/model/TrendGraphResponse.dart';
 import 'package:janpro/model/UnitComplaintResponse.dart';
@@ -46,6 +50,7 @@ import 'package:janpro/model/UnitclientMasterResponse.dart';
 import 'package:janpro/model/UnitsiteMasterResponse.dart';
 import 'package:janpro/model/UpdateTATResponse.dart';
 import 'package:janpro/model/UpdatedworkflowResponse.dart';
+import 'package:janpro/model/ViewAttendaceMonthly.dart';
 import 'package:janpro/model/WorkflowlistResponse.dart';
 import 'package:janpro/model/WorkflowoperationalDetailmodel.dart';
 import 'package:janpro/model/Workflowoperationalmodel.dart';
@@ -111,6 +116,12 @@ enum API {
   cardvisitview,
 
   deleteattendance,
+  submit_client_attendance_rooster,
+  approved_rejected_om_oe_client_submit_attendance_rooster,
+
+
+  approved_om_oe_attendance_rooster,
+  rejected_om_oe_attendance_rooster,
   notificationlist,
   janitors_details,
   janitors_edit,
@@ -128,6 +139,8 @@ enum API {
 
   trends_attendance_graph,
   attendance_roster,
+  view_monthly_attendance_rooster_details,
+
   add_attendance_daily_count
 }
 
@@ -342,6 +355,18 @@ class APIManager {
       case API.deleteattendance:
         apiPathString = "/api/attendancemaster/Delete_AttendanceMaster";
         break;
+      case API.submit_client_attendance_rooster:
+        apiPathString = "/api/attendancemaster/submit_client_attendance_rooster";
+        break;
+      case API.approved_rejected_om_oe_client_submit_attendance_rooster:
+        apiPathString = "/api/attendancemaster/approved_rejected_om_oe_client_submit_attendance_rooster";
+        break;
+      case API.approved_om_oe_attendance_rooster:
+        apiPathString = "/api/attendancemaster/approved_om_oe_attendance_rooster";
+        break;
+      case API.rejected_om_oe_attendance_rooster:
+        apiPathString = "/api/attendancemaster/rejected_om_oe_attendance_rooster";
+        break;
       case API.janitors_add:
         apiPathString = "/api/attendancemaster/add_janitors";
         break;
@@ -369,11 +394,14 @@ class APIManager {
         apiPathString = "/api/attendancemaster/list_janitors";
         break;
       case API.trends_attendance_graph:
-        apiPathString = "/api/siteconfigurator/new_trends_attendance_graph";
+        apiPathString = "/api/masterarea/new_trends_attendance_graph";
         //trends_attendance_graph";
         break;
       case API.attendance_roster:
         apiPathString = "/api/attendancemaster/attendance-rooster";
+        break;
+      case API.view_monthly_attendance_rooster_details:
+        apiPathString = "/api/attendancemaster/view_monthly_attendance_rooster_details";
         break;
       case API.add_attendance_daily_count:
         // apiPathString = "/api/siteconfigurator/add_attendance_daily_count";
@@ -433,6 +461,10 @@ class APIManager {
       case API.sitedropdown:
 
       case API.deleteattendance:
+      case API.submit_client_attendance_rooster:
+      case API.approved_rejected_om_oe_client_submit_attendance_rooster:
+      case API.approved_om_oe_attendance_rooster:
+      case API.rejected_om_oe_attendance_rooster:
       case API.janitorslist:
       case API.notificationlist:
       case API.janitors_add:
@@ -447,6 +479,7 @@ class APIManager {
       case API.fetchcontact_janitors:
       case API.trends_attendance_graph:
       case API.attendance_roster:
+      case API.view_monthly_attendance_rooster_details:
       case API.add_attendance_daily_count:
         method = HTTPMethod.POST;
         break;
@@ -589,6 +622,19 @@ class APIManager {
       case API.deleteattendance:
         className = "DeleteAttendance";
         break;
+      case API.submit_client_attendance_rooster:
+        className = "SubmitAttendanceRooster";
+        break;
+      case API.approved_rejected_om_oe_client_submit_attendance_rooster:
+        className = "ApproveRejectSubmit";
+        break;
+      case API.approved_om_oe_attendance_rooster:
+        className = "ApprovAttendanceRooster";
+        break;
+      
+      case API.rejected_om_oe_attendance_rooster:
+        className = "RejectAttendanceRooster";
+        break;
 
       case API.janitors_add:
         className = "JanitorAdd";
@@ -622,6 +668,9 @@ class APIManager {
         break;
       case API.attendance_roster:
         className = "AttendanceRosterResponse";
+        break;
+       case API.view_monthly_attendance_rooster_details:
+        className = "ViewAttendaceMonthly";
         break;
         case API.add_attendance_daily_count:
          className = "AddDailyCountResponse";
@@ -663,6 +712,10 @@ class APIManager {
     }
     if (className == 'AttendanceRosterResponse') {
       responseObj = AttendanceRosterResponse.fromJson(json);
+    }
+
+    if (className == 'ViewAttendaceMonthly') {
+      responseObj = ViewAttendaceMonthly.fromJson(json);
     }
     if (className == 'CommonResponse') {
       responseObj = CommonResponse.fromJson(json);
@@ -775,6 +828,18 @@ class APIManager {
 
     if (className == 'DeleteAttendance') {
       responseObj = DeleteAttendance.fromJson(json);
+    }
+    if (className == 'SubmitAttendanceRooster') {
+      responseObj = SubmitAttendanceRooster.fromJson(json);
+    }
+     if (className == 'ApproveRejectSubmit') {
+      responseObj = ApproveRejectSubmit.fromJson(json);
+    }
+     if (className == 'RejectAttendanceRooster') {
+      responseObj = RejectAttendanceRooster.fromJson(json);
+    }
+    if (className == 'ApprovAttendanceRooster') {
+      responseObj = ApprovAttendanceRooster.fromJson(json);
     }
     if (className == 'NotificationlistResponse') {
       responseObj = NotificationlistResponse.fromJson(json);

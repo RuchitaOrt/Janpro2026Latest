@@ -2152,7 +2152,7 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
     result.clear();
     List<String> fileNames = [];
 
-    // 🔥 Compress OUTSIDE UI update
+    //  Compress OUTSIDE UI update
     for (XFile xfile in images) {
       File file = File(xfile.path);
 

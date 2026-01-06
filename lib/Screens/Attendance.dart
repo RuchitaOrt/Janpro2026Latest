@@ -1,55 +1,50 @@
+// ignore_for_file: unused_local_variable, prefer_final_fields, deprecated_member_use, unnecessary_null_comparison, avoid_unnecessary_containers, sort_child_properties_last, sized_box_for_whitespace, curly_braces_in_flow_control_structures, unnecessary_brace_in_string_interps, no_leading_underscores_for_local_identifiers, unused_field, unused_element, unnecessary_string_interpolations, prefer_if_null_operators, avoid_function_literals_in_foreach_calls, library_private_types_in_public_api, prefer_const_constructors_in_immutables, prefer_typing_uninitialized_variables, use_key_in_widget_constructors
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Screens/Training.dart';
+import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/FormTextField.dart';
-
 import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/LocationService.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
-
 import 'package:janpro/Utitlity/customBottomNavigationBar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
 import 'package:janpro/Utitlity/linechart.dart';
 import 'package:janpro/Utitlity/sizeConfig.dart';
 import 'package:janpro/model/AddAttendanceResponse.dart' as addattten;
+import 'package:janpro/model/ApprovAttendanceRooster.dart';
 import 'package:janpro/model/AttendencelistResponse.dart';
 import 'package:janpro/model/DeleteAttendance.dart' as deleteatt;
-import 'package:janpro/model/JanitorContactFetchResponse.dart';
 import 'package:janpro/model/JanitorslistResponse.dart';
+import 'package:janpro/model/RejectAttendanceRooster.dart';
+import 'package:janpro/model/SubmitAttendanceRooster.dart';
 import 'package:janpro/model/unitAttendanceResponse.dart' as unitatt;
 import 'package:janpro/model/unitGraphAttendanceResponse.dart' as graph;
 import 'package:page_transition/page_transition.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart' as permishan;
-
 import 'package:janpro/model/UnitsiteMasterResponse.dart' as sitemaster;
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'dart:math' as math;
-
 import '../DBHelper/db_helper.dart';
 import '../const/global.dart';
 import '../model/AddDailyCountResponse.dart';
 import '../model/attendance_roster_response.dart';
 import '../model/unitGraphAttendanceResponse.dart' as unitgraph;
-import 'attendance_roster.dart';
 
 class MainList {
   final String name;
@@ -105,6 +100,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   bool isexpandedclient = false;
   bool isexpanded = false;
   String attendanceclientid = "";
+  String attendancesuperid = "";
+
   String attendancesiteid = "";
   String attendanceshiftid = "";
 
@@ -117,37 +114,37 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   bool isExpandedSite = false;
   @override
   void initState() {
-    log('client_name${widget.clientname}');
     super.initState();
     var datefrom = DateFormat('dd-MM-yyyy').format(DateTime.now());
     GlobalLists.datecontroller.text = datefrom;
-    log('GlobalLists.dropdownList${GlobalLists.dropdownList}');
-    print('GlobalLists.siteid: ${GlobalLists.siteid}');
-    print("date ");
     getrole();
   }
 
   String month = '';
   String year = '';
-
-  Map<String, String> monthMap = {
-    'January': '01',
-    'February': '02',
-    'March': '03',
-    'April': '04',
-    'May': '05',
-    'June': '06',
-    'July': '07',
-    'August': '08',
-    'September': '09',
-    'October': '10',
-    'November': '11',
-    'December': '12',
-  };
+  Widget _legendDot(Color color, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.black87,
+            fontFamily: AppFonts.regular,
+          ),
+        ),
+      ],
+    );
+  }
 
   _fetchAttendanceRoster() async {
-    print('Site Id: $attendancesiteid');
-    print('GlobalLists.siteid: ${GlobalLists.siteid}');
     try {
       var status1 = await ConnectionDetector.checkInternetConnection();
       if (!status1) {
@@ -155,21 +152,41 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         return;
       }
 
+      // Get current date
       final now = DateTime.now();
-      final firstDay = DateTime(now.year, 1, 1); // January 1st
-      final lastDay = DateTime(now.year, 12, 31); // December 31st
+
+      // Set default month and year if not provided
       if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
-        final now = DateTime.now();
         month = now.month.toString().padLeft(2, '0'); // "01" to "12"
         year = now.year.toString(); // "2025"
       }
+
+      // Parse month and year
+      int selectedMonth = int.parse(month);
+      int selectedYear = int.parse(year);
+
+      // Calculate first and last day of the selected month
+      final firstDayOfMonth = DateTime(selectedYear, selectedMonth, 1);
+      final lastDayOfMonth = DateTime(
+        selectedYear,
+        selectedMonth + 1,
+        0,
+      ); // Last day of month
+
+      // Prepare the API request map
       var map = {
         'site_id': attendancesiteid,
-        'from_date': DateFormat('yyyy-MM-dd').format(firstDay),
-        'to_date': DateFormat('yyyy-MM-dd').format(lastDay),
+        'from_date': DateFormat('yyyy-MM-dd').format(firstDayOfMonth),
+        'to_date': DateFormat('yyyy-MM-dd').format(lastDayOfMonth),
         "month": "$month",
         "year": "$year",
       };
+
+      print(
+        'Fetching attendance roster for: ${DateFormat('MMMM yyyy').format(firstDayOfMonth)}',
+      );
+      print('From: ${DateFormat('yyyy-MM-dd').format(firstDayOfMonth)}');
+      print('To: ${DateFormat('yyyy-MM-dd').format(lastDayOfMonth)}');
 
       // Show loading dialog
       showDialog(
@@ -212,8 +229,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             if (rosterResponse.status == "success") {
               setState(() {
                 _attendanceRosterData = rosterResponse.data;
-                // log(_attendanceRosterData.toString());
-                print("_attendanceRosterData $_attendanceRosterData");
+                print(
+                  "_attendanceRosterData length: ${_attendanceRosterData.length}",
+                );
               });
 
               _showRosterDialog();
@@ -235,29 +253,91 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       );
     } catch (e) {
       Navigator.pop(context); // Dismiss loading dialog if still showing
-      print('Error in _fetchAttendanceRoster: $e');
       ShowDialogs.showToast('An error occurred');
     }
   }
 
+  OverlayEntry? _overlayEntry;
+
+  final monthNames = [
+    '',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  Widget _legendItem(Color color, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLegendDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Attendance Legend',
+            style: TextStyle(fontFamily: AppFonts.semibold, fontSize: 18),
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                _legendDot(Colors.green, "Client approved/rejected"),
+                _legendDot(customcolor.pink, "Client Reason"),
+                _legendDot(customcolor.red, "OM/OE rejected"),
+                _legendDot(customcolor.lightgreen, "Present/Absent"),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                'Close',
+                style: TextStyle(
+                  fontFamily: AppFonts.semibold,
+                  color: customcolor.blue,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showRosterDialog() {
     if (!mounted || context == null || _attendanceRosterData.isEmpty) return;
-
-    const monthNames = [
-      '',
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
+    final _horizontalScrollKey = GlobalKey();
 
     String getMonthYear(String date) {
       final parts = date.split('-');
@@ -273,28 +353,63 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       return DateTime(year, monthIndex);
     }
 
+    int currentMonth = int.parse(month);
+    int currentYear = int.parse(year);
+
     final Map<String, List<dynamic>> groupedByMonth = {};
     for (var shift in _attendanceRosterData) {
-      log('shift.employeeList ${shift.shiftName}');
+      final monthsInShift = <String>{};
+
       for (var emp in shift.employeeList) {
         for (var att in emp.attendData) {
           final monthYear = getMonthYear(att.date);
-          groupedByMonth.putIfAbsent(monthYear, () => []);
-          if (!groupedByMonth[monthYear]!.contains(shift)) {
-            groupedByMonth[monthYear]!.add(shift);
-          }
+          monthsInShift.add(monthYear);
+        }
+      }
+
+      if (monthsInShift.isEmpty) {
+        monthsInShift.add('${monthNames[currentMonth]} $currentYear');
+      }
+
+      for (var monthYear in monthsInShift) {
+        groupedByMonth.putIfAbsent(monthYear, () => []);
+        if (!groupedByMonth[monthYear]!.contains(shift)) {
+          groupedByMonth[monthYear]!.add(shift);
         }
       }
     }
 
-    final now = DateTime.now();
-    final List<String> monthYears = groupedByMonth.keys.toList()
+    List<int> availableYears = [2026, 2025];
+
+    int selectedYear = int.parse(year);
+    List<String> monthYears = [];
+    for (int i = 1; i <= 12; i++) {
+      monthYears.add('${monthNames[i]} $selectedYear');
+    }
+
+    String selectedMonth = '${monthNames[currentMonth]}';
+
+    void _reloadDataForMonthYear(String newMonth, int newYear) {
+      final monthName = newMonth.split(' ')[0];
+      final monthIndex = monthNames.indexOf(monthName);
+      month = monthIndex.toString().padLeft(2, '0');
+      // year = newYear.toString();
+
+      // Close current dialog and fetch new data
+      Navigator.pop(context);
+      _fetchAttendanceRoster();
+    }
+
+    // Sort months chronologically
+    final availableMonths = groupedByMonth.keys.toList()
       ..sort((a, b) => getMonthYearDate(a).compareTo(getMonthYearDate(b)));
 
-    final currentMonthStr = '${monthNames[now.month]} ${now.year}';
-    String selectedMonth = monthYears.contains(currentMonthStr)
-        ? currentMonthStr
-        : (monthYears.isNotEmpty ? monthYears[0] : '');
+    // If selected month is not in available months, select the first available
+    if (!availableMonths.contains(selectedMonth) &&
+        availableMonths.isNotEmpty) {
+      selectedMonth = availableMonths[0];
+    }
+
     dynamic selectedShift = groupedByMonth[selectedMonth]?.isNotEmpty == true
         ? groupedByMonth[selectedMonth]![0]
         : null;
@@ -309,11 +424,49 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       pageBuilder: (context, animation, secondaryAnimation) {
         return StatefulBuilder(
           builder: (context, setState) {
+            // Helper function to get attendance status from key
+            String _getAttendanceStatusFromKey(String key) {
+              final parts = key.split(',');
+              return parts.length >= 3 ? parts[2] : '';
+            }
+
+            bool _allSelectedHaveSameStatus() {
+              if (selectedCells.isEmpty) return true;
+
+              final firstStatus = _getAttendanceStatusFromKey(
+                selectedCells.first,
+              );
+              return selectedCells.every(
+                (key) => _getAttendanceStatusFromKey(key) == firstStatus,
+              );
+            }
+
+            String? _getCurrentSelectedStatus() {
+              if (selectedCells.isEmpty) return null;
+
+              final firstStatus = _getAttendanceStatusFromKey(
+                selectedCells.first,
+              );
+              return _allSelectedHaveSameStatus() ? firstStatus : null;
+            }
+
+            void _reloadDataForMonth(String newMonth) {
+              final parts = newMonth.split(' ');
+              final monthName = parts[0];
+              final yearStr = parts[1];
+
+              final monthIndex = monthNames.indexOf(monthName);
+              month = monthIndex.toString().padLeft(2, '0');
+              year = yearStr;
+
+              Navigator.pop(context);
+              _fetchAttendanceRoster();
+            }
+
             final shifts = groupedByMonth[selectedMonth] ?? [];
             final allDates = <String>{};
 
             for (var shift in shifts) {
-              // log('shift.employeeList ${shift.shiftName}');
               for (var emp in shift.employeeList) {
                 for (var att in emp.attendData) {
                   if (getMonthYear(att.date) == selectedMonth) {
@@ -325,8 +478,168 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
             final sortedDates = allDates.toList()..sort();
 
+            Map<String, dynamic> _prepareApiData(
+              String reason,
+              List<String> selectedKeys,
+              String actionType, // 'submit', 'approve', or 'reject'
+            ) {
+              final siteId = '$attendancesiteid';
+              final userId = '$attendanceclientid';
+              final clientId = '$attendanceclientid';
+              final shiftId = selectedShift.id?.toString() ?? '';
+
+              // Get first selected date
+              String toDate = '';
+              if (selectedKeys.isNotEmpty) {
+                final firstKeyParts = selectedKeys[0].split(',');
+                if (firstKeyParts.length >= 2) {
+                  toDate = firstKeyParts[1];
+                }
+              }
+
+              final List<Map<String, dynamic>> empDataList = [];
+              final List<int> attendanceIdList = [];
+
+              for (var key in selectedKeys) {
+                final parts = key.split(',');
+                if (parts.length < 3) continue;
+
+                final empName = parts[0];
+                final date = parts[1];
+
+                EmployeeData? emp;
+                try {
+                  emp = selectedShift.employeeList.firstWhere(
+                    (e) => e.empName == empName,
+                  );
+                } catch (e) {
+                  continue;
+                }
+
+                if (emp == null) continue;
+
+                AttendanceData? attendanceData;
+                try {
+                  attendanceData = emp.attendData.firstWhere(
+                    (att) => att.date == date,
+                  );
+                } catch (e) {
+                  log('No attendance data found for $empName on $date');
+                }
+
+                if (actionType == 'submit') {
+                  /// TOGGLE attendance_status
+                  String toggledStatus = 'no';
+
+                  if (attendanceData?.attendanceStatus == 'yes') {
+                    toggledStatus = 'yes';
+                  } else if (attendanceData?.attendanceStatus == 'no') {
+                    toggledStatus = 'no';
+                  }
+
+                  Map<String, dynamic> data = {
+                    "date": date,
+                    "attendance_status": toggledStatus,
+                    "emp_id": emp.empId,
+                  };
+
+                  if (role == GlobalLists.clientrole) {
+                    data["reason"] = reason;
+                  } else {
+                    data["om_oe_resson"] = reason;
+                  }
+
+                  empDataList.add(data);
+                }
+                /// ================= APPROVE / REJECT =================
+                else if (actionType == 'approve' || actionType == 'reject') {
+                  if (attendanceData?.attendanceId != null) {
+                    attendanceIdList.add(attendanceData!.attendanceId!);
+                  } else {
+                    log('No attendance_id found for $empName on $date');
+                  }
+                }
+              }
+
+              if (actionType == 'submit') {
+                return {
+                  'site_id': siteId,
+                  'to_date': toDate,
+                  'shift': shiftId,
+                  'user_id': userId,
+                  'client_id': clientId,
+                  'emp_id': empDataList,
+                };
+              } else {
+                return {
+                  'reason': reason,
+                  'user_id': userId,
+                  'is_client': role == GlobalLists.clientrole
+                      ? "true"
+                      : "false",
+                  'attendance_id_list': attendanceIdList,
+                };
+              }
+            }
+
             // Function to show reason dialog
             void _showReasonDialog({bool isMultiSelect = false}) {
+              // For multi-select, ensure all selected have the same status
+              if (isMultiSelect && !_allSelectedHaveSameStatus()) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Cannot submit mixed attendance statuses. Please select only one type (All Present, All Absent, or All Unmarked).',
+                    ),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+                return;
+              }
+
+              bool hasReason = false;
+              if (selectedCells.isNotEmpty) {
+                for (var key in selectedCells) {
+                  final parts = key.split(',');
+                  if (parts.length >= 3) {
+                    final empName = parts[0];
+                    final date = parts[1];
+
+                    // Find the employee in the selected shift
+                    try {
+                      final emp = selectedShift.employeeList.firstWhere(
+                        (e) => e.empName == empName,
+                      );
+
+                      // Find the attendance data for this date
+                      final attendance = emp.attendData.firstWhere(
+                        (att) => att.date == date,
+                        // orElse: () => null,
+                      );
+                      log('Checking attendance ${attendance}');
+
+                      if (attendance != null &&
+                          attendance.reason?.isNotEmpty == true) {
+                        hasReason = true;
+
+                        log(
+                          'Found reason for $empName on $date: ${attendance.reason}',
+                        );
+                        break;
+                      }
+                    } catch (e) {
+                      log('Error finding employee or attendance data: $e');
+                      continue;
+                    }
+                  }
+                }
+              }
+
+              // Determine which buttons to show
+              final bool showAcceptRemarkButtons = hasReason;
+              final bool showSubmitButton = !showAcceptRemarkButtons;
+
               final reasonController = TextEditingController();
               showDialog(
                 context: context,
@@ -335,15 +648,30 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.report_problem, color: Colors.redAccent),
-                      SizedBox(width: 8),
-                      Text(
-                        "Mark as Absent",
-                        style: TextStyle(
-                          fontFamily: AppFonts.semibold,
-                          fontSize: 18,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.report_problem, color: Colors.redAccent),
+                          SizedBox(width: 8),
+                          Text(
+                            "Mark as Absent",
+                            style: TextStyle(
+                              fontFamily: AppFonts.semibold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: customcolor.darkgrey),
+                        onPressed: () {
+                          setState(() {
+                            selectedCells.clear();
+                            multiSelectMode = false;
+                          });
+                          Navigator.pop(context);
+                        },
                       ),
                     ],
                   ),
@@ -394,45 +722,170 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                     vertical: 8,
                   ),
                   actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontFamily: AppFonts.regular,
-                          color: customcolor.darkgrey,
+                    if (showSubmitButton)
+                      ElevatedButton(
+                        onPressed: () async {
+                          final reason = reasonController.text.trim();
+
+                          final apiData = _prepareApiData(
+                            reason,
+                            selectedCells.toList(),
+                            'submit', // Action type
+                          );
+
+                          try {
+                            // Call the submit API
+                            await _submitAttendaceRoster(apiData);
+
+                            // Clear selections and close dialogs
+                            setState(() {
+                              selectedCells.clear();
+                              multiSelectMode = false;
+                            });
+
+                            Navigator.pop(context); // Close reason dialog
+                          } catch (e) {
+                            log('Error submitting attendance: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to update attendance'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: customcolor.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          "Submit",
+                          style: TextStyle(
+                            fontFamily: AppFonts.semibold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        log("Reason: ${reasonController.text}");
-                        log("Selected cells: $selectedCells");
-                        // Here you would typically submit the data
-                        setState(() {
-                          selectedCells.clear();
-                          multiSelectMode = false;
-                        });
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: customcolor.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+
+                    if (showAcceptRemarkButtons) ...[
+                      // Accept Button
+                      ElevatedButton(
+                        onPressed: () async {
+                          final reason = reasonController.text.trim();
+
+                          final apiData = _prepareApiData(
+                            reason,
+                            selectedCells.toList(),
+                            'approve', // Action type
+                          );
+
+                          try {
+                            // Call the submit API
+                            await _approveAttendaceRoster(apiData);
+
+                            // Clear selections and close dialogs
+                            setState(() {
+                              selectedCells.clear();
+                              multiSelectMode = false;
+                            });
+
+                            Navigator.pop(context); // Close reason dialog
+                          } catch (e) {
+                            log('Error submitting attendance: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to update attendance'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: customcolor.green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
                         ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
+                        child: Text(
+                          "Accept",
+                          style: TextStyle(
+                            fontFamily: AppFonts.semibold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        "Submit",
-                        style: TextStyle(
-                          fontFamily: AppFonts.semibold,
-                          color: Colors.white,
+
+                      // Remark Button
+                      ElevatedButton(
+                        onPressed: () async {
+                          final reason = reasonController.text.trim();
+                          if (reason.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please enter a reason'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Prepare API data
+                          final apiData = _prepareApiData(
+                            reason,
+                            selectedCells.toList(),
+                            'reject', // Action type
+                          );
+
+                          try {
+                            // Call the submit API
+                            await _rejectAttendaceRoster(apiData);
+
+                            // Clear selections and close dialogs
+                            setState(() {
+                              selectedCells.clear();
+                              multiSelectMode = false;
+                            });
+
+                            Navigator.pop(context); // Close reason dialog
+                          } catch (e) {
+                            log('Error submitting attendance: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to update attendance'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          role == GlobalLists.clientrole ? "Reject" : "Remark",
+                          style: TextStyle(
+                            fontFamily: AppFonts.semibold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               );
@@ -440,19 +893,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
             // Function to handle single tap
             void _handleSingleTap(String key, AttendanceData? day) {
-              final isAlreadyAbsent = day?.attendanceStatus == 'no';
-
-              if (isAlreadyAbsent) {
-                setState(() {
-                  selectedCells.remove(key);
-                });
-              } else {
-                setState(() {
-                  selectedCells.clear();
-                  selectedCells.add(key);
-                });
-                // Then show reason dialog
-              }
+              setState(() {
+                selectedCells.clear();
+                selectedCells.add(key);
+              });
               _showReasonDialog(isMultiSelect: false);
             }
 
@@ -482,73 +926,206 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              color: customcolor.darkgrey,
-                            ),
-                            onPressed: () => Navigator.of(context).pop(),
+
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.info_outline,
+                                  color: customcolor.blue,
+                                ),
+                                tooltip: "View reasons",
+                                onPressed: () {
+                                  _showLegendDialog(context);
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.close,
+                                  color: customcolor.darkgrey,
+                                ),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
 
-                      /// Month Dropdown
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: customcolor.greyborder),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Select Month:',
-                              style: TextStyle(
-                                fontFamily: AppFonts.regular,
-                                color: customcolor.subtitle,
-                                fontSize: 14,
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                underline: const SizedBox(),
-                                value: selectedMonth,
-                                items: monthYears
-                                    .map(
-                                      (m) => DropdownMenuItem(
-                                        value: m,
-                                        child: Text(
-                                          m,
-                                          style: TextStyle(
-                                            fontFamily: AppFonts.semibold,
-                                            color: customcolor.title,
-                                            fontSize: 15,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: customcolor.greyborder,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Select Year:',
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.regular,
+                                      color: customcolor.subtitle,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    child: DropdownButton<int>(
+                                      isExpanded: true,
+                                      underline: const SizedBox(),
+                                      value: selectedYear,
+                                      items: availableYears.map((year) {
+                                        return DropdownMenuItem<int>(
+                                          value: year,
+                                          child: Text(
+                                            year.toString(),
+                                            style: TextStyle(
+                                              fontFamily: AppFonts.semibold,
+                                              color: multiSelectMode
+                                                  ? Colors.grey
+                                                  : customcolor.title,
+                                              fontSize: 10,
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (val) {
-                                  if (val == null) return;
-                                  setState(() {
-                                    selectedMonth = val;
-                                    selectedShift =
-                                        groupedByMonth[val]?.isNotEmpty == true
-                                        ? groupedByMonth[val]![0]
-                                        : null;
-                                  });
-                                },
+                                        );
+                                      }).toList(),
+                                      onChanged: multiSelectMode
+                                          ? null
+                                          : (val) {
+                                              if (val == null) return;
+
+                                              final int currentYear =
+                                                  DateTime.now().year;
+                                              final int currentMonth =
+                                                  DateTime.now().month;
+
+                                              setState(() {
+                                                selectedYear = val;
+
+                                                monthYears.clear();
+
+                                                int endMonth =
+                                                    (selectedYear ==
+                                                        currentYear)
+                                                    ? currentMonth
+                                                    : 12;
+
+                                                for (
+                                                  int i = 1;
+                                                  i <= endMonth;
+                                                  i++
+                                                ) {
+                                                  monthYears.add(
+                                                    '${monthNames[i]} $selectedYear',
+                                                  );
+                                                }
+
+                                                /// 🔥 Auto select valid month
+                                                selectedMonth =
+                                                    '${monthNames[1]} $selectedYear';
+
+                                                /// Clear previous selections
+                                                selectedCells.clear();
+                                                multiSelectMode = false;
+
+                                                _reloadDataForMonthYear(
+                                                  selectedMonth,
+                                                  selectedYear,
+                                                );
+                                              });
+                                            },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          SizedBox(width: 5),
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: customcolor.greyborder,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Select Month:',
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.regular,
+                                      color: customcolor.subtitle,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    child: DropdownButton<String>(
+                                      isExpanded: true,
+                                      underline: const SizedBox(),
+                                      value: selectedMonth,
+                                      items: monthYears.map((m) {
+                                        return DropdownMenuItem<String>(
+                                          value: m,
+                                          child: Text(
+                                            m,
+                                            style: TextStyle(
+                                              fontFamily: AppFonts.semibold,
+                                              color: multiSelectMode
+                                                  ? Colors.grey
+                                                  : customcolor.title,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: multiSelectMode
+                                          ? null
+                                          : (val) {
+                                            log('value $val');
+                                              if (val == null) return;
+
+                                              setState(() {
+                                                selectedMonth = val;
+                                                selectedShift =
+                                                    groupedByMonth[val]
+                                                            ?.isNotEmpty ==
+                                                        true
+                                                    ? groupedByMonth[val]![0]
+                                                    : null;
+                                                selectedCells.clear();
+                                                multiSelectMode = false;
+                                              });
+
+                                              _reloadDataForMonthYear(
+                                                selectedMonth,
+                                                selectedYear, 
+                                              );
+                                            },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
 
-                      /// Shift Dropdown
+                      /// Shift Dropdown - Disabled when multiSelectMode is true
                       if (shifts.isNotEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -581,17 +1158,23 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                         label,
                                         style: TextStyle(
                                           fontFamily: AppFonts.semibold,
-                                          color: customcolor.title,
+                                          color: multiSelectMode
+                                              ? Colors.grey
+                                              : customcolor.title,
                                           fontSize: 15,
                                         ),
                                       ),
                                     );
                                   }).toList(),
-                                  onChanged: (val) {
-                                    setState(() {
-                                      selectedShift = val;
-                                    });
-                                  },
+                                  onChanged: multiSelectMode
+                                      ? null
+                                      : (val) {
+                                          setState(() {
+                                            selectedShift = val;
+                                            selectedCells.clear();
+                                            multiSelectMode = false;
+                                          });
+                                        },
                                 ),
                               ),
                             ],
@@ -606,24 +1189,49 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                             horizontal: 16,
                           ),
                           decoration: BoxDecoration(
-                            color: customcolor.blue.withOpacity(0.1),
+                            color: !_allSelectedHaveSameStatus()
+                                ? Colors.orange.withOpacity(0.1)
+                                : customcolor.blue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: !_allSelectedHaveSameStatus()
+                                  ? Colors.orange
+                                  : customcolor.blue,
+                            ),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "Multi-select mode: ${selectedCells.length} selected",
-                                style: TextStyle(
-                                  fontFamily: AppFonts.semibold,
-                                  color: customcolor.blue,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Entries Selected: ${selectedCells.length}",
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.semibold,
+                                      color: !_allSelectedHaveSameStatus()
+                                          ? Colors.orange
+                                          : customcolor.blue,
+                                    ),
+                                  ),
+                                  if (!_allSelectedHaveSameStatus())
+                                    Text(
+                                      "Mixed statuses selected - please select only one type",
+                                      style: TextStyle(
+                                        fontFamily: AppFonts.regular,
+                                        fontSize: 12,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                ],
                               ),
                               Row(
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.clear_all, size: 20),
-                                    color: customcolor.blue,
+                                    icon: Icon(Icons.close, size: 20),
+                                    color: !_allSelectedHaveSameStatus()
+                                        ? Colors.orange
+                                        : customcolor.blue,
                                     onPressed: () {
                                       setState(() {
                                         selectedCells.clear();
@@ -633,10 +1241,24 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                   ),
                                   IconButton(
                                     icon: Icon(Icons.done, size: 20),
-                                    color: customcolor.blue,
+                                    color: !_allSelectedHaveSameStatus()
+                                        ? Colors.orange
+                                        : customcolor.blue,
                                     onPressed: () {
-                                      if (selectedCells.isNotEmpty) {
+                                      if (selectedCells.isNotEmpty &&
+                                          _allSelectedHaveSameStatus()) {
                                         _showReasonDialog(isMultiSelect: true);
+                                      } else if (selectedCells.isNotEmpty) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Cannot submit mixed attendance statuses',
+                                            ),
+                                            backgroundColor: Colors.orange,
+                                          ),
+                                        );
                                       }
                                     },
                                   ),
@@ -646,73 +1268,109 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                           ),
                         ),
 
-                      if (selectedShift != null)
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 120,
+                                    height: 45,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 12,
+                                    ),
+                                    color: customcolor.skybluebg,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Janitor's Name",
+                                          style: TextStyle(
+                                            fontFamily: AppFonts.semibold,
+                                            color: customcolor.blue,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  ...selectedShift.employeeList.map(
+                                    (emp) => SizedBox(
+                                      height: 45,
+                                      child: Container(
+                                        width: 120,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                          horizontal: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: customcolor.greyborder,
+                                            ),
+                                          ),
+                                        ),
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          emp.empName,
+                                          style: TextStyle(
+                                            fontFamily: AppFonts.regular,
+                                            fontSize: 14,
+                                            color: customcolor.title,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Fixed: "No employees assigned" centered properly
+                                  if (selectedShift.employeeList.isEmpty)
                                     Container(
                                       width: 120,
+                                      height: 45,
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 8,
                                         horizontal: 12,
                                       ),
-                                      color: customcolor.skybluebg,
-                                      child: Text(
-                                        "Janitor's Name",
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.semibold,
-                                          color: customcolor.blue,
-                                          fontSize: 14,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: customcolor.greyborder,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    ...selectedShift.employeeList.map(
-                                      (emp) => SizedBox(
-                                        height: 48,
-                                        child: Container(
-                                          width: 120,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 8,
-                                            horizontal: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              bottom: BorderSide(
-                                                color: customcolor.greyborder,
-                                              ),
-                                            ),
-                                          ),
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            emp.empName,
-                                            style: TextStyle(
-                                              fontFamily: AppFonts.regular,
-                                              fontSize: 14,
-                                              color: customcolor.title,
-                                            ),
+                                      child: Center(
+                                        child: Text(
+                                          "No employees assigned",
+                                          style: TextStyle(
+                                            fontFamily: AppFonts.regular,
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            fontStyle: FontStyle.italic,
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ],
-                                ),
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
+                                ],
+                              ),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  key: _horizontalScrollKey,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (sortedDates.isNotEmpty)
                                         Row(
                                           children: sortedDates
                                               .map(
                                                 (date) => Container(
+                                                  height: 45,
                                                   width: 50,
                                                   alignment: Alignment.center,
                                                   padding:
@@ -733,57 +1391,237 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                               )
                                               .toList(),
                                         ),
-                                        ...selectedShift.employeeList.map(
-                                          (emp) => Row(
-                                            children: sortedDates.map((date) {
-                                              AttendanceData? day;
 
-                                              try {
-                                                day = emp.attendData.firstWhere(
-                                                  (d) => d.date == date,
-                                                );
-                                              } catch (e) {
-                                                log(
-                                                  'No attendance data for ${emp.empName} on $date',
-                                                );
-                                                day = null;
+                                      ...selectedShift.employeeList.map(
+                                        (emp) => Row(
+                                          children: sortedDates.map((date) {
+                                            AttendanceData? day;
+
+                                            try {
+                                              day = emp.attendData.firstWhere(
+                                                (d) => d.date == date,
+                                              );
+                                            } catch (e) {
+                                              day = null;
+                                            }
+
+                                            final key =
+                                                '${emp.empName},$date,${day?.attendanceStatus ?? ''}';
+                                            final selected = selectedCells
+                                                .contains(key);
+                                            final isFuture = DateTime.parse(
+                                              date,
+                                            ).isAfter(DateTime.now());
+
+                                            // Determine if cell can be edited based on role
+                                            bool canEdit = false;
+
+                                            // Only for client role
+                                            if (role ==
+                                                GlobalLists.clientrole) {
+                                              // Check all conditions for client role
+                                              canEdit =
+                                                  !isFuture &&
+                                                  day?.act_deact_janitor ==
+                                                      true &&
+                                                  day?.attendanceStatus !=
+                                                      '-' &&
+                                                  (day?.client_approval_status ==
+                                                          null ||
+                                                      day!.client_approval_status ==
+                                                          '') &&
+                                                  (day?.reason == null ||
+                                                      day?.reason == '');
+                                            } else {
+                                              // For non-client roles, canEdit remains false
+                                              canEdit = false;
+                                            }
+
+                                            final currentStatus =
+                                                day?.attendanceStatus ?? '';
+
+                                            Color circleColor() {
+                                              if (day?.act_deact_janitor ==
+                                                  false) {
+                                                return Colors.grey[300]!;
+                                              }
+                                              // Client approval status takes precedence
+                                              if (day?.client_approval_status !=
+                                                      null &&
+                                                  day!
+                                                      .client_approval_status!
+                                                      .isNotEmpty) {
+                                                return day.client_approval_status ==
+                                                        'approved'
+                                                    ? Colors.green
+                                                    : Colors.green;
                                               }
 
-                                              final key =
-                                                  '${emp.empName},$date,${day?.attendanceStatus ?? ''}';
-                                              final selected = selectedCells
-                                                  .contains(key);
-                                              final isFuture = DateTime.parse(
-                                                date,
-                                              ).isAfter(DateTime.now());
-                                              final canEdit =
-                                                  role ==
-                                                      GlobalLists.clientrole &&
-                                                  !isFuture;
-                                              return GestureDetector(
-                                                onLongPress: () {
-                                                  log(
-                                                    'Long-pressed cell: $key, canEdit: $canEdit',
-                                                  );
-                                                  if (canEdit) {
+                                              // OM/OE approval status (only if no client approval)
+                                              if (day?.om_oe_approval_status !=
+                                                      null &&
+                                                  day!
+                                                      .om_oe_approval_status!
+                                                      .isNotEmpty) {
+                                                return day.om_oe_approval_status ==
+                                                        'approved'
+                                                    ? Colors.green
+                                                    : customcolor.red;
+                                              }
+
+                                              if (day?.reason != null &&
+                                                  day!.reason!.isNotEmpty) {
+                                                return customcolor.pink;
+                                              }
+
+                                              if (day == null)
+                                                return customcolor.greybg;
+
+                                              if (day.attendanceStatus ==
+                                                  'yes') {
+                                                return customcolor.lightgreen;
+                                              }
+
+                                              if (day.attendanceStatus ==
+                                                      'no' &&
+                                                  !isFuture) {
+                                                return customcolor.lightgreen;
+                                              }
+
+                                              return Colors.grey[300]!;
+                                            }
+
+                                            return GestureDetector(
+                                              onLongPress: () {
+                                                bool hasClientApproval = false;
+                                                if (canEdit) {
+                                                  if (day!.client_approval_status !=
+                                                          null &&
+                                                      day
+                                                          .client_approval_status!
+                                                          .isNotEmpty) {
+                                                    hasClientApproval = true;
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          'Cannot modify attendance that already has client approval',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.red,
+                                                      ),
+                                                    );
+                                                    return;
+                                                  }
+                                                  // If multiSelectMode is off, start it with this cell
+                                                  if (!multiSelectMode) {
                                                     setState(() {
                                                       multiSelectMode = true;
-                                                      selected
-                                                          ? selectedCells
-                                                                .remove(key)
-                                                          : selectedCells.add(
-                                                              key,
-                                                            );
+                                                      selectedCells.clear();
+                                                      selectedCells.add(key);
                                                     });
+                                                  } else {
+                                                    // If already in multiSelectMode, check if we can add this cell
+                                                    final selectedStatus =
+                                                        _getCurrentSelectedStatus();
+
+                                                    if (selectedStatus ==
+                                                            null ||
+                                                        selectedStatus ==
+                                                            currentStatus ||
+                                                        selectedCells.isEmpty) {
+                                                      setState(() {
+                                                        selected
+                                                            ? selectedCells
+                                                                  .remove(key)
+                                                            : selectedCells.add(
+                                                                key,
+                                                              );
+                                                      });
+                                                    } else {
+                                                      // Show warning that you can't mix different statuses
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text(
+                                                            'Cannot mix different attendance statuses in multi-select',
+                                                          ),
+                                                          backgroundColor:
+                                                              Colors.orange,
+                                                        ),
+                                                      );
+                                                    }
                                                   }
-                                                },
-                                                onTap: () {
-                                                  log('ontap modeOn: $key');
+                                                }
+                                              },
+                                              onTap: () {
+                                                if (!canEdit) return;
+                                                multiSelectMode = true;
+                                                log(
+                                                  'day?.reason: ${day?.reason}',
+                                                );
 
-                                                  if (!canEdit) return;
+                                                bool hasClientApproval = false;
 
-                                                  if (multiSelectMode) {
-                                                    // In multi-select mode, just toggle selection
+                                                if (day!.client_approval_status !=
+                                                        null &&
+                                                    day
+                                                        .client_approval_status!
+                                                        .isNotEmpty) {
+                                                  hasClientApproval = true;
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Cannot modify attendance that already has client approval',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                      behavior: SnackBarBehavior
+                                                          .floating,
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                            left: 16,
+                                                            right: 16,
+                                                            bottom: 30,
+                                                          ),
+                                                    ),
+                                                  );
+
+                                                  return;
+                                                }
+
+                                                if (multiSelectMode) {
+                                                  if (day.client_approval_status !=
+                                                          null &&
+                                                      day
+                                                          .client_approval_status!
+                                                          .isNotEmpty) {
+                                                    hasClientApproval = true;
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          'Cannot modify attendance that already has client approval',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.red,
+                                                      ),
+                                                    );
+                                                    return;
+                                                  }
+                                                  final selectedStatus =
+                                                      _getCurrentSelectedStatus();
+
+                                                  // Check if we can select/deselect this cell
+                                                  if (selectedStatus == null ||
+                                                      selectedStatus ==
+                                                          currentStatus ||
+                                                      selectedCells.isEmpty) {
                                                     setState(() {
                                                       selected
                                                           ? selectedCells
@@ -793,120 +1631,184 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                             );
                                                     });
                                                   } else {
-                                                    // Single tap: handle single tap
-                                                    _handleSingleTap(key, day);
+                                                    // Show warning
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          'Cannot mix different attendance statuses in multi-select',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.orange,
+                                                      ),
+                                                    );
                                                   }
-                                                },
-                                                child: Container(
-                                                  width: 50,
-                                                  height: 48,
-                                                  alignment: Alignment.center,
-                                                  decoration: BoxDecoration(
-                                                    border: Border(
-                                                      bottom: BorderSide(
-                                                        color: customcolor
-                                                            .greyborder,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  child: Container(
-                                                    width: 24,
-                                                    height: 24,
-                                                    decoration: BoxDecoration(
-                                                      color: selected
-                                                          ? customcolor.pink
-                                                          : day == null
-                                                          ? customcolor.greybg
-                                                          : day.attendanceStatus ==
-                                                                'yes'
-                                                          ? customcolor
-                                                                .lightgreen
-                                                          : day.attendanceStatus ==
-                                                                    'no' &&
-                                                                !isFuture
-                                                          ? Colors.red
-                                                          : Colors.grey[300],
-                                                      shape: BoxShape.circle,
-                                                      border:
-                                                          //  multiSelectMode
-                                                          //     ?
-                                                          Border.all(
-                                                            color: selected
-                                                                ? customcolor
-                                                                      .blue
-                                                                : Colors
-                                                                      .transparent,
-                                                            width: 2,
-                                                          ),
-                                                      // : null,
-                                                    ),
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      isFuture
-                                                          ? '-'
-                                                          : day == null
-                                                          ? '-'
-                                                          : (day.attendanceStatus ==
-                                                                    'yes'
-                                                                ? 'P'
-                                                                : 'A'),
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        fontFamily:
-                                                            AppFonts.regular,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: selected
-                                                            ? Colors.white
-                                                            : isFuture ||
-                                                                  day == null
-                                                            ? customcolor
-                                                                  .greytext
-                                                            : day.attendanceStatus ==
-                                                                  'yes'
-                                                            ? customcolor.green
-                                                            : customcolor.white,
-                                                      ),
+                                                } else {
+                                                  _handleSingleTap(key, day);
+                                                }
+                                              },
+                                              child: Container(
+                                                width: 50,
+                                                height: 45,
+                                                alignment: Alignment.center,
+                                                decoration: BoxDecoration(
+                                                  border: Border(
+                                                    bottom: BorderSide(
+                                                      color: customcolor
+                                                          .greyborder,
                                                     ),
                                                   ),
                                                 ),
-                                              );
-                                            }).toList(),
-                                          ),
+                                                child: Container(
+                                                  width: 24,
+                                                  height: 24,
+                                                  decoration: BoxDecoration(
+                                                    color: selected
+                                                        ? customcolor.pink
+                                                        : circleColor(),
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                      color: selected
+                                                          ? customcolor.blue
+                                                          : Colors.transparent,
+                                                      width: 2,
+                                                    ),
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: Stack(
+                                                    children: [
+                                                      Text(
+                                                        isFuture
+                                                            ? '-'
+                                                            : day == null
+                                                            ? '-'
+                                                            : (day.attendanceStatus ==
+                                                                      '-'
+                                                                  ? '-'
+                                                                  : day.attendanceStatus ==
+                                                                        'yes'
+                                                                  ? 'P'
+                                                                  : 'A'),
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontFamily:
+                                                              AppFonts.regular,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color:
+                                                              selected ||
+                                                                  day
+                                                                          ?.reason
+                                                                          ?.isNotEmpty ==
+                                                                      true
+                                                              ? Colors.white
+                                                              : isFuture ||
+                                                                    day == null
+                                                              ? customcolor
+                                                                    .greytext
+                                                              : day.attendanceStatus ==
+                                                                    'yes'
+                                                              ? customcolor
+                                                                    .green
+                                                              : customcolor
+                                                                    .white,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+
+                                      if (selectedShift.employeeList.isEmpty &&
+                                          sortedDates.isNotEmpty)
+                                        Row(
+                                          children: sortedDates.map((date) {
+                                            return Container(
+                                              width: 50,
+                                              height: 45,
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                border: Border(
+                                                  bottom: BorderSide(
+                                                    color:
+                                                        customcolor.greyborder,
+                                                  ),
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  "-",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontFamily:
+                                                        AppFonts.regular,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
+                      ),
 
-                      if (selectedCells.isNotEmpty && multiSelectMode)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _showReasonDialog(isMultiSelect: true);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: customcolor.blue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              minimumSize: Size(double.infinity, 48),
+                      if (selectedCells.isNotEmpty &&
+                          multiSelectMode &&
+                          _allSelectedHaveSameStatus())
+                        SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            selectedCells.isNotEmpty && multiSelectMode
+                                ? _showReasonDialog(isMultiSelect: true)
+                                : Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ViewRemarkAttendance(
+                                            month: month,
+                                            year: year,
+                                            attendancesiteid: attendancesiteid,
+                                            clientid: attendanceclientid,
+                                            manTag: maintag,
+                                            // userid: userid,
+                                          ),
+                                    ),
+                                  );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: customcolor.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(
-                              "Submit",
-                              style: TextStyle(
-                                fontFamily: AppFonts.semibold,
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
+                            minimumSize: Size(double.infinity, 48),
+                          ),
+                          child: Text(
+                            selectedCells.isNotEmpty && multiSelectMode
+                                ? "Submit"
+                                : role == GlobalLists.clientrole
+                                ? "Report Discrepancy"
+                                : "Review Discrepancy",
+                            style: TextStyle(
+                              fontFamily: AppFonts.semibold,
+                              fontSize: 16,
+                              color: Colors.white,
                             ),
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -916,6 +1818,193 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  // Updated _submitAttendaceRoster function
+  _submitAttendaceRoster(Map<String, dynamic> apiData) async {
+    try {
+      var status1 = await ConnectionDetector.checkInternetConnection();
+      if (!status1) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
+      }
+      String currentDate = DateTime.now().toIso8601String().split('T').first;
+
+      log('Current date for submission: $currentDate');
+      var supervisorid = await SPManager().getsupervisorid();
+
+      // Prepare the map according to API requirements
+      var map = {
+        'site_id': apiData['site_id'] ?? '',
+        'to_date': currentDate,
+        'shift': apiData['shift'] ?? '',
+        'client_id': GlobalLists.clientrole == role
+            ? apiData['user_id'] ?? ''
+            : supervisorid,
+        'user_id': GlobalLists.clientrole == role
+            ? apiData['user_id'] ?? ''
+            : supervisorid,
+        'emp_id': jsonEncode(apiData['emp_id'] ?? []),
+      };
+
+      log('Submitting attendance data: $map');
+
+      await APIManager().apiRequest(
+        context,
+        API.submit_client_attendance_rooster,
+        (response) async {
+          SubmitAttendanceRooster resp = response;
+          print('API Response: $resp');
+          if (resp.status == 1) {
+            setState(() {
+              Timer(Duration(seconds: 1), () => Navigator.pop(context));
+
+              Timer(
+                Duration(seconds: 1),
+                () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        Attendance(GlobalLists.mainlisttab[maintag].clientName),
+                    transitionDuration: Duration(seconds: 0),
+                  ),
+                ),
+              );
+            });
+          } else {}
+        },
+        (error) {
+          print('Error submitting attendance: $error');
+          ShowDialogs.showToast('Error: $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log('Error submitting attendance roster: $e');
+      ShowDialogs.showToast('Exception: $e');
+    }
+  }
+
+  _rejectAttendaceRoster(Map<String, dynamic> apiData) async {
+    try {
+      var status1 = await ConnectionDetector.checkInternetConnection();
+      if (!status1) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
+      }
+      var supervisorid = await SPManager().getsupervisorid();
+
+      // Prepare the map according to API requirements
+      var map = {
+        'reason': apiData['reason'] ?? '',
+        'user_id': GlobalLists.clientrole == role
+            ? apiData['user_id'] ?? ''
+            : supervisorid,
+        // 'is_client':GlobalLists.clientrole == role?true:false,
+        'is_client': apiData['is_client'] ?? '',
+        'attendance_id_list': jsonEncode(apiData['attendance_id_list'] ?? []),
+      };
+
+      log('Rejecting attendance data: $map');
+
+      await APIManager().apiRequest(
+        context,
+        API.rejected_om_oe_attendance_rooster,
+        (response) async {
+          RejectAttendanceRooster resp = response;
+          print('API Response: $resp');
+          if (resp.status == 1) {
+            setState(() {
+              Timer(Duration(seconds: 1), () => Navigator.pop(context));
+
+              Timer(
+                Duration(seconds: 1),
+                () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        Attendance(GlobalLists.mainlisttab[maintag].clientName),
+                    transitionDuration: Duration(seconds: 0),
+                  ),
+                ),
+              );
+            });
+          } else {}
+        },
+        (error) {
+          print('Error rejecting attendance: $error');
+          ShowDialogs.showToast('Error: $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log('Error rejecting attendance roster: $e');
+      ShowDialogs.showToast('Exception: $e');
+    }
+  }
+
+  _approveAttendaceRoster(Map<String, dynamic> apiData) async {
+    try {
+      var status1 = await ConnectionDetector.checkInternetConnection();
+      // if (!status1) {
+      //   ShowDialogs.showToast("Please check internet connection");
+      //   return;
+      // }
+      var supervisorid = await SPManager().getsupervisorid();
+
+      // Prepare the map according to API requirements
+      var map = {
+        // 'reason': apiData['reason'] ?? '',
+        'user_id': GlobalLists.clientrole == role
+            ? apiData['user_id'] ?? ''
+            : supervisorid,
+        // 'is_client':GlobalLists.clientrole == role?"true":"false",
+        'is_client': apiData['is_client'] ?? '',
+        'attendance_id_list': jsonEncode(apiData['attendance_id_list'] ?? []),
+      };
+
+      log('Approving attendance data: $map');
+
+      await APIManager().apiRequest(
+        context,
+        API.approved_om_oe_attendance_rooster,
+        (response) async {
+          ApprovAttendanceRooster resp = response;
+          print('API Response: $resp');
+          if (resp.status == 1) {
+            setState(() {
+              Timer(Duration(seconds: 1), () => Navigator.pop(context));
+
+              Timer(
+                Duration(seconds: 1),
+                () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        Attendance(GlobalLists.mainlisttab[maintag].clientName),
+                    transitionDuration: Duration(seconds: 0),
+                  ),
+                ),
+              );
+            });
+          } else {}
+        },
+        (error) {
+          print('Error approving attendance: $error');
+          ShowDialogs.showToast('Error: $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log('Error approving attendance roster: $e');
+      ShowDialogs.showToast('Exception: $e');
+    }
   }
 
   List<List<T>> _splitIntoChunks<T>(List<T> list, int chunkSize) {
@@ -933,9 +2022,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   getrole() async {
     role = await SPManager().getroleid();
-
-    log('role : $role');
-
     if (role == GlobalLists.supervisorrole) {
       janotoragendaApi(GlobalLists.clientid, GlobalLists.siteid);
     }
@@ -945,10 +2031,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         role == GlobalLists.headrole ||
         role == GlobalLists.reginalmanagerrole ||
         role == GlobalLists.clientrole) {
-      print("RUCHI29OCT");
       unitattendanceApi();
     } else {
-      print("RUCHI29OCT ATTEND");
       attendanceApi();
     }
     if (role == GlobalLists.unitrole ||
@@ -976,13 +2060,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       setState(() {
         _locationMessage =
             "Latitude: ${position.latitude}, Longitude: ${position.longitude}";
-
-        print(_locationMessage);
       });
     } catch (e) {
       // setState(() {
       _locationMessage = "Error: $e";
-      print(_locationMessage);
+
       //});
     }
     getLocation();
@@ -995,14 +2077,13 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     if (status.isGranted) {
       getLocation();
     } else if (status.isPermanentlyDenied) {
-      print("isUndetermined");
       //  ShowDialogs.showToast(
       //                       "Please Allow Your Location Permission From Setting  To Add your Attendance");
       getLocation();
       //await Permission.location.request();
     } else {
       // getLocation();
-      print("status1");
+
       permishan.openAppSettings();
       //locatedCountryCode = null;
       //await Permission.location.request();
@@ -1029,26 +2110,16 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     var status = await permishan.Permission.locationWhenInUse.status;
     if (status != permishan.PermissionStatus.granted) {
       //show Dialog or route to specific page (or route to Application Manager)
-      print("notgranted");
+
       grantPermission();
       ShowDialogs.showToast(
         "Please Allow Your Location Permission From Setting  To Add your Attendance",
       );
       // openAppSettings();
     } else {
-      print("granted");
-
       getLocation().then((value) {
-        print("hii");
         if (value != null) {
-          print("notnull");
           getLocation();
-        } else {
-          print("null");
-          grantPermission();
-          ShowDialogs.showToast(
-            "Please Allow Your Location Permission From Setting  To Add your Attendance",
-          );
         }
 
         // _getLocation();
@@ -1068,7 +2139,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    log('GlobalLists.graphlist ${GlobalLists.graphlist.length}');
     return WillPopScope(
       onWillPop: () async {
         Navigator.push(
@@ -1077,7 +2147,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             pageBuilder: (context, animation1, animation2) => HomePage(),
           ),
         );
-        return await false;
+        return false;
       },
       child: Scaffold(
         key: _scaffoldKey1,
@@ -1236,11 +2306,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                 role ==
                                                     GlobalLists
                                                         .operationmanagerrole)
-                                            ?
-                                              // ? maintag == mainlaglastposition_overall
-                                              //     ? Container()
-                                              //     :
-                                              Row(
+                                            ? Row(
                                                 children: [
                                                   //
                                                   new Container(
@@ -1315,11 +2381,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                         .datecontroller
                                                                         .text =
                                                                     datefrom;
-                                                                print(
-                                                                  GlobalLists
-                                                                      .datecontroller
-                                                                      .text,
-                                                                );
+
                                                                 setState(
                                                                   () => selectedDateTime =
                                                                       pickedDate,
@@ -1342,7 +2404,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                     role ==
                                                                         GlobalLists
                                                                             .operationmanagerrole) {
-                                                                  print("unit");
                                                                   unitattendanceApi();
                                                                 } else {
                                                                   attendanceApi();
@@ -1399,11 +2460,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                 () => selectedDateTime =
                                                                     pickedDate,
                                                               );
-                                                              print(
-                                                                GlobalLists
-                                                                    .datecontroller
-                                                                    .text,
-                                                              );
+
                                                               if (role ==
                                                                       GlobalLists
                                                                           .unitrole ||
@@ -1422,7 +2479,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                   role ==
                                                                       GlobalLists
                                                                           .operationmanagerrole) {
-                                                                print("unit");
                                                                 unitattendanceApi();
                                                               } else {
                                                                 attendanceApi();
@@ -1650,11 +2706,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                             .datecontroller
                                                                             .text =
                                                                         datefrom;
-                                                                    print(
-                                                                      GlobalLists
-                                                                          .datecontroller
-                                                                          .text,
-                                                                    );
+
                                                                     setState(
                                                                       () => selectedDateTime =
                                                                           pickedDate,
@@ -1671,9 +2723,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                             GlobalLists.clientrole ||
                                                                         role ==
                                                                             GlobalLists.operationmanagerrole) {
-                                                                      print(
-                                                                        "unit",
-                                                                      );
                                                                       unitattendanceApi();
                                                                     } else {
                                                                       attendanceApi();
@@ -1729,11 +2778,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                     () => selectedDateTime =
                                                                         pickedDate,
                                                                   );
-                                                                  print(
-                                                                    GlobalLists
-                                                                        .datecontroller
-                                                                        .text,
-                                                                  );
+
                                                                   if (role ==
                                                                           GlobalLists
                                                                               .unitrole ||
@@ -1752,9 +2797,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                       role ==
                                                                           GlobalLists
                                                                               .operationmanagerrole) {
-                                                                    print(
-                                                                      "unit",
-                                                                    );
                                                                     unitattendanceApi();
                                                                   } else {
                                                                     attendanceApi();
@@ -1786,10 +2828,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     ),
                                     SizedBox(height: 10),
                                     GlobalLists.mainlisttab.length > 0
-                                        ? Wrap(
-                                            children:
-                                                _buildChoicemainList(), // ✅ correct usage
-                                          )
+                                        ? Wrap(children: _buildChoicemainList())
                                         : Container(),
                                     //workflow
                                     SizedBox(height: 10),
@@ -3546,150 +4585,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     );
   }
 
-  // unitattendancelist(
-  //     List<unitatt.EmployeeList> employeelist, bool delete_permission) {
-  //   return Container(
-  //     height: SizeConfig.blockSizeVertical * 90,
-  //     child: ListView.builder(
-  //       scrollDirection: Axis.vertical,
-  //       shrinkWrap: true,
-  //       physics: ScrollPhysics(),
-  //       itemCount: employeelist.length,
-  //       itemBuilder: (context, index) {
-  //         return Padding(
-  //           padding: const EdgeInsets.only(right: 2.0, bottom: 6),
-  //           child: Card(
-  //             shape: RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.all(
-  //                 Radius.circular(10),
-  //               ),
-  //               side: BorderSide(width: 0.5, color: customcolor.greyborder),
-  //             ),
-  //             child: Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 Row(
-  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                   children: [
-  //                     Padding(
-  //                       padding: const EdgeInsets.all(8.0),
-  //                       child: Text(
-  //                         employeelist[index].name,
-  //                         style: AppFonts.headerStyle(
-  //                             fontSize:
-  //                                 ResponsiveFlutter.of(context).fontSize(2.3),
-  //                             color: customcolor.black,
-  //                             fontWeight: FontWeight.w500),
-  //                       ),
-  //                     ),
-  //                     (role == GlobalLists.clientrole)
-  //                         ? Container()
-  //                         : GestureDetector(
-  //                             onTap: () {
-  //                               if (delete_permission == false) {
-  //                                 ShowDialogs.showToast('No Active Shift');
-  //                               } else {
-  //                                 ShowDialogs.showConfirmDialog(
-  //                                     context,
-  //                                     "Delete",
-  //                                     " Are you sure you want to\n delete these attendance?",
-  //                                     () {
-  //                                   deleteattendanceApi(
-  //                                       employeelist[index].id.toString());
-  //                                 });
-  //                               }
-  //                             },
-  //                             child: Padding(
-  //                               padding: const EdgeInsets.all(8.0),
-  //                               child: Icon(
-  //                                 Icons.delete,
-  //                                 color: customcolor.textblue,
-  //                                 size: 18,
-  //                               ),
-  //                             ),
-  //                           )
-  //                   ],
-  //                 ),
-  //                 Padding(
-  //                   padding: const EdgeInsets.only(
-  //                       left: 10, right: 10, top: 2, bottom: 15),
-  //                   child: Container(
-  //                     decoration: BoxDecoration(
-  //                       color: customcolor.skybluebg,
-  //                       borderRadius: BorderRadius.all(Radius.circular(10)),
-  //                     ),
-  //                     child: Padding(
-  //                       padding: const EdgeInsets.all(8.0),
-  //                       child: Row(
-  //                         mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //                         children: [
-  //                           Column(
-  //                             mainAxisAlignment: MainAxisAlignment.center,
-  //                             crossAxisAlignment: CrossAxisAlignment.center,
-  //                             children: [
-  //                               Text(
-  //                                 "Mobile",
-  //                                 style: AppFonts.headerStyle(
-  //                                     fontSize: ResponsiveFlutter.of(context)
-  //                                         .fontSize(1.5),
-  //                                     color: customcolor.greytext,
-  //                                     fontWeight: FontWeight.w600),
-  //                               ),
-  //                               SizedBox(
-  //                                 height: 3,
-  //                               ),
-  //                               Text(
-  //                                 employeelist[index].contact,
-  //                                 style: AppFonts.headerStyle(
-  //                                     fontSize: ResponsiveFlutter.of(context)
-  //                                         .fontSize(1.7),
-  //                                     color: customcolor.black,
-  //                                     fontWeight: FontWeight.w400),
-  //                               ),
-  //                             ],
-  //                           ),
-  //                           Column(
-  //                             mainAxisAlignment: MainAxisAlignment.center,
-  //                             crossAxisAlignment: CrossAxisAlignment.center,
-  //                             children: [
-  //                               Text(
-  //                                 "Login Timing",
-  //                                 style: AppFonts.headerStyle(
-  //                                     fontSize: ResponsiveFlutter.of(context)
-  //                                         .fontSize(1.5),
-  //                                     color: customcolor.greytext,
-  //                                     fontWeight: FontWeight.w600),
-  //                               ),
-  //                               SizedBox(
-  //                                 height: 3,
-  //                               ),
-  //                               Text(
-  //                                 "${employeelist[index].loginTime}",
-  //                                 style: AppFonts.headerStyle(
-  //                                     fontSize: ResponsiveFlutter.of(context)
-  //                                         .fontSize(1.7),
-  //                                     color: customcolor.black,
-  //                                     fontWeight: FontWeight.w400),
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
   bool isattendanceLoadin = false;
   //attendance api catch store
   attendanceApi() async {
-    log('attendanceApi');
+    log('api called attendanceApi');
     var status1 = await ConnectionDetector.checkInternetConnection();
 
     if (status1) {
@@ -3757,15 +4656,15 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               attendencelistResponseToJson(resp),
             );
 
-            // ✅ Save JSON to SharedPreferences
-            //29OctRUCHI
             setState(() {
               isattendanceLoadin = false;
             });
             // Navigator.of(this.context).pop();
           } else {
-            //29OctRUCHI
             setState(() {
+              GlobalLists.mainlisttab.clear();
+
+              GlobalLists.superviorgraphlist.clear();
               isattendanceLoadin = false;
             });
             // Navigator.of(this.context).pop();
@@ -3774,6 +4673,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         (error) {
           //  Navigator.of(this.context).pop();
           setState(() {
+            GlobalLists.mainlisttab.clear();
+            GlobalLists.superviorgraphlist.clear();
+
             isattendanceLoadin = false;
           });
           log('ERR msg is $error');
@@ -3783,7 +4685,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         jsonval: map,
       );
     } else {
-      // 🚫 Offline Mode: Load from SharedPreferences
+      //  Offline Mode: Load from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       String? cachedData = prefs.getString('cached_attendance_data');
 
@@ -3828,7 +4730,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
           ShowDialogs.showToast("Offline attendance data loaded");
         } catch (e) {
-          print("❌ Error parsing cached attendance: $e");
           ShowDialogs.showToast("Failed to load offline data");
         }
       } else {
@@ -3890,14 +4791,14 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             }
           } catch (e) {
             Navigator.of(context).pop();
-            print('Error parsing API response: $e');
+
             ShowDialogs.showToast("Failed to parse API. Loading offline...");
             _loadCachedUnitAttendance(prefs, cacheKey);
           }
         },
         (error) {
           Navigator.of(context).pop();
-          print('API error: $error');
+
           ShowDialogs.showToast("API failed. Loading offline...");
           _loadCachedUnitAttendance(prefs, cacheKey);
         },
@@ -4000,11 +4901,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     var status1 = await ConnectionDetector.checkInternetConnection();
 
     if (status1) {
-      var map = new Map<String, dynamic>();
+      var map = Map<String, dynamic>();
 
       var clientid = await SPManager().getclientid();
       var supervisorid = await SPManager().getsupervisorid();
-      print(clientid);
+
       if (role == GlobalLists.clientrole) {
         map['clientid'] = clientid;
         map['date'] = GlobalLists.datecontroller.text;
@@ -4012,15 +4913,14 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         map['date'] = GlobalLists.datecontroller.text;
         map['emp_id'] = supervisorid;
       }
-      print("OVERALL");
-      print(map);
+
       //OM attendance
       APIManager().apiRequest(
         context,
         API.overallgraph,
         (response) async {
           graph.UnitGraphAttendanceResponse resp = response;
-          print('called API ${resp}');
+
           if (resp.status == 1) {
             setState(() {
               GlobalLists.graphlist = resp.graphData;
@@ -4050,12 +4950,12 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       String? cachedData = prefs.getString('unitgraphattendanceApi');
 
       if (cachedData != null) {
-        // 🔥 Fix here: use `fromJson`, not `toJson`
+        //  Fix here: use `fromJson`, not `toJson`
         graph.UnitGraphAttendanceResponse cachedResponse = unitgraph
             .unitGraphAttendanceResponseFromJson(cachedData);
 
         setState(() {
-          GlobalLists.graphlist = cachedResponse.graphData ?? [];
+          GlobalLists.graphlist = cachedResponse.graphData;
         });
         ShowDialogs.showToast("Offline data loaded");
       } else {
@@ -4074,8 +4974,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
-
-    print('Location: ${position.latitude}, ${position.longitude}');
 
     List<Placemark> placemarks = await placemarkFromCoordinates(
       position.latitude,
@@ -4263,7 +5161,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             setState(() {
               // Navigator.of(this.context).pop();
               isattendanceLoadin = false;
-              print("RUCHIIF");
 
               Timer(
                 Duration(seconds: 1),
@@ -4276,8 +5173,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               );
             });
           } else {
-            ShowDialogs.showToast(resp.message!);
-            print("RUCHIELSE");
+            ShowDialogs.showToast(resp.message);
+
             setState(() {
               isattendanceLoadin = false;
             });
@@ -4293,7 +5190,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       );
     } else {
       print("RUCHIELSE offline");
-      // 🚫 Offline Mode
+      //  Offline Mode
     }
   }
 
@@ -4336,8 +5233,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     }
 
     if (status1) {
-      log(' In side called');
-      // ✅ Online mode
+      //  Online mode
       // ShowDialogs.showLoadingDialog(context, _keyLoader);
       setState(() {
         GlobalLists.isaddAttendance.value = true;
@@ -4369,7 +5265,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             });
           } else {
             ShowDialogs.showToast(resp.msg);
-            print("RUCHIELSE");
+
             setState(() {
               GlobalLists.isaddAttendance.value = false;
             });
@@ -4384,8 +5280,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         jsonval: map,
       );
     } else {
-      print("RUCHIELSE offline");
-      // 🚫 Offline Mode
+      //  Offline Mode
       await DBHelper.insertOfflineRequest(
         '${Global.baseUrl}/api/attendancemaster/Add_AttendanceMaster',
         map,
@@ -4401,7 +5296,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         loginTime: map['time'],
       );
 
-      // ✅ Check duplicate in GlobalLists
+      //  Check duplicate in GlobalLists
       bool exists = GlobalLists.attendanceemployeelist.any(
         (e) => e.contact == newEmployee.contact,
       );
@@ -4412,7 +5307,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         GlobalLists.attendancedata.employeeList.add(newEmployee);
         // });
 
-        // ✅ Update SharedPreferences cache
+        //  Update SharedPreferences cache
         final prefs = await SharedPreferences.getInstance();
         String? cachedData = prefs.getString('cached_attendance_data');
 
@@ -4435,7 +5330,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               );
             }
           } catch (e) {
-            print("❌ Error updating cache: $e");
+            print('Error updating cached data: $e');
           }
         }
       } else {
@@ -4471,7 +5366,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     final cacheKey = 'cached_janitor_${idclient}_$idsite';
 
     if (status1) {
-      // ✅ ONLINE mode
+      //  ONLINE mode
       APIManager().apiRequest(
         context,
         API.janitorslist,
@@ -4494,17 +5389,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                 }).toList();
               }
 
-              // .map((e) => Janitorcheckbox(
-              //       e.janName.toString(),
-              //       e.id.toString(),
-              //       false,
-              //     ))
-              // .toList();
-
               print('called JANITOR LENGTH ${GlobalLists.dropdownList.length}');
             });
 
-            // ✅ Save response to local cache
+            //  Save response to local cache
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(cacheKey, json.encode(resp.toJson()));
           } else {
@@ -4519,7 +5407,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         jsonval: map,
       );
     } else {
-      // 🚫 OFFLINE mode
+      //  OFFLINE mode
       final prefs = await SharedPreferences.getInstance();
       String? cachedData = prefs.getString(cacheKey);
 
@@ -4560,88 +5448,60 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         elevation: 5,
         child: Padding(
           padding: EdgeInsets.only(left: 10, right: 10, top: 10),
-          child: ListView.builder(
-            itemCount: GlobalLists.dropdownList.length,
-            itemBuilder: (BuildContext context, int index) {
-              return Column(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setStateDialgoue(() {
-                        namecontroller.text =
-                            GlobalLists.dropdownList[index].name;
-                        mobilecontroller.text =
-                            GlobalLists.dropdownList[index].contact;
+          child: GlobalLists.dropdownList.length == 0
+              ? Center(
+                  child: Text(
+                    "No janitor's present",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: GlobalLists.dropdownList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Column(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setStateDialgoue(() {
+                              namecontroller.text =
+                                  GlobalLists.dropdownList[index].name;
+                              mobilecontroller.text =
+                                  GlobalLists.dropdownList[index].contact;
 
-                        isexpandedjanitor = false;
+                              isexpandedjanitor = false;
 
-                        // fetchcontactApi(dropdownList[index].id.toString());
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 3, bottom: 2),
-                      child: Container(
-                        color: Colors.white,
-                        width: SizeConfig.blockSizeHorizontal * 100,
-                        child: Text(
-                          GlobalLists.dropdownList[index].name,
-                          style: AppFonts.headerStyle(
-                            fontSize: 14,
-                            color: customcolor.black,
-                            fontWeight: FontWeight.normal,
+                              // fetchcontactApi(dropdownList[index].id.toString());
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 3, bottom: 2),
+                            child: Container(
+                              color: Colors.white,
+                              width: SizeConfig.blockSizeHorizontal * 100,
+                              child: Text(
+                                GlobalLists.dropdownList[index].name,
+                                style: AppFonts.headerStyle(
+                                  fontSize: 14,
+                                  color: customcolor.black,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Divider(color: customcolor.greybg),
-                ],
-              );
-            },
-          ),
+                        SizedBox(height: 5),
+                        Divider(color: customcolor.greybg),
+                      ],
+                    );
+                  },
+                ),
         ),
       ),
     );
   }
-
-  //fetch contact from janitor
-  // fetchcontactApi(String janitorid) async {
-  //   var status1 = await ConnectionDetector.checkInternetConnection();
-
-  //   if (status1) {
-  //     ShowDialogs.showLoadingDialog(context, _keyLoader);
-
-  //     var map = new Map<String, dynamic>();
-
-  //     map['id'] = janitorid;
-
-  //     APIManager().apiRequest(context, API.fetchcontact_janitors,
-  //         (response) async {
-  //       JanitorContactFetchResponse resp = response;
-  //       print('called API ${resp}');
-  //       if (resp.status == 1) {
-  //         Navigator.of(this.context).pop();
-  //         //   ShowDialogs.showToast(resp.msg);
-  //         setState(() {
-  //           mobilecontroller.text = resp.data[0].contact;
-  //         });
-  //       } else {
-  //         mobilecontroller.text = "";
-  //         ShowDialogs.showToast(resp.msg);
-  //         Navigator.of(this.context).pop();
-  //       }
-  //     }, (error) {
-  //       print('ERR msg is $error');
-  //     }, false, "", jsonval: map);
-  //   } else {
-  //     ShowDialogs.showToast("Please check internet connection");
-  //   }
-  // }
 }
 
 extension ExtendedIterable<E> on Iterable<E> {
-  /// Like Iterable<T>.map but the callback has index as second argument
   Iterable<T> mapIndexed<T>(T Function(E e, int i) f) {
     var i = 0;
     return map((e) => f(e, i++));

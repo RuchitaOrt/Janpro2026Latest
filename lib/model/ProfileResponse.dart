@@ -74,7 +74,7 @@ class Data {
         empEmailId: json["emp_email_id"] ?? "",
         password: json["password"] ?? "",
         contact: json["contact"] ?? "",
-        reportManager: json["report_manager"],
+        reportManager: json["report_manager"]??'',
         isActive: json["isActive"] ?? false,
         empTypeStr: json["emp_type_str"] ?? "",
     );

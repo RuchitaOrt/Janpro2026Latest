@@ -508,7 +508,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
         listtab
             .add(widget.pendingTaskDetail[tabindexmain].masterAreaWiseList[j]);
         status =
-            widget.pendingTaskDetail[tabindexmain].masterAreaWiseList[j].status;
+            widget.pendingTaskDetail[tabindexmain].masterAreaWiseList[j].status??'';
         tabs.add(
           new Tab(
             child: Container(
@@ -824,7 +824,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                                 .pendingTaskDetail[tabindexmain]
                                 .masterAreaWiseList[tabindex]
                                 .blockData[index]
-                                .masterBlockName,
+                                .masterBlockName??"",
                             //  mainlist[index].maintaskname,
                             widget
                                 .pendingTaskDetail[tabindexmain]
@@ -1045,7 +1045,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                               contentPadding: EdgeInsets.zero,
                               dense: true,
                               title: Text(
-                                checkboxeslist[indexcheck].pointerName,
+                                checkboxeslist[indexcheck].pointerName??"",
                                 style: AppFonts.headerStyle(
                                     fontSize: 12,
                                     color: Colors.black,
@@ -1092,7 +1092,7 @@ class _PendingWorkflowstatusState extends State<PendingWorkflowstatus>
                       //   checkedid.add(multipleSelectedlist[i].id.toString());
                       //  }
                       for (int i = 0; i < checkboxeslist.length; i++) {
-                        if (!checkboxeslist[i].checked) {
+                        if (checkboxeslist[i].checked?? false) {
                           uncheckedid.add(checkboxeslist[i].id.toString());
                         } else {
                           checkedid.add(checkboxeslist[i].id.toString());
@@ -1517,7 +1517,7 @@ setState(() {
       choices.add(Container(
         //  color: customcolor.darkorange,
         child: ChoiceChip(
-          label: Text(item.masterAreaName),
+          label: Text(item.masterAreaName??""),
           labelStyle: TextStyle(
               color: tag == value
                   ? customcolor.white
@@ -1531,7 +1531,7 @@ setState(() {
           selected: tag == value,
           onSelected: (selected) {
             setState(() {
-              _isSelected = item.masterAreaName;
+              _isSelected = item.masterAreaName??'';
               tag = value;
               print("tag $tag");
             });

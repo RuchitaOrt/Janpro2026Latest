@@ -1,7 +1,3 @@
-// To parse this JSON data, do
-//
-//     final dashboardlistResponse = dashboardlistResponseFromJson(jsonString);
-
 import 'dart:convert';
 
 DashboardlistResponse dashboardlistResponseFromJson(String str) =>
@@ -11,9 +7,9 @@ String dashboardlistResponseToJson(DashboardlistResponse data) =>
     json.encode(data.toJson());
 
 class DashboardlistResponse {
-  int status;
-  String msg;
-  Data data;
+  int? status;
+  String? msg;
+  Data? data;
   dynamic workflowPercentage;
   List<Detail> pendingTaskDetail;
   dynamic pendingTaskCount;
@@ -24,68 +20,67 @@ class DashboardlistResponse {
   dynamic priorityTaskCount;
   dynamic prioritytotalTaskCount;
   dynamic priorityPercentageCount;
-
   dynamic clientid;
   dynamic siteid;
   dynamic permission;
   dynamic notapplicable;
-  // dynamic multiday;
 
   DashboardlistResponse({
-    required this.status,
-    required this.msg,
-    required this.data,
-    required this.workflowPercentage,
+    this.status,
+    this.msg,
+    this.data,
+    this.workflowPercentage,
     required this.pendingTaskDetail,
-    required this.pendingTaskCount,
-    required this.pendingtotalTaskCount,
+    this.pendingTaskCount,
+    this.pendingtotalTaskCount,
     required this.penddingcomplaint,
-    required this.penddingcomplaintcount,
+    this.penddingcomplaintcount,
     required this.prioritydetails,
-    required this.priorityTaskCount,
-    required this.prioritytotalTaskCount,
-    required this.priorityPercentageCount,
-    required this.clientid,
-    required this.siteid,
-    required this.permission,
-    required this.notapplicable,
-    // required this.multiday,
+    this.priorityTaskCount,
+    this.prioritytotalTaskCount,
+    this.priorityPercentageCount,
+    this.clientid,
+    this.siteid,
+    this.permission,
+    this.notapplicable,
   });
 
   factory DashboardlistResponse.fromJson(Map<String, dynamic> json) =>
       DashboardlistResponse(
-          status: json["status"],
-          msg: json["msg"],
-          data: json["data"] == {} ? json["data"] : Data.fromJson(json["data"]),
-          workflowPercentage: json["workflow_percentage"],
-          pendingTaskDetail: json["pending_task_detail"] == []
-              ? []
-              : List<Detail>.from(
-                  json["pending_task_detail"].map((x) => Detail.fromJson(x))),
-          pendingTaskCount: json["pending_task_count"],
-          pendingtotalTaskCount: json["pendingtotal_task_count"],
-          penddingcomplaint: json["penddingcomplaint"] == []
-              ? []
-              : List<Penddingcomplaint>.from(json["penddingcomplaint"]
-                  .map((x) => Penddingcomplaint.fromJson(x))),
-          penddingcomplaintcount: json["penddingcomplaintcount"],
-          prioritydetails: json["prioritydetails"] == []
-              ? []
-              : List<Detail>.from(
-                  json["prioritydetails"].map((x) => Detail.fromJson(x))),
-          priorityTaskCount: json["priority_task_count"],
-          prioritytotalTaskCount: json["prioritytotal_task_count"],
-          priorityPercentageCount: json["priority_percentage_count"],
-          clientid: json["clientid"],
-          siteid: json["siteid"],
-          permission: json["permission"],
-          notapplicable: json["notapplicable"],
-          );
+        status: _parseInt(json["status"]),
+        msg: json["msg"]?.toString(),
+        data: json["data"] != null && json["data"] is Map && json["data"].isNotEmpty
+            ? Data.fromJson(json["data"])
+            : null,
+        workflowPercentage: json["workflow_percentage"],
+        pendingTaskDetail: json["pending_task_detail"] is List
+            ? List<Detail>.from(
+                (json["pending_task_detail"] as List).map((x) => Detail.fromJson(x)))
+            : [],
+        pendingTaskCount: json["pending_task_count"],
+        pendingtotalTaskCount: json["pendingtotal_task_count"],
+        penddingcomplaint: json["penddingcomplaint"] is List
+            ? List<Penddingcomplaint>.from(
+                (json["penddingcomplaint"] as List).map((x) => Penddingcomplaint.fromJson(x)))
+            : [],
+        penddingcomplaintcount: json["penddingcomplaintcount"],
+        prioritydetails: json["prioritydetails"] is List
+            ? List<Detail>.from(
+                (json["prioritydetails"] as List).map((x) => Detail.fromJson(x)))
+            : [],
+        priorityTaskCount: json["priority_task_count"],
+        prioritytotalTaskCount: json["prioritytotal_task_count"],
+        priorityPercentageCount: json["priority_percentage_count"],
+        clientid: _parseInt(json["clientid"]),
+        siteid: _parseInt(json["siteid"]),
+        permission: json["permission"],
+        notapplicable: _parseInt(json["notapplicable"]),
+      );
 
   Map<String, dynamic> toJson() => {
         "status": status,
         "msg": msg,
-        "data": data.toJson(),
+        "data": data?.toJson(),
         "workflow_percentage": workflowPercentage,
         "pending_task_detail":
             List<dynamic>.from(pendingTaskDetail.map((x) => x.toJson())),
@@ -103,80 +98,100 @@ class DashboardlistResponse {
         "siteid": siteid,
         "permission": permission,
         "notapplicable": notapplicable,
-        // 'multidays': multiday
       };
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return null;
+  }
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
+  }
 }
 
 class Data {
-  int id;
+  int? id;
   dynamic createdAt;
   dynamic updatedAt;
   dynamic createdBy;
   dynamic updatedBy;
-  dynamic isActive;
+  bool? isActive;
   dynamic siteConfigId;
-  String shiftName;
-  String shiftStartTime;
-  String shiftEndTime;
+  String? shiftName;
+  String? shiftStartTime;
+  String? shiftEndTime;
   dynamic noOfStaff;
-  String supervisor;
-  String startTime;
-  String endTime;
+  String? supervisor;
+  String? startTime;
+  String? endTime;
   dynamic clientId;
-  String clientName;
+  String? clientName;
   dynamic siteId;
-  String siteName;
+  String? siteName;
   dynamic count;
-  double attendancePercentage;
-  bool multidays;
+  double? attendancePercentage;
+  bool? multidays;
 
   Data({
-    required this.id,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.createdBy,
-    required this.updatedBy,
-    required this.isActive,
-    required this.siteConfigId,
-    required this.shiftName,
-    required this.shiftStartTime,
-    required this.shiftEndTime,
-    required this.noOfStaff,
-    required this.supervisor,
-    required this.startTime,
-    required this.endTime,
-    required this.clientId,
-    required this.clientName,
-    required this.siteId,
-    required this.siteName,
-    required this.count,
-    required this.attendancePercentage,
-    required this.multidays,
+    this.id,
+    this.createdAt,
+    this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    this.isActive,
+    this.siteConfigId,
+    this.shiftName,
+    this.shiftStartTime,
+    this.shiftEndTime,
+    this.noOfStaff,
+    this.supervisor,
+    this.startTime,
+    this.endTime,
+    this.clientId,
+    this.clientName,
+    this.siteId,
+    this.siteName,
+    this.count,
+    this.attendancePercentage,
+    this.multidays,
   });
 
   factory Data.fromJson(Map<String, dynamic> json) => Data(
-      id: json["id"] ?? 0,
-      createdAt: json["createdAt"],
-      updatedAt: json["updatedAt"],
-      createdBy: json["createdBy"],
-      updatedBy: json["updatedBy"],
-      isActive: json["isActive"] ?? false,
-      siteConfigId: json["site_config_id"],
-      shiftName: json["shift_name"] ?? "",
-      shiftStartTime: json["shift_start_time"] ?? "",
-      shiftEndTime: json["shift_end_time"] ?? "",
-      noOfStaff: json["no_of_staff"] ?? 0,
-      supervisor: json["supervisor"] ?? "",
-      startTime: json["start_time"] ?? "",
-      endTime: json["end_time"] ?? "",
-      clientId: json["client_id"],
-      clientName: json["client_name"] ?? "",
-      siteId: json["Site_id"],
-      siteName: json["site_name"] ?? "",
-      count: json["count"] ?? 0,
-      attendancePercentage:
-          json["attendance_percentage"] != null ? json["attendance_percentage"].toDouble() : 0.0,
-      multidays: json["multidays"] ?? false,
+        id: DashboardlistResponse._parseInt(json["id"]),
+        createdAt: json["createdAt"],
+        updatedAt: json["updatedAt"],
+        createdBy: json["createdBy"],
+        updatedBy: json["updatedBy"],
+        isActive: json["isActive"] as bool?,
+        siteConfigId: json["site_config_id"],
+        shiftName: json["shift_name"]?.toString(),
+        shiftStartTime: json["shift_start_time"]?.toString(),
+        shiftEndTime: json["shift_end_time"]?.toString(),
+        noOfStaff: json["no_of_staff"],
+        supervisor: json["supervisor"]?.toString(),
+        startTime: json["start_time"]?.toString(),
+        endTime: json["end_time"]?.toString(),
+        clientId: DashboardlistResponse._parseInt(json["client_id"]),
+        clientName: json["client_name"]?.toString(),
+        siteId: json["Site_id"],
+        siteName: json["site_name"]?.toString(),
+        count: json["count"],
+        attendancePercentage: DashboardlistResponse._parseDouble(json["attendance_percentage"]),
+        multidays: json["multidays"] as bool?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -205,75 +220,74 @@ class Data {
 }
 
 class Penddingcomplaint {
-  int id;
-  DateTime createdAt;
+  int? id;
+  DateTime? createdAt;
   dynamic updatedAt;
   dynamic createdBy;
   String? updatedBy;
-  bool isActive;
-  String complainantName;
+  bool? isActive;
+  String? complainantName;
   dynamic complaintType;
-  String subject;
-  String client;
-  String site;
-  String status;
+  String? subject;
+  String? client;
+  String? site;
+  String? status;
   String? image1;
   String? image2;
   String? image3;
-  String comment;
+  String? comment;
   String? tatDuration;
-  DateTime date;
+  DateTime? date;
 
   Penddingcomplaint({
-    required this.id,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.createdBy,
-    required this.updatedBy,
-    required this.isActive,
-    required this.complainantName,
-    required this.complaintType,
-    required this.subject,
-    required this.client,
-    required this.site,
-    required this.status,
-    required this.image1,
-    required this.image2,
-    required this.image3,
-    required this.comment,
-    required this.tatDuration,
-    required this.date,
+    this.id,
+    this.createdAt,
+    this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    this.isActive,
+    this.complainantName,
+    this.complaintType,
+    this.subject,
+    this.client,
+    this.site,
+    this.status,
+    this.image1,
+    this.image2,
+    this.image3,
+    this.comment,
+    this.tatDuration,
+    this.date,
   });
 
-  factory Penddingcomplaint.fromJson(Map<String, dynamic> json) =>
-      Penddingcomplaint(
-         id: json["id"] ?? 0,
-      createdAt: json["createdAt"] != null
-          ? DateTime.tryParse(json["createdAt"]) ?? DateTime.now()
-          : DateTime.now(),
-      updatedAt: json["updatedAt"],
-      createdBy: json["createdBy"],
-      updatedBy: json["updatedBy"],
-      isActive: json["isActive"] ?? false,
-      complainantName: json["complainant_name"] ?? "",
-      complaintType: json["complaint_type"],
-      subject: json["subject"] ?? "",
-      client: json["client"] ?? "",
-      site: json["site"] ?? "",
-      status: json["status"] ?? "",
-      image1: json["image1"],
-      image2: json["image2"],
-      image3: json["image3"],
-      comment: json["comment"] ?? "",
-      tatDuration: json["TAT_duration"],
-      date: json["date"] != null
-          ? DateTime.tryParse(json["date"]) ?? DateTime.now()
-          : DateTime.now(),
+  factory Penddingcomplaint.fromJson(Map<String, dynamic> json) => Penddingcomplaint(
+        id: DashboardlistResponse._parseInt(json["id"]),
+        createdAt: json["createdAt"] != null && json["createdAt"].toString().isNotEmpty
+            ? DateTime.tryParse(json["createdAt"].toString())
+            : null,
+        updatedAt: json["updatedAt"],
+        createdBy: json["createdBy"],
+        updatedBy: json["updatedBy"]?.toString(),
+        isActive: json["isActive"] as bool?,
+        complainantName: json["complainant_name"]?.toString(),
+        complaintType: json["complaint_type"],
+        subject: json["subject"]?.toString(),
+        client: json["client"]?.toString(),
+        site: json["site"]?.toString(),
+        status: json["status"]?.toString(),
+        image1: json["image1"]?.toString(),
+        image2: json["image2"]?.toString(),
+        image3: json["image3"]?.toString(),
+        comment: json["comment"]?.toString(),
+        tatDuration: json["TAT_duration"]?.toString(),
+        date: json["date"] != null && json["date"].toString().isNotEmpty
+            ? DateTime.tryParse(json["date"].toString())
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "createdAt": createdAt.toIso8601String(),
+        "createdAt": createdAt?.toIso8601String(),
         "updatedAt": updatedAt,
         "createdBy": createdBy,
         "updatedBy": updatedBy,
@@ -289,43 +303,44 @@ class Penddingcomplaint {
         "image3": image3,
         "comment": comment,
         "TAT_duration": tatDuration,
-        "date":
-            "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
+        "date": date?.toIso8601String(),
       };
 }
 
 class Detail {
-  String startTime;
-  String endTime;
+  String? startTime;
+  String? endTime;
   dynamic checkCount;
   dynamic uncheckCount;
   dynamic totalcount;
   dynamic percentage;
-  String status;
+  String? status;
   List<MasterAreaWiseList> masterAreaWiseList;
 
   Detail({
-    required this.startTime,
-    required this.endTime,
-    required this.checkCount,
-    required this.uncheckCount,
-    required this.totalcount,
-    required this.percentage,
-    required this.status,
+    this.startTime,
+    this.endTime,
+    this.checkCount,
+    this.uncheckCount,
+    this.totalcount,
+    this.percentage,
+    this.status,
     required this.masterAreaWiseList,
   });
 
   factory Detail.fromJson(Map<String, dynamic> json) => Detail(
-        startTime: json["start_time"]??'',
-        endTime: json["end_time"]??'',
+        startTime: json["start_time"]?.toString(),
+        endTime: json["end_time"]?.toString(),
         checkCount: json["check_count"],
         uncheckCount: json["uncheck_count"],
         totalcount: json["totalcount"],
         percentage: json["percentage"],
-        status: json["status"]??'',
-        masterAreaWiseList: List<MasterAreaWiseList>.from(
-            json["master_area_wise_list"]
-                .map((x) => MasterAreaWiseList.fromJson(x))),
+        status: json["status"]?.toString(),
+        masterAreaWiseList: json["master_area_wise_list"] is List
+            ? List<MasterAreaWiseList>.from(
+                (json["master_area_wise_list"] as List)
+                    .map((x) => MasterAreaWiseList.fromJson(x)))
+            : [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -343,33 +358,35 @@ class Detail {
 
 class MasterAreaWiseList {
   dynamic masterArea;
-  String masterAreaName;
+  String? masterAreaName;
   dynamic checkCount;
   dynamic uncheckCount;
   dynamic totalCount;
-  String status;
+  String? status;
   List<BlockDatum> blockData;
 
   MasterAreaWiseList({
-    required this.masterArea,
-    required this.masterAreaName,
-    required this.checkCount,
-    required this.uncheckCount,
-    required this.totalCount,
-    required this.status,
+    this.masterArea,
+    this.masterAreaName,
+    this.checkCount,
+    this.uncheckCount,
+    this.totalCount,
+    this.status,
     required this.blockData,
   });
 
   factory MasterAreaWiseList.fromJson(Map<String, dynamic> json) =>
       MasterAreaWiseList(
         masterArea: json["master_area"],
-        masterAreaName: json["master_area_name"]??"",
+        masterAreaName: json["master_area_name"]?.toString(),
         checkCount: json["check_count"],
         uncheckCount: json["uncheck_count"],
         totalCount: json["total_count"],
-        status: json["status"]??'',
-        blockData: List<BlockDatum>.from(
-            json["block_data"].map((x) => BlockDatum.fromJson(x))),
+        status: json["status"]?.toString(),
+        blockData: json["block_data"] is List
+            ? List<BlockDatum>.from(
+                (json["block_data"] as List).map((x) => BlockDatum.fromJson(x)))
+            : [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -384,64 +401,66 @@ class MasterAreaWiseList {
 }
 
 class BlockDatum {
-  int id;
-  DateTime createdAt;
+  int? id;
+  DateTime? createdAt;
   dynamic updatedAt;
   dynamic createdBy;
   dynamic updatedBy;
-  bool isActive;
+  bool? isActive;
   dynamic clientWiseCheckListId;
-  String startTime;
-  String endTime;
+  String? startTime;
+  String? endTime;
   dynamic masterArea;
   dynamic masterBlock;
   dynamic shift;
-  String masterAreaName;
-  String masterBlockName;
+  String? masterAreaName;
+  String? masterBlockName;
   List<Checklist> checklist;
 
   BlockDatum({
-    required this.id,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.createdBy,
-    required this.updatedBy,
-    required this.isActive,
-    required this.clientWiseCheckListId,
-    required this.startTime,
-    required this.endTime,
-    required this.masterArea,
-    required this.masterBlock,
-    required this.shift,
-    required this.masterAreaName,
-    required this.masterBlockName,
+    this.id,
+    this.createdAt,
+    this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    this.isActive,
+    this.clientWiseCheckListId,
+    this.startTime,
+    this.endTime,
+    this.masterArea,
+    this.masterBlock,
+    this.shift,
+    this.masterAreaName,
+    this.masterBlockName,
     required this.checklist,
   });
 
   factory BlockDatum.fromJson(Map<String, dynamic> json) => BlockDatum(
-        id: json["id"]??0,
-        createdAt: DateTime.parse(json["createdAt"]),
+        id: DashboardlistResponse._parseInt(json["id"]),
+        createdAt: json["createdAt"] != null && json["createdAt"].toString().isNotEmpty
+            ? DateTime.tryParse(json["createdAt"].toString())
+            : null,
         updatedAt: json["updatedAt"],
         createdBy: json["createdBy"],
         updatedBy: json["updatedBy"],
-        isActive: json["isActive"]??false,
+        isActive: json["isActive"] as bool?,
         clientWiseCheckListId: json["ClientWiseCheckList_id"],
-        startTime: json["start_time"]??'',
-        endTime: json["end_time"]??'',
+        startTime: json["start_time"]?.toString(),
+        endTime: json["end_time"]?.toString(),
         masterArea: json["master_area"],
         masterBlock: json["master_block"],
         shift: json["Shift"],
-        masterAreaName: json["master_area_name"]??'',
-        masterBlockName: json["master_block_name"]??'',
-        checklist: json["checklist"] == null
-            ? []
-            : List<Checklist>.from(
-                json["checklist"].map((x) => Checklist.fromJson(x))),
+        masterAreaName: json["master_area_name"]?.toString(),
+        masterBlockName: json["master_block_name"]?.toString(),
+        checklist: json["checklist"] is List
+            ? List<Checklist>.from(
+                (json["checklist"] as List).map((x) => Checklist.fromJson(x)))
+            : [],
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "createdAt": createdAt.toIso8601String(),
+        "createdAt": createdAt?.toIso8601String(),
         "updatedAt": updatedAt,
         "createdBy": createdBy,
         "updatedBy": updatedBy,
@@ -454,56 +473,56 @@ class BlockDatum {
         "Shift": shift,
         "master_area_name": masterAreaName,
         "master_block_name": masterBlockName,
-        "checklist": checklist == null
-            ? []
-            : List<dynamic>.from(checklist.map((x) => x.toJson())),
+        "checklist": List<dynamic>.from(checklist.map((x) => x.toJson())),
       };
 }
 
 class Checklist {
-  int id;
-  DateTime createdAt;
+  int? id;
+  DateTime? createdAt;
   dynamic updatedAt;
   dynamic createdBy;
   dynamic updatedBy;
-  bool isActive;
-  String pointerName;
-  bool checkStatus;
+  bool? isActive;
+  String? pointerName;
+  bool? checkStatus;
   dynamic masterBlockId;
   dynamic checkListTimeTableId;
-  bool checked;
+  bool? checked;
 
   Checklist({
-    required this.id,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.createdBy,
-    required this.updatedBy,
-    required this.isActive,
-    required this.pointerName,
-    required this.checkStatus,
-    required this.masterBlockId,
-    required this.checkListTimeTableId,
-    required this.checked,
+    this.id,
+    this.createdAt,
+    this.updatedAt,
+    this.createdBy,
+    this.updatedBy,
+    this.isActive,
+    this.pointerName,
+    this.checkStatus,
+    this.masterBlockId,
+    this.checkListTimeTableId,
+    this.checked,
   });
 
   factory Checklist.fromJson(Map<String, dynamic> json) => Checklist(
-        id: json["id"],
-        createdAt: DateTime.parse(json["createdAt"]),
+        id: DashboardlistResponse._parseInt(json["id"]),
+        createdAt: json["createdAt"] != null && json["createdAt"].toString().isNotEmpty
+            ? DateTime.tryParse(json["createdAt"].toString())
+            : null,
         updatedAt: json["updatedAt"],
         createdBy: json["createdBy"],
         updatedBy: json["updatedBy"],
-        isActive: json["isActive"]??false,
-        pointerName: json["pointer_name"]??"",
-        checkStatus: json["check_status"]??false,
+        isActive: json["isActive"] as bool?,
+        pointerName: json["pointer_name"]?.toString(),
+        checkStatus: json["check_status"] as bool?,
         masterBlockId: json["master_block_id"],
         checkListTimeTableId: json["check_list_time_table_id"],
-        checked: json["checked"]??false,
+        checked: json["checked"] as bool?,
       );
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "createdAt": createdAt.toIso8601String(),
+        "createdAt": createdAt?.toIso8601String(),
         "updatedAt": updatedAt,
         "createdBy": createdBy,
         "updatedBy": updatedBy,

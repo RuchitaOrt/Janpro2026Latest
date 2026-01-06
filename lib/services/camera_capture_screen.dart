@@ -1,4 +1,6 @@
-import 'dart:io';
+
+// ignore_for_file: depend_on_referenced_packages
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
@@ -123,7 +125,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
       body: _isCameraInitialized
           ? Stack(
               children: [
-                // Fullscreen preview with proper aspect ratio
+            
                 Positioned.fill(
                   child: FittedBox(
                     fit: BoxFit.cover,
@@ -135,7 +137,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                         child: GestureDetector(
                           onScaleStart: (details) {
                             _baseZoom =
-                                _currentZoom; // store zoom when pinch starts
+                                _currentZoom; 
                           },
                           onScaleUpdate: (details) async {
                             if (_controller == null) return;
@@ -158,7 +160,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                   ),
                 ),
 
-                // Flash toggle button
+            
                 Positioned(
                   top: 50,
                   left: 20,
@@ -199,7 +201,7 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                   ),
                 ),
 
-                // Capture button
+        
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Padding(

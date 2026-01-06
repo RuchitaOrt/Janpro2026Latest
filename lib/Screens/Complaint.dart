@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element, sized_box_for_whitespace, unnecessary_string_interpolations
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -1620,7 +1622,7 @@ Future<void> openGallery() async {
                                                                           )
                                                                         : SizedBox(),
                                                                     element.TAT_remark ==
-                                                                            null
+                                                                            null||element.TAT_remark.isEmpty
                                                                         ? SizedBox()
                                                                         : GestureDetector(
                                                                             onTap:
@@ -2601,7 +2603,7 @@ Future<void> openGallery() async {
                                                                   : SizedBox(),
                                                               _elements[element]
                                                                           .TAT_remark ==
-                                                                      null
+                                                                      null||_elements[element].TAT_remark.isEmpty
                                                                   ? SizedBox()
                                                                   : GestureDetector(
                                                                       onTap:
@@ -3605,7 +3607,7 @@ Future<void> openGallery() async {
                                                                     : SizedBox(),
                                                                 _elements[element]
                                                                             .TAT_remark ==
-                                                                        null
+                                                                        null||_elements[element].TAT_remark.isEmpty
                                                                     ? SizedBox()
                                                                     : GestureDetector(
                                                                         onTap:
@@ -4711,10 +4713,11 @@ Future<void> openGallery() async {
                                                         ),
                                               // clients card
 
-                                              element.TAT_remark != null &&
+                                              (element.TAT_remark == null||element.TAT_remark=='') &&
                                                       role ==
                                                           GlobalLists.clientrole
-                                                  ? Column(
+                                                  ? const SizedBox()
+                                                 : Column(
                                                       mainAxisAlignment:
                                                           MainAxisAlignment
                                                               .center,
@@ -4769,8 +4772,8 @@ Future<void> openGallery() async {
                                                         ),
                                                       ],
                                                     )
-                                                  : const SizedBox(),
-                                              SizedBox(
+                                                  
+                                              ,SizedBox(
                                                 height: 10,
                                               ),
                                             ],
@@ -4906,8 +4909,8 @@ Future<void> openGallery() async {
                                                                           ),
                                                                         )
                                                                       : Container(),
-                                                                  element.TAT_remark !=
-                                                                              null &&
+                                                                 ( element.TAT_remark !=
+                                                                              null||element.TAT_remark.isNotEmpty) &&
                                                                           (element.status == "Escalated" ||
                                                                               element.status == "In-Progress" ||
                                                                               element.status == "In Progress" ||
@@ -4922,7 +4925,7 @@ Future<void> openGallery() async {
                                                                         )
                                                                       : SizedBox(),
                                                                   element.TAT_remark ==
-                                                                          null
+                                                                          null||element.TAT_remark.isEmpty
                                                                       ? SizedBox()
                                                                       : GestureDetector(
                                                                           onTap:
@@ -6113,7 +6116,7 @@ Future<void> openGallery() async {
                                                                   : SizedBox(),
                                                               _elements[element]
                                                                           .TAT_remark ==
-                                                                      null
+                                                                      null||_elements[element].TAT_remark.isEmpty
                                                                   ? SizedBox()
                                                                   : GestureDetector(
                                                                       onTap:
@@ -6136,6 +6139,7 @@ Future<void> openGallery() async {
                                                                         ),
                                                                       ),
                                                                     ),
+                                                           
                                                             ],
                                                           ),
                                                   ),
@@ -7881,7 +7885,7 @@ Future<void> openGallery() async {
                                                                   : SizedBox(),
                                                               _elements[element]
                                                                           .TAT_remark ==
-                                                                      null
+                                                                      null||_elements[element].TAT_remark.isEmpty
                                                                   ? SizedBox()
                                                                   : GestureDetector(
                                                                       onTap:

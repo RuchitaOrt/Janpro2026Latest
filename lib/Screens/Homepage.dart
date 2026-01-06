@@ -1167,8 +1167,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                             ),
                           )
                         : (role == GlobalLists.operationrole ||
-                              role == GlobalLists.operationmanagerrole ||
-                              role == GlobalLists.reginalmanagerrole)
+                              role == GlobalLists.operationmanagerrole)
                         ? Align(
                             alignment: Alignment.bottomRight,
                             child: Padding(
@@ -4104,21 +4103,34 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                         percent:
                                             headlist[index].percentage.contains(
                                               "NaN %",
-                                            )
+                                            )||notapplicable==0
                                             ? 0
                                             : headlist[index].percvalue,
-                                        center: new Text(
-                                          headlist[index].percentage.contains(
-                                                "NaN %",
+                                        center:
+                                           notapplicable ==
+                                                0
+                                            ? Text(
+                                                "NA",
+                                                style: AppFonts.headerStyle(
+                                                  fontSize: 18,
+                                                  color: customcolor
+                                                      .textorangecolor,
+                                                  fontWeight: FontWeight.w100,
+                                                ),
                                               )
-                                              ? "0 %"
-                                              : headlist[index].percentage,
-                                          style: AppFonts.headerStyle(
-                                            fontSize: 18,
-                                            color: customcolor.textorangecolor,
-                                            fontWeight: FontWeight.w100,
-                                          ),
-                                        ),
+                                            : Text(
+                                                headlist[index].percentage
+                                                        .contains("NaN %")
+                                                    ? "0 %"
+                                                    : headlist[index]
+                                                          .percentage,
+                                                style: AppFonts.headerStyle(
+                                                  fontSize: 18,
+                                                  color: customcolor
+                                                      .textorangecolor,
+                                                  fontWeight: FontWeight.w100,
+                                                ),
+                                              ),
 
                                         circularStrokeCap:
                                             CircularStrokeCap.round,
@@ -4255,6 +4267,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
   //dashboard api
 
   Future<void> dashboardApi() async {
+    log(  "dashboardApi called");
     final prefs = await SharedPreferences.getInstance();
     const cacheKey = 'dashboard_cache';
 
@@ -4332,17 +4345,24 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                 updateDashboardState(resp);
               });
 
+               log('notapplicable checking ${resp.notapplicable}');
               isFirstLoad = false; // stop showing loaders
               //17dec
 
-              await SPManager().setShiftID(resp.data.id.toString());
+              await SPManager().setShiftID(resp.data!.id.toString());
             } else {
               print("DASHBOARD ${resp.status}");
               //16dec2025
               // updateDashboardState(resp);
 
               print("RUCHITA GlobalLists.isActive");
-              print(resp.data.isActive);
+              log('check isActive ${resp.data?.isActive}');
+
+
+              log('notapplicable checking.. ${resp.notapplicable}');
+              setState(() {
+                notapplicable = resp.notapplicable;
+              });
 
               GlobalLists.clientid = resp.clientid.toString();
               GlobalLists.siteid = resp.siteid.toString();
@@ -4354,7 +4374,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
 
               isFirstLoad = false;
 
-              ShowDialogs.showToast(resp.msg);
+              ShowDialogs.showToast(resp.msg.toString());
               // keep placeholders or cached data
             }
           } catch (e) {
@@ -4492,27 +4512,28 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
   //       }
   //     }
   //   }
+   int notapplicable = 0;
 
   void updateDashboardState(DashboardlistResponse resp) {
     print("RUCHI @2");
     GlobalLists.isclientdata = true;
-    GlobalLists.clientname = resp.data.clientName;
-    GlobalLists.shifttime = '${resp.data.startTime} -${resp.data.endTime}';
-    GlobalLists.sitename = resp.data.siteName;
-    GlobalLists.nooftotalstaff = resp.data.noOfStaff?.toString() ?? "0";
-    GlobalLists.noofstaff = resp.data.count?.toString() ?? "0";
-    GlobalLists.attendanceper = resp.data.attendancePercentage ?? 0.0;
-    GlobalLists.attendancedate = resp.data.createdAt.toString();
+    GlobalLists.clientname = resp.data?.clientName??"";
+    GlobalLists.shifttime = '${resp.data?.startTime} -${resp.data?.endTime}';
+    GlobalLists.sitename = resp.data?.siteName??'';
+    GlobalLists.nooftotalstaff = resp.data?.noOfStaff?.toString() ?? "0";
+    GlobalLists.noofstaff = resp.data?.count?.toString() ?? "0";
+    GlobalLists.attendanceper = resp.data?.attendancePercentage ?? 0.0;
+    GlobalLists.attendancedate = resp.data?.createdAt.toString()??'';
     GlobalLists.totalattendanceper =
         double.parse(GlobalLists.noofstaff) *
         (double.parse(GlobalLists.nooftotalstaff) / 100);
-    GlobalLists.clientid = resp.data.clientId.toString();
+    GlobalLists.clientid = resp.data?.clientId.toString()??'';
 
-    GlobalLists.shiftid = resp.data.id.toString();
+    GlobalLists.shiftid = resp.data?.id.toString()??"";
 
     print(GlobalLists.clientid);
-    print(resp.data.clientId.toString());
-    GlobalLists.siteid = resp.data.siteId.toString();
+    print(resp.data?.clientId.toString());
+    GlobalLists.siteid = resp.data?.siteId.toString()??"";
     // dashboardvlaue = resp.data;
     print("RUCHITA GlobalLists.shiftid");
 
@@ -4529,9 +4550,10 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
     print("DELETE PERMISSION");
     print(GlobalLists.attendance_delete_permission);
 
-    int notapplicable = resp.notapplicable;
+     notapplicable = resp.notapplicable;
+     setState(() {});
 
-    print("RUCHI @ $notapplicable");
+    log("RUCHI @ $notapplicable");
     headlist = [
       Dashboard(
         "assets/images/image4.png",
@@ -4569,13 +4591,13 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
   void updateDashboardStatewhenNzero(DashboardlistResponse resp) {
     print("updateDashboardStatewhenNzero");
     GlobalLists.isclientdata = true;
-    GlobalLists.clientname = resp.data.clientName;
-    GlobalLists.shifttime = '${resp.data.startTime} -${resp.data.endTime}';
-    GlobalLists.sitename = resp.data.siteName;
-    GlobalLists.nooftotalstaff = resp.data.noOfStaff?.toString() ?? "0";
-    GlobalLists.noofstaff = resp.data.count?.toString() ?? "0";
-    GlobalLists.attendanceper = resp.data.attendancePercentage ?? 0.0;
-    GlobalLists.attendancedate = resp.data.createdAt.toString();
+    GlobalLists.clientname = resp.data?.clientName??"";
+    GlobalLists.shifttime = '${resp.data?.startTime??''} -${resp.data?.endTime??""}';
+    GlobalLists.sitename = resp.data?.siteName??"";
+    GlobalLists.nooftotalstaff = resp.data?.noOfStaff?.toString() ?? "0";
+    GlobalLists.noofstaff = resp.data?.count?.toString() ?? "0";
+    GlobalLists.attendanceper = resp.data?.attendancePercentage ?? 0.0;
+    GlobalLists.attendancedate = resp.data?.createdAt.toString()??'';
     GlobalLists.totalattendanceper =
         double.parse(GlobalLists.noofstaff) *
         (double.parse(GlobalLists.nooftotalstaff) / 100);
@@ -5162,9 +5184,6 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
 
   bool addTrainingLoad = false;
   operationaladdtrainingApi() async {
-    print("|||||||||||||||||||||||");
-    print("result");
-    print("|||||||||||||||||||||||");
     var status = await ConnectionDetector.checkInternetConnection();
     if (status) {
       // ShowDialogs.showLoadingDialog(context, _keyLoader);
@@ -6258,8 +6277,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
 
         (role == GlobalLists.operationrole ||
-                role == GlobalLists.operationmanagerrole ||
-                role == GlobalLists.reginalmanagerrole)
+                role == GlobalLists.operationmanagerrole)
             ? SpeedDialChild(
                 child: Image.asset(
                   "assets/images/calendar.png",
