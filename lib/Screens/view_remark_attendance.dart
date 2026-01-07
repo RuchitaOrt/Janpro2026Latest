@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Attendance.dart';
@@ -95,6 +96,20 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         record.omOeApprovalStatus!.isEmpty;
   }
 
+  /// Check if OM/OE approval is completed for all records
+  bool get _isOmOeApprovalCompleted {
+    if (attendanceData == null) return false;
+
+    for (var d in attendanceData!.data) {
+      for (var r in d.records) {
+        if (r.omOeApprovalStatus == null || r.omOeApprovalStatus!.isEmpty) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   /// Check if client can take action on any record
   bool get _canClientTakeAction {
     if (GlobalLists.clientrole != role)
@@ -109,6 +124,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       return true; // Not a client, allow action
 
     return !_isOmOeApprovalPending(record);
+  }
+
+  /// Check if OM/OE user should be in read-only mode
+  bool get _isOmOeReadOnly {
+    // If user is not a client and OM/OE approval is completed
+    return GlobalLists.clientrole != role && _isOmOeApprovalCompleted;
   }
 
   /// Initialize API rejection status
@@ -144,7 +165,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         backgroundColor: customcolor.blue,
         title: const Text("View Remark Attendance"),
       ),
-      body: attendanceData?.data.length == 0 ||attendanceData==null
+      body: attendanceData?.data.length == 0 || attendanceData == null
           ? const Center(child: Text("No Record Found"))
           : Padding(
               padding: const EdgeInsets.all(12.0),
@@ -266,75 +287,79 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
               const SizedBox(height: 12),
 
               // Reasons Card
-            attendanceData!.data[0].omOeResson.isEmpty?SizedBox():  Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      "Reasons Summary",
-                      style: AppFonts.headerStyle(
-                        fontSize: 13,
-                        color: customcolor.black,
-                        fontWeight: FontWeight.w400,
+              attendanceData!.data[0].omOeResson.length==0
+                  ? SizedBox()
+                  : Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
+                          Text(
+                            "Reasons Summary",
+                            style: AppFonts.headerStyle(
+                              fontSize: 13,
+                              color: customcolor.black,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // OM/OE Reasons (if exists)
+                          attendanceData?.data[0].omOeResson.isEmpty ?? true
+                              ? const SizedBox()
+                              : Column(
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 50,
+                                          child: Text(
+                                            'OPs:',
+                                            style: AppFonts.headerStyle(
+                                              fontSize: 13,
+                                              color: customcolor.black,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            attendanceData!
+                                                .data[0].omOeResson.join(
+                                              ', ',
+                                            ),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 14,
+                                              color: Colors.grey.shade800,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
+                                ),
+                        ],
                       ),
                     ),
-
-                    const SizedBox(height: 8),
-
-                    // OM/OE Reasons (if exists)
-                    attendanceData?.data[0].omOeResson.isEmpty ?? true
-                        ? const SizedBox()
-                        : Column(
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 50,
-                                    child: Text(
-                                      'OPs:',
-                                      style: AppFonts.headerStyle(
-                                        fontSize: 13,
-                                        color: customcolor.black,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      attendanceData!.data[0].omOeResson.join(
-                                        ', ',
-                                      ),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 14,
-                                        color: Colors.grey.shade800,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                            ],
-                          ),
-                  ],
-                ),
-              ),
 
               // Bulk Actions Container
               const SizedBox(height: 12),
@@ -366,12 +391,13 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
   bool _isRadioLocked(Record record) {
     bool isClient = GlobalLists.clientrole == role;
+    bool isOmOeReadOnly = _isOmOeReadOnly;
 
     bool isClientFinal = record.clientApprovalStatus != null;
     bool isOmApproved = record.omOeApprovalStatus == "approved";
     bool isOmRejected = record.omOeApprovalStatus == "rejected";
 
-    return isClientFinal || isOmApproved || (!isClient && isOmRejected);
+    return isClientFinal || isOmApproved || (!isClient && isOmRejected) || isOmOeReadOnly;
   }
 
   /// ---------------- LIST ----------------
@@ -384,7 +410,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
         /// FILTER: ONLY SHOW RECORDS WITH REASON
         final filteredRecords = datum.records.where((r) {
-          return r.reason != null && r.reason!.isNotEmpty;
+          return r.name.isNotEmpty;
         }).toList();
 
         /// IF NO RECORD HAS REASON → DO NOT SHOW DATE
@@ -434,6 +460,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
   Widget _recordCard(Record record) {
     bool isClient = GlobalLists.clientrole == role;
+    bool isOmOeReadOnly = _isOmOeReadOnly;
 
     /// CLIENT FINAL DECISION
     bool isClientFinal = record.clientApprovalStatus != null;
@@ -444,7 +471,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     bool isOmPending = _isOmOeApprovalPending(record);
 
     bool lockRadio =
-        isClientFinal || isOmApproved || (!isClient && isOmRejected);
+        isClientFinal || isOmApproved || (!isClient && isOmRejected) || isOmOeReadOnly;
 
     /// Check if radio should be disabled for client
     bool radioDisabledForClient = isClient && isOmPending;
@@ -453,7 +480,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       "Record ${record.id} | isClient:$isClient | "
       "OM:${record.omOeApprovalStatus} | "
       "Client:${record.clientApprovalStatus} | "
-      "lock:$lockRadio | radioDisabledForClient:$radioDisabledForClient",
+      "lock:$lockRadio | radioDisabledForClient:$radioDisabledForClient | "
+      "isOmOeReadOnly:$isOmOeReadOnly",
     );
 
     /// ---------------- PRESELECT VALUE ----------------
@@ -533,7 +561,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                 Row(
                   children: [
                     Text(
-                      "Req Status : ",
+                   role==GlobalLists.clientrole?"Your Status":   "Req Status : ",
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -599,7 +627,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         enabled:
                             !lockRadio &&
                             !_allClientApproved &&
-                            !radioDisabledForClient,
+                            !radioDisabledForClient &&
+                            !isOmOeReadOnly,
                         isOmPending: isOmPending && isClient,
                       ),
                       Text(
@@ -616,7 +645,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         enabled:
                             !lockRadio &&
                             !_allClientApproved &&
-                            !radioDisabledForClient,
+                            !radioDisabledForClient &&
+                            !isOmOeReadOnly,
                         isOmPending: isOmPending && isClient,
                       ),
                       Text(
@@ -681,7 +711,21 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   Widget _submitButton() {
     bool isClient = GlobalLists.clientrole == role;
     bool hasPendingOmOe = _hasPendingOmOeApproval;
-    bool canSubmit = isClient ? !hasPendingOmOe : true;
+    bool isOmOeReadOnly = _isOmOeReadOnly;
+    
+    // Determine if submit button should be enabled
+    bool canSubmit;
+    
+    if (isOmOeReadOnly) {
+      // OM/OE read-only mode: disable submit button
+      canSubmit = false;
+    } else if (isClient) {
+      // Client: only enable if no pending OM/OE approval
+      canSubmit = !hasPendingOmOe;
+    } else {
+      // OM/OE user who can still take action
+      canSubmit = true;
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -699,7 +743,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlobalLists.clientrole == role && _hasPendingOmOeApproval
+          // Only show bulk buttons when NOT in OM/OE read-only mode
+          // AND when client has permission (no pending OM/OE approval)
+          (isOmOeReadOnly || (GlobalLists.clientrole == role && _hasPendingOmOeApproval))
               ? SizedBox()
               : Container(
                   child: Row(
@@ -734,7 +780,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         disabled:
                             _allClientApproved ||
                             (GlobalLists.clientrole == role &&
-                                _hasPendingOmOeApproval),
+                                _hasPendingOmOeApproval) ||
+                            isOmOeReadOnly,
                       ),
                       const SizedBox(width: 8),
                       _bulkButton(
@@ -766,7 +813,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         disabled:
                             _allClientApproved ||
                             (GlobalLists.clientrole == role &&
-                                _hasPendingOmOeApproval),
+                                _hasPendingOmOeApproval) ||
+                            isOmOeReadOnly,
                       ),
                     ],
                   ),
@@ -777,12 +825,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             child: ElevatedButton(
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(
-                  _allClientApproved || !canSubmit
+                  _allClientApproved || !canSubmit || isOmOeReadOnly
                       ? Colors.grey.shade300
                       : customcolor.blue,
                 ),
                 foregroundColor: MaterialStateProperty.all(
-                  _allClientApproved || !canSubmit
+                  _allClientApproved || !canSubmit || isOmOeReadOnly
                       ? Colors.grey.shade500
                       : Colors.white,
                 ),
@@ -795,12 +843,14 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                   ),
                 ),
               ),
-              onPressed: _allClientApproved || !canSubmit
+              onPressed: _allClientApproved || !canSubmit || isOmOeReadOnly
                   ? null
                   : _submitAttendaceRoster,
               child: Text(
                 _allClientApproved
                     ? "Already Approved"
+                    : isOmOeReadOnly && role!=GlobalLists.clientrole
+                    ? "OPs Approval Completed"
                     : !canSubmit
                     ? "Pending OPs Approval"
                     : "Submit",
@@ -973,6 +1023,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   }
 
   _submitAttendaceRoster() async {
+    // Check for OM/OE read-only mode
+    if (_isOmOeReadOnly) {
+      ShowDialogs.showToast("OPs approval already completed");
+      return;
+    }
+
     // Check for client permission to submit
     if (GlobalLists.clientrole == role && _hasPendingOmOeApproval) {
       ShowDialogs.showToast("Pending approval from OPs side");
@@ -1063,7 +1119,6 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         "user_id": GlobalLists.clientrole == role ? "" : supervisorid,
         "is_client": GlobalLists.clientrole == role ? "true" : "false",
         "is_final_submitted": GlobalLists.clientrole == role ? "true" : "false",
-
       };
 
       /// ---------------- API CALL ----------------
@@ -1077,7 +1132,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
           if (resp.status == 1) {
             Timer(
               Duration(seconds: 1),
-              () => Navigator.push(
+                  () => Navigator.push(
                 context,
                 PageRouteBuilder(
                   pageBuilder: (context, animation1, animation2) => Attendance(
@@ -1087,8 +1142,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                 ),
               ),
             );
+            ShowDialogs.showToast(resp.msg);
           } else {
-            ShowDialogs.showToast(resp.msg ?? "Submission failed");
+            ShowDialogs.showToast(resp.msg);
           }
         },
         (error) {
