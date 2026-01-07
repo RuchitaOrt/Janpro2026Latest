@@ -46,8 +46,11 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   ViewAttendaceMonthly? attendanceData;
   String? role = "1";
 
-  /// recordId -> approve / reject
+  /// recordId -> user's current selection (approve/reject)
   Map<int, String> approvalSelection = {};
+
+  /// track records that are already rejected from API (client or OM/OE)
+  Set<int> alreadyRejectedFromApi = {};
 
   /// universal reject reason (asked once on submit)
   String? universalRejectReason;
@@ -108,6 +111,26 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     return !_isOmOeApprovalPending(record);
   }
 
+  /// Initialize API rejection status
+  void _initializeApiRejectionStatus() {
+    alreadyRejectedFromApi.clear();
+
+    if (attendanceData == null) return;
+
+    for (var d in attendanceData!.data) {
+      for (var r in d.records) {
+        // Check if record is already rejected by client
+        if (r.clientApprovalStatus == "rejected") {
+          alreadyRejectedFromApi.add(r.id);
+        }
+        // Check if record is already rejected by OM/OE
+        else if (r.omOeApprovalStatus == "rejected") {
+          alreadyRejectedFromApi.add(r.id);
+        }
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -121,8 +144,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         backgroundColor: customcolor.blue,
         title: const Text("View Remark Attendance"),
       ),
-      body: attendanceData == null
-          ? const Center(child: CircularProgressIndicator())
+      body: attendanceData?.data.length == 0 ||attendanceData==null
+          ? const Center(child: Text("No Record Found"))
           : Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -139,176 +162,184 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   /// ---------------- TOP APPROVE / REJECT ALL ----------------
 
   Widget _topBulkAction() {
-    return Column(
-      children: [
-        // Header Card with Discrepancy Count
-        Material(
-          elevation: 2,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Discrepancy Text
-                Flexible(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return attendanceData?.data.length == 0
+        ? SizedBox()
+        : Column(
+            children: [
+              // Header Card with Discrepancy Count
+              Material(
+                elevation: 2,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        "Discrepancies",
-                        style: AppFonts.headerStyle(
-                          fontSize: ResponsiveFlutter.of(context).fontSize(2.5),
-                          color: customcolor.textblue,
-                          fontWeight: FontWeight.bold,
+                      // Discrepancy Text
+                      Flexible(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Discrepancies",
+                              style: AppFonts.headerStyle(
+                                fontSize: ResponsiveFlutter.of(
+                                  context,
+                                ).fontSize(2.5),
+                                color: customcolor.textblue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 55,
+                                  child: Text(
+                                    'Reson:',
+                                    style: AppFonts.headerStyle(
+                                      fontSize: 13,
+                                      color: customcolor.black,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    attendanceData!.data[0].reasons
+                                        .join(', ')
+                                        .toString(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 13,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 10),
 
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 55,
-                            child: Text(
-                              'Reson:',
-                              style: AppFonts.headerStyle(
-                                fontSize: 13,
-                                color: customcolor.black,
-                                fontWeight: FontWeight.w400,
-                              ),
+                      // Progress Circle
+                      Container(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: CircularPercentIndicator(
+                          animationDuration: 500,
+                          lineWidth: 6.0,
+                          radius: 40.0,
+                          animation: true,
+                          percent: attendanceData!.data.isEmpty
+                              ? 0
+                              : (approvalSelection.length /
+                                        attendanceData!.data.length)
+                                    .clamp(0.0, 1.0),
+                          center: Text(
+                            attendanceData!.data.isEmpty
+                                ? "NA"
+                                : "${attendanceData!.totalApprovedByClient}/${attendanceData!.totalCount}",
+                            style: AppFonts.headerStyle(
+                              fontSize: attendanceData!.data.isEmpty ? 18 : 24,
+                              color: customcolor.textyellow,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Expanded(
-                            child: Text(
-                              attendanceData!.data[0].reasons.join(', '),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 13,
-                                color: Colors.grey.shade800,
-                              ),
-                            ),
-                          ),
-                        ],
+                          circularStrokeCap: CircularStrokeCap.round,
+                          progressColor: customcolor.textblue,
+                          backgroundColor: Colors.grey.shade200,
+                        ),
                       ),
                     ],
                   ),
                 ),
+              ),
 
-                // Progress Circle
-                Container(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: CircularPercentIndicator(
-                    animationDuration: 500,
-                    lineWidth: 6.0,
-                    radius: 40.0,
-                    animation: true,
-                    percent: attendanceData!.data.isEmpty
-                        ? 0
-                        : (approvalSelection.length /
-                                  attendanceData!.data.length)
-                              .clamp(0.0, 1.0),
-                    center: Text(
-                      attendanceData!.data.isEmpty
-                          ? "NA"
-                          : "${attendanceData!.totalApprovedByClient}/${attendanceData!.totalCount}",
+              const SizedBox(height: 12),
+
+              // Reasons Card
+            attendanceData!.data[0].omOeResson.isEmpty?SizedBox():  Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      "Reasons Summary",
                       style: AppFonts.headerStyle(
-                        fontSize: attendanceData!.data.isEmpty ? 18 : 24,
-                        color: customcolor.textyellow,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: customcolor.black,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
-                    circularStrokeCap: CircularStrokeCap.round,
-                    progressColor: customcolor.textblue,
-                    backgroundColor: Colors.grey.shade200,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
 
-        const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
-        // Reasons Card
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              Text(
-                "Reasons Summary",
-                style: AppFonts.headerStyle(
-                  fontSize: 13,
-                  color: customcolor.black,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // OM/OE Reasons (if exists)
-              attendanceData?.data[0].omOeResson.isEmpty ?? true
-                  ? const SizedBox()
-                  : Column(
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 50,
-                              child: Text(
-                                'OPs:',
-                                style: AppFonts.headerStyle(
-                                  fontSize: 13,
-                                  color: customcolor.black,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                    // OM/OE Reasons (if exists)
+                    attendanceData?.data[0].omOeResson.isEmpty ?? true
+                        ? const SizedBox()
+                        : Column(
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 50,
+                                    child: Text(
+                                      'OPs:',
+                                      style: AppFonts.headerStyle(
+                                        fontSize: 13,
+                                        color: customcolor.black,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      attendanceData!.data[0].omOeResson.join(
+                                        ', ',
+                                      ),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                attendanceData!.data[0].omOeResson.join(', '),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                  color: Colors.grey.shade800,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-            ],
-          ),
-        ),
+                              const SizedBox(height: 8),
+                            ],
+                          ),
+                  ],
+                ),
+              ),
 
-        // Bulk Actions Container
-        const SizedBox(height: 12),
-      ],
-    );
+              // Bulk Actions Container
+              const SizedBox(height: 12),
+            ],
+          );
   }
 
   Widget _bulkButton({
@@ -353,7 +384,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
         /// FILTER: ONLY SHOW RECORDS WITH REASON
         final filteredRecords = datum.records.where((r) {
-          return r.reason != null && r.reason.trim().isNotEmpty;
+          return r.reason != null && r.reason!.isNotEmpty;
         }).toList();
 
         /// IF NO RECORD HAS REASON → DO NOT SHOW DATE
@@ -432,7 +463,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       selectedValue = record.clientApprovalStatus == "approved"
           ? "approve"
           : "reject";
-    } else if (record.omOeApprovalStatus != null && !isClient) {
+    } else if (record.omOeApprovalStatus != null) {
       // IMPORTANT: client should NOT be forced by OM/OE decision
       selectedValue = record.omOeApprovalStatus == "approved"
           ? "approve"
@@ -928,6 +959,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         Navigator.pop(context);
         setState(() {
           attendanceData = response;
+          _initializeApiRejectionStatus(); // Initialize rejection tracking
         });
       },
       (error) {
@@ -957,10 +989,23 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       return;
     }
 
-    
-    bool hasReject = approvalSelection.values.any((e) => e == "reject");
+    /// ======== FIXED: Check only for NEW rejections ========
+    bool hasNewReject = false;
 
-    if (hasReject) {
+    for (var record in allRecords) {
+      final userSelection = approvalSelection[record.id];
+
+      // Only count it as a new rejection if:
+      // 1. User selected "reject" AND
+      // 2. It wasn't already rejected from API
+      if (userSelection == "reject" &&
+          !alreadyRejectedFromApi.contains(record.id)) {
+        hasNewReject = true;
+        break; // No need to check further
+      }
+    }
+
+    if (hasNewReject) {
       universalRejectReason = await _rejectReasonDialog();
       if (universalRejectReason == null) return;
     }
@@ -982,11 +1027,27 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         for (var r in d.records) {
           final status = approvalSelection[r.id];
 
+          // Use the appropriate status based on whether it's a new rejection or existing
+          String finalStatus;
+          String approveStatus;
+
+          if (alreadyRejectedFromApi.contains(r.id) && status == "reject") {
+            // Keep existing API rejection status
+            finalStatus = r.previousStatus == 'yes'
+                ? "no"
+                : "yes"; // Opposite of original
+            approveStatus = "rejected";
+          } else {
+            // Use user's new selection
+            finalStatus = status == "approve" ? "yes" : "no";
+            approveStatus = status == "approve" ? "approved" : "rejected";
+          }
+
           attendanceIdList.add({
             "date": DateFormat('yyyy-MM-dd').format(r.date),
-            "attendance_status": status == "approve" ? "yes" : "no",
+            "attendance_status": finalStatus,
             "attendance_id": r.id,
-            "approve_status": status == "approve" ? "approved" : "rejected",
+            "approve_status": approveStatus,
           });
         }
       }
@@ -994,9 +1055,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       /// ---------------- FINAL MAP ----------------
 
       var map = {
-        "reason": approvalSelection.values.contains("reject")
-            ? universalRejectReason
-            : "",
+        "reason": hasNewReject ? universalRejectReason : "",
         "attendance_id_list": jsonEncode(attendanceIdList),
         "client_id": GlobalLists.clientrole == role
             ? widget.clientid
@@ -1004,6 +1063,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         "user_id": GlobalLists.clientrole == role ? "" : supervisorid,
         "is_client": GlobalLists.clientrole == role ? "true" : "false",
         "is_final_submitted": GlobalLists.clientrole == role ? "true" : "false",
+
       };
 
       /// ---------------- API CALL ----------------
@@ -1052,6 +1112,3 @@ extension StringExtension on String {
     return this[0].toUpperCase() + substring(1);
   }
 }
-
-
-//changes

@@ -156,9 +156,17 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       final now = DateTime.now();
 
       // Set default month and year if not provided
+
       if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
-        month = now.month.toString().padLeft(2, '0'); // "01" to "12"
-        year = now.year.toString(); // "2025"
+        if (now.month == 1) {
+          // January → previous year December
+          month = "12";
+          year = (now.year - 1).toString();
+        } else {
+          // Any other month → current month/year
+          month = now.month.toString().padLeft(2, '0');
+          year = now.year.toString();
+        }
       }
 
       // Parse month and year
@@ -335,6 +343,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     );
   }
 
+  var shiftId;
+  var clientId;
+  var userId;
+  var siteId;
   void _showRosterDialog() {
     if (!mounted || context == null || _attendanceRosterData.isEmpty) return;
     final _horizontalScrollKey = GlobalKey();
@@ -393,7 +405,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       final monthName = newMonth.split(' ')[0];
       final monthIndex = monthNames.indexOf(monthName);
       month = monthIndex.toString().padLeft(2, '0');
-      // year = newYear.toString();
+      year = newYear.toString();
 
       // Close current dialog and fetch new data
       Navigator.pop(context);
@@ -416,6 +428,34 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
     Set<String> selectedCells = {};
     bool multiSelectMode = false;
+    // Change from String to int for month index tracking
+    int selectedMonthIndex = currentMonth; // Track month by index (1-12)
+    String selectedMonthDisplay = '${monthNames[currentMonth]} $selectedYear';
+
+    // Update the reload function
+    void _reloadDataForMonth(int monthIndex) {
+      final monthIndexStr = monthIndex.toString().padLeft(2, '0');
+      month = monthIndexStr;
+
+      // Create the month-year string for grouping
+      final monthYearKey = '${monthNames[monthIndex]} $selectedYear';
+
+      // Update display
+      selectedMonthDisplay = monthYearKey;
+
+      // Update shift based on month-year key
+      selectedShift = groupedByMonth[monthYearKey]?.isNotEmpty == true
+          ? groupedByMonth[monthYearKey]![0]
+          : null;
+
+      // Clear selections
+      selectedCells.clear();
+      multiSelectMode = false;
+
+      // Reload data
+      Navigator.pop(context);
+      _fetchAttendanceRoster();
+    }
 
     showGeneralDialog(
       context: context,
@@ -450,15 +490,27 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               return _allSelectedHaveSameStatus() ? firstStatus : null;
             }
 
-            void _reloadDataForMonth(String newMonth) {
-              final parts = newMonth.split(' ');
-              final monthName = parts[0];
-              final yearStr = parts[1];
+            void _reloadDataForMonth(int monthIndex) {
+              // Changed parameter type
+              final monthIndexStr = monthIndex.toString().padLeft(2, '0');
+              month = monthIndexStr;
 
-              final monthIndex = monthNames.indexOf(monthName);
-              month = monthIndex.toString().padLeft(2, '0');
-              year = yearStr;
+              // Create the month-year string for grouping
+              final monthYearKey = '${monthNames[monthIndex]} $selectedYear';
 
+              // Update display
+              selectedMonthDisplay = monthYearKey;
+
+              // Update shift based on month-year key
+              selectedShift = groupedByMonth[monthYearKey]?.isNotEmpty == true
+                  ? groupedByMonth[monthYearKey]![0]
+                  : null;
+
+              // Clear selections
+              selectedCells.clear();
+              multiSelectMode = false;
+
+              // Reload data
               Navigator.pop(context);
               _fetchAttendanceRoster();
             }
@@ -483,10 +535,14 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               List<String> selectedKeys,
               String actionType, // 'submit', 'approve', or 'reject'
             ) {
-              final siteId = '$attendancesiteid';
-              final userId = '$attendanceclientid';
-              final clientId = '$attendanceclientid';
-              final shiftId = selectedShift.id?.toString() ?? '';
+              setState(() {
+                siteId = '$attendancesiteid';
+                userId = '$attendanceclientid';
+                clientId = '$attendanceclientid';
+                shiftId = selectedShift.id?.toString() ?? '';
+              });
+
+              log('check $siteId ,$userId,$clientId,$shiftId');
 
               // Get first selected date
               String toDate = '';
@@ -528,7 +584,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                 }
 
                 if (actionType == 'submit') {
-                  /// TOGGLE attendance_status
                   String toggledStatus = 'no';
 
                   if (attendanceData?.attendanceStatus == 'yes') {
@@ -550,9 +605,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                   }
 
                   empDataList.add(data);
-                }
-                /// ================= APPROVE / REJECT =================
-                else if (actionType == 'approve' || actionType == 'reject') {
+                } else if (actionType == 'approve' || actionType == 'reject') {
                   if (attendanceData?.attendanceId != null) {
                     attendanceIdList.add(attendanceData!.attendanceId!);
                   } else {
@@ -1029,7 +1082,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                   );
                                                 }
 
-                                                /// 🔥 Auto select valid month
                                                 selectedMonth =
                                                     '${monthNames[1]} $selectedYear';
 
@@ -1076,12 +1128,15 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     child: DropdownButton<String>(
                                       isExpanded: true,
                                       underline: const SizedBox(),
-                                      value: selectedMonth,
-                                      items: monthYears.map((m) {
+                                      value: monthNames[selectedMonthIndex],
+                                      items: monthNames.sublist(1).map((
+                                        monthName,
+                                      ) {
+                                        // Show all months
                                         return DropdownMenuItem<String>(
-                                          value: m,
+                                          value: monthName,
                                           child: Text(
-                                            m,
+                                            monthName,
                                             style: TextStyle(
                                               fontFamily: AppFonts.semibold,
                                               color: multiSelectMode
@@ -1095,25 +1150,15 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       onChanged: multiSelectMode
                                           ? null
                                           : (val) {
-                                            log('value $val');
                                               if (val == null) return;
 
-                                              setState(() {
-                                                selectedMonth = val;
-                                                selectedShift =
-                                                    groupedByMonth[val]
-                                                            ?.isNotEmpty ==
-                                                        true
-                                                    ? groupedByMonth[val]![0]
-                                                    : null;
-                                                selectedCells.clear();
-                                                multiSelectMode = false;
-                                              });
+                                              final monthIndex = monthNames
+                                                  .indexOf(val);
 
-                                              _reloadDataForMonthYear(
-                                                selectedMonth,
-                                                selectedYear, 
-                                              );
+                                              setState(() {
+                                                selectedMonthIndex = monthIndex;
+                                                _reloadDataForMonth(monthIndex);
+                                              });
                                             },
                                     ),
                                   ),
@@ -1422,6 +1467,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                               // Check all conditions for client role
                                               canEdit =
                                                   !isFuture &&
+                                                  selectedShift
+                                                          ?.is_final_submitted ==
+                                                      false &&
                                                   day?.act_deact_janitor ==
                                                       true &&
                                                   day?.attendanceStatus !=
@@ -1707,8 +1755,12 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                     day == null
                                                               ? customcolor
                                                                     .greytext
-                                                              : day.attendanceStatus ==
-                                                                    'yes'
+                                                              : (day.attendanceStatus ==
+                                                                        'yes' &&
+                                                                    day.client_approval_status ==
+                                                                        null &&
+                                                                    day.om_oe_approval_status ==
+                                                                        null)
                                                               ? customcolor
                                                                     .green
                                                               : customcolor
@@ -1771,7 +1823,21 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         padding: const EdgeInsets.only(top: 8),
                         child: ElevatedButton(
                           onPressed: () {
-                            selectedCells.isNotEmpty && multiSelectMode
+                          
+                            if (selectedShift?.is_month_end == 1 &&
+                                selectedShift?.is_final_submitted == true) {
+                              log('roster finalize');
+
+                              return;
+                            }
+                       
+                            selectedShift?.is_month_end == 1 &&
+                                    selectedShift?.is_final_submitted ==
+                                        false &&
+                                    selectedCells.isEmpty &&
+                                    !multiSelectMode&&role==GlobalLists.clientrole && selectedShift.review_updated_by_oe_om==false
+                                ? _submitAttendaceRosterfinal(selectedShift.id.toString())
+                                : selectedCells.isNotEmpty && multiSelectMode
                                 ? _showReasonDialog(isMultiSelect: true)
                                 : Navigator.push(
                                     context,
@@ -1783,24 +1849,31 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                             attendancesiteid: attendancesiteid,
                                             clientid: attendanceclientid,
                                             manTag: maintag,
-                                            // userid: userid,
                                           ),
                                     ),
                                   );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: customcolor.blue,
+                            backgroundColor:
+                                selectedShift?.is_month_end == 1 &&
+                                    selectedShift?.is_final_submitted == true
+                                ? Colors.grey
+                                : customcolor.blue,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                             minimumSize: Size(double.infinity, 48),
                           ),
                           child: Text(
-                            selectedCells.isNotEmpty && multiSelectMode
-                                ? "Submit"
-                                : role == GlobalLists.clientrole
+                            selectedShift?.is_month_end == 1 &&
+                                    selectedShift?.is_final_submitted == true
+                                ? "Finalize Roster"
+                                : selectedCells.isNotEmpty && multiSelectMode
                                 ? "Report Discrepancy"
-                                : "Review Discrepancy",
+                                : role == GlobalLists.clientrole &&selectedShift?.review_updated_by_oe_om==false
+                                ? "Approve Roster"
+                                : role == GlobalLists.clientrole &&selectedShift?.review_updated_by_oe_om==true?"Review Updates":
+                                "Review Discrepancy",
                             style: TextStyle(
                               fontFamily: AppFonts.semibold,
                               fontSize: 16,
@@ -1820,8 +1893,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     );
   }
 
+  // late Map<String, dynamic> apiDatas;
   // Updated _submitAttendaceRoster function
-  _submitAttendaceRoster(Map<String, dynamic> apiData) async {
+  _submitAttendaceRoster(Map<String, dynamic>? apiData) async {
     try {
       var status1 = await ConnectionDetector.checkInternetConnection();
       if (!status1) {
@@ -1835,7 +1909,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
       // Prepare the map according to API requirements
       var map = {
-        'site_id': apiData['site_id'] ?? '',
+        'site_id': apiData!['site_id'] ?? '',
         'to_date': currentDate,
         'shift': apiData['shift'] ?? '',
         'client_id': GlobalLists.clientrole == role
@@ -1845,6 +1919,78 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             ? apiData['user_id'] ?? ''
             : supervisorid,
         'emp_id': jsonEncode(apiData['emp_id'] ?? []),
+        'month': month,
+        'year': year,
+      };
+
+      log('Submitting attendance data: $map');
+
+      await APIManager().apiRequest(
+        context,
+        API.submit_client_attendance_rooster,
+        (response) async {
+          SubmitAttendanceRooster resp = response;
+          print('API Response: $resp');
+          if (resp.status == 1) {
+            setState(() {
+              Timer(Duration(seconds: 1), () => Navigator.pop(context));
+
+              Timer(
+                Duration(seconds: 1),
+                () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        Attendance(GlobalLists.mainlisttab[maintag].clientName),
+                    transitionDuration: Duration(seconds: 0),
+                  ),
+                ),
+              );
+            });
+          } else {}
+        },
+        (error) {
+          log('Error submitting attendance: $error');
+          ShowDialogs.showToast('Error: $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log('Error submitting attendance roster: $e');
+      ShowDialogs.showToast('Exception: $e');
+    }
+  }
+
+  _submitAttendaceRosterfinal(dynamic selectedShift) async {
+    try {
+      var status1 = await ConnectionDetector.checkInternetConnection();
+      if (!status1) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
+      }
+      String currentDate = DateTime.now().toIso8601String().split('T').first;
+
+      log('Current date for submission final: $currentDate');
+      var supervisorid = await SPManager().getsupervisorid();
+
+      // Prepare the map according to API requirements
+      var map = {
+      
+      'site_id': '$attendancesiteid', // Use attendancesiteid directly
+      'to_date': currentDate,
+      'shift': selectedShift?.id?.toString() ?? '', // Get from selectedShift
+      'client_id': GlobalLists.clientrole == role 
+          ? '$attendanceclientid' 
+          : supervisorid,
+      'user_id': GlobalLists.clientrole == role 
+          ? '$attendanceclientid' 
+          : supervisorid,
+      'emp_id': jsonEncode([]),
+      'month': month,
+      'year': year,
+  
       };
 
       log('Submitting attendance data: $map');

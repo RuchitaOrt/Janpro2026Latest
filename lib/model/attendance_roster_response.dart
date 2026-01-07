@@ -28,6 +28,10 @@ class ShiftData {
   final String shiftEndTime;
   final String supervisor;
   final List<EmployeeData> employeeList;
+  final dynamic is_month_end;
+  final dynamic is_final_submitted;
+  final bool review_updated_by_oe_om;
+
 
   ShiftData({
     required this.id,
@@ -36,6 +40,9 @@ class ShiftData {
     required this.shiftEndTime,
     required this.supervisor,
     required this.employeeList,
+    required this.is_month_end,
+    required this.is_final_submitted,
+    required this.review_updated_by_oe_om
   });
 
   factory ShiftData.fromJson(Map<String, dynamic> json) {
@@ -49,6 +56,10 @@ class ShiftData {
               ?.map((e) => EmployeeData.fromJson(e))
               .toList() ??
           [],
+          is_final_submitted:json['is_final_submitted'],
+          is_month_end:json['is_month_end'],
+        review_updated_by_oe_om:json['review_updated_by_oe_om']??false
+
     );
   }
 }
