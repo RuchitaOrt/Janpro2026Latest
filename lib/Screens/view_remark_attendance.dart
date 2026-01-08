@@ -1,10 +1,10 @@
-// ignore_for_file: prefer_typing_uninitialized_variables, must_be_immutable, deprecated_member_use
+// ignore_for_file: prefer_typing_uninitialized_variables, must_be_immutable, deprecated_member_use, unused_element
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
-
+import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Attendance.dart';
@@ -28,6 +28,7 @@ class ViewRemarkAttendance extends StatefulWidget {
   var clientid;
   var userid;
   var manTag;
+  var shiftId;
 
   ViewRemarkAttendance({
     super.key,
@@ -37,6 +38,7 @@ class ViewRemarkAttendance extends StatefulWidget {
     this.clientid,
     this.userid,
     this.manTag,
+    required this.shiftId,
   });
 
   @override
@@ -169,12 +171,47 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
           ? const Center(child: Text("No Record Found"))
           : Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Column(
-                children: [
-                  _topBulkAction(),
-                  Expanded(child: _attendanceList()),
-                  _submitButton(),
-                ],
+              child: CustomRefreshIndicator(
+                onRefresh: () async {
+                  _fetchAttendanceRoster();
+                },
+
+                builder:
+                    (
+                      BuildContext context,
+                      Widget child,
+                      IndicatorController controller,
+                    ) {
+                      return Stack(
+                        alignment: Alignment.topCenter,
+                        children: <Widget>[
+                          if (!controller.isIdle)
+                            Positioned(
+                              top: 35.0 * controller.value,
+                              child: SizedBox(
+                                height: 30,
+                                width: 30,
+                                child: CircularProgressIndicator(
+                                  value: !controller.isLoading
+                                      ? controller.value.clamp(0.0, 1.0)
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          Transform.translate(
+                            offset: Offset(0, 100.0 * controller.value),
+                            child: child,
+                          ),
+                        ],
+                      );
+                    },
+                child: Column(
+                  children: [
+                    _topBulkAction(),
+                    Expanded(child: _attendanceList()),
+                    _submitButton(),
+                  ],
+                ),
               ),
             ),
     );
@@ -287,7 +324,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
               const SizedBox(height: 12),
 
               // Reasons Card
-              attendanceData!.data[0].omOeResson.length==0
+              attendanceData!.data[0].omOeResson.length == 0
                   ? SizedBox()
                   : Container(
                       width: double.infinity,
@@ -341,10 +378,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                                         ),
                                         Expanded(
                                           child: Text(
-                                            attendanceData!
-                                                .data[0].omOeResson.join(
-                                              ', ',
-                                            ),
+                                            attendanceData!.data[0].omOeResson
+                                                .join(', '),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w500,
                                               fontSize: 14,
@@ -397,7 +432,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     bool isOmApproved = record.omOeApprovalStatus == "approved";
     bool isOmRejected = record.omOeApprovalStatus == "rejected";
 
-    return isClientFinal || isOmApproved || (!isClient && isOmRejected) || isOmOeReadOnly;
+    return isClientFinal ||
+        isOmApproved ||
+        (!isClient && isOmRejected) ||
+        isOmOeReadOnly;
   }
 
   /// ---------------- LIST ----------------
@@ -471,7 +509,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     bool isOmPending = _isOmOeApprovalPending(record);
 
     bool lockRadio =
-        isClientFinal || isOmApproved || (!isClient && isOmRejected) || isOmOeReadOnly;
+        isClientFinal ||
+        isOmApproved ||
+        (!isClient && isOmRejected) ||
+        isOmOeReadOnly;
 
     /// Check if radio should be disabled for client
     bool radioDisabledForClient = isClient && isOmPending;
@@ -561,7 +602,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                 Row(
                   children: [
                     Text(
-                   role==GlobalLists.clientrole?"Your Status":   "Req Status : ",
+                      role == GlobalLists.clientrole
+                          ? "Your Status :"
+                          : "Req Status : ",
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -712,10 +755,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     bool isClient = GlobalLists.clientrole == role;
     bool hasPendingOmOe = _hasPendingOmOeApproval;
     bool isOmOeReadOnly = _isOmOeReadOnly;
-    
+
     // Determine if submit button should be enabled
     bool canSubmit;
-    
+
     if (isOmOeReadOnly) {
       // OM/OE read-only mode: disable submit button
       canSubmit = false;
@@ -745,7 +788,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         children: [
           // Only show bulk buttons when NOT in OM/OE read-only mode
           // AND when client has permission (no pending OM/OE approval)
-          (isOmOeReadOnly || (GlobalLists.clientrole == role && _hasPendingOmOeApproval))
+          (isOmOeReadOnly ||
+                  (GlobalLists.clientrole == role && _hasPendingOmOeApproval))
               ? SizedBox()
               : Container(
                   child: Row(
@@ -849,7 +893,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
               child: Text(
                 _allClientApproved
                     ? "Already Approved"
-                    : isOmOeReadOnly && role!=GlobalLists.clientrole
+                    : isOmOeReadOnly && role != GlobalLists.clientrole
                     ? "OPs Approval Completed"
                     : !canSubmit
                     ? "Pending OPs Approval"
@@ -988,6 +1032,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     var map = {
       "from_date": DateFormat('yyyy-MM-dd').format(firstDay),
       "to_date": DateFormat('yyyy-MM-dd').format(lastDay),
+      "shift": widget.shiftId.toString(),
     };
 
     if (role == GlobalLists.clientrole) {
@@ -1022,143 +1067,338 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     );
   }
 
-  _submitAttendaceRoster() async {
-    // Check for OM/OE read-only mode
-    if (_isOmOeReadOnly) {
-      ShowDialogs.showToast("OPs approval already completed");
-      return;
-    }
+//   _submitAttendaceRoster() async {
+//     // Check for OM/OE read-only mode
+//     if (_isOmOeReadOnly) {
+//       ShowDialogs.showToast("OPs approval already completed");
+//       return;
+//     }
 
-    // Check for client permission to submit
-    if (GlobalLists.clientrole == role && _hasPendingOmOeApproval) {
-      ShowDialogs.showToast("Pending approval from OPs side");
-      return;
-    }
+//     // Check for client permission to submit
+//     if (GlobalLists.clientrole == role && _hasPendingOmOeApproval) {
+//       ShowDialogs.showToast("Pending approval from OPs side");
+//       return;
+//     }
 
-    List<Record> allRecords = [];
-    for (var d in attendanceData!.data) {
-      allRecords.addAll(d.records);
-    }
+//     List<Record> allRecords = [];
+//     for (var d in attendanceData!.data) {
+//       allRecords.addAll(d.records);
+//     }
 
-    if (approvalSelection.length != allRecords.length) {
-      ShowDialogs.showToast("Please approve or reject all records");
-      return;
-    }
+//     if (approvalSelection.length != allRecords.length) {
+//       ShowDialogs.showToast("Please approve or reject all records");
+//       return;
+//     }
 
-    /// ======== FIXED: Check only for NEW rejections ========
-    bool hasNewReject = false;
+//     /// ======== FIXED: Check only for NEW rejections ========
+//     bool hasNewReject = false;
 
-    for (var record in allRecords) {
-      final userSelection = approvalSelection[record.id];
+//     for (var record in allRecords) {
+//       final userSelection = approvalSelection[record.id];
 
-      // Only count it as a new rejection if:
-      // 1. User selected "reject" AND
-      // 2. It wasn't already rejected from API
-      if (userSelection == "reject" &&
-          !alreadyRejectedFromApi.contains(record.id)) {
-        hasNewReject = true;
-        break; // No need to check further
-      }
-    }
+//       // Only count it as a new rejection if:
+//       // 1. User selected "reject" AND
+//       // 2. It wasn't already rejected from API
+//       if (userSelection == "reject" &&
+//           !alreadyRejectedFromApi.contains(record.id)) {
+//         hasNewReject = true;
+//         break; // No need to check further
+//       }
+//     }
 
-    if (hasNewReject) {
-      universalRejectReason = await _rejectReasonDialog();
-      if (universalRejectReason == null) return;
-    }
+//     if (hasNewReject) {
+//       universalRejectReason = await _rejectReasonDialog();
+//       if (universalRejectReason == null) return;
+//     }
 
-    try {
-      if (!await ConnectionDetector.checkInternetConnection()) {
-        ShowDialogs.showToast("Please check internet connection");
-        return;
-      }
+//     try {
+//       if (!await ConnectionDetector.checkInternetConnection()) {
+//         ShowDialogs.showToast("Please check internet connection");
+//         return;
+//       }
 
-      var supervisorid = await SPManager().getsupervisorid();
-      String currentDate = DateTime.now().toIso8601String().split('T').first;
+//       var supervisorid = await SPManager().getsupervisorid();
+//       String currentDate = DateTime.now().toIso8601String().split('T').first;
 
-      /// ---------------- BUILD attendance_id_list ----------------
+//       /// ---------------- BUILD attendance_id_list ----------------
 
-      List<Map<String, dynamic>> attendanceIdList = [];
+//       List<Map<String, dynamic>> attendanceIdList = [];
 
-      for (var d in attendanceData!.data) {
-        for (var r in d.records) {
-          final status = approvalSelection[r.id];
+//       for (var d in attendanceData!.data) {
+//         for (var r in d.records) {
+//           final status = approvalSelection[r.id];
 
-          // Use the appropriate status based on whether it's a new rejection or existing
-          String finalStatus;
-          String approveStatus;
+//           // Use the appropriate status based on whether it's a new rejection or existing
+//           String finalStatus;
+//           String approveStatus;
 
-          if (alreadyRejectedFromApi.contains(r.id) && status == "reject") {
-            // Keep existing API rejection status
-            finalStatus = r.previousStatus == 'yes'
-                ? "no"
-                : "yes"; // Opposite of original
-            approveStatus = "rejected";
-          } else {
-            // Use user's new selection
-            finalStatus = status == "approve" ? "yes" : "no";
-            approveStatus = status == "approve" ? "approved" : "rejected";
-          }
+//           if (alreadyRejectedFromApi.contains(r.id) && status == "reject") {
+//             // Keep existing API rejection status
+//             finalStatus = r.previousStatus == 'yes'
+//                 ? "no"
+//                 : "yes"; // Opposite of original
+//             approveStatus = "rejected";
+//           } else {
+//             // Use user's new selection
+//             finalStatus = status == "approve" ? "yes" : "no";
+//             approveStatus = status == "approve" ? "approved" : "rejected";
+//           }
 
-          attendanceIdList.add({
-            "date": DateFormat('yyyy-MM-dd').format(r.date),
-            "attendance_status": finalStatus,
-            "attendance_id": r.id,
-            "approve_status": approveStatus,
-          });
-        }
-      }
+//           attendanceIdList.add({
+//             "date": DateFormat('yyyy-MM-dd').format(r.date),
+//             "attendance_status": finalStatus,
+//             "attendance_id": r.id,
+//             "approve_status": approveStatus,
+//           });
+//         }
+//       }
 
-      /// ---------------- FINAL MAP ----------------
+//       bool allOmOeApproved = true;
 
-      var map = {
-        "reason": hasNewReject ? universalRejectReason : "",
-        "attendance_id_list": jsonEncode(attendanceIdList),
-        "client_id": GlobalLists.clientrole == role
-            ? widget.clientid
-            : supervisorid,
-        "user_id": GlobalLists.clientrole == role ? "" : supervisorid,
-        "is_client": GlobalLists.clientrole == role ? "true" : "false",
-        "is_final_submitted": GlobalLists.clientrole == role ? "true" : "false",
-      };
+// for (var record in allRecords) {
+//   if (record.omOeApprovalStatus != "approved") {
+//     allOmOeApproved = false;
+//     break;
+//   }
+// }  String isFinalSubmitted;
+    
+//     if (GlobalLists.clientrole == role) {
+//       // For client users, always use "true" as per original logic
+//       isFinalSubmitted = "true";
+//     } else {
+//       // For non-client users (OM/OE):
+//       // - If all records are OM/OE approved, use "true"
+//       // - Otherwise, use "false"
+//       isFinalSubmitted = allOmOeApproved ? "true" : "false";
+//     }
 
-      /// ---------------- API CALL ----------------
+//       /// ---------------- FINAL MAP ----------------
 
-      await APIManager().apiRequest(
-        context,
-        API.approved_rejected_om_oe_client_submit_attendance_rooster,
-        (response) {
-          ApproveRejectSubmit resp = response;
+//       var map = {
+//         "reason": hasNewReject ? universalRejectReason : "",
+//         "attendance_id_list": jsonEncode(attendanceIdList),
+//         "client_id": GlobalLists.clientrole == role
+//             ? widget.clientid
+//             : supervisorid,
 
-          if (resp.status == 1) {
-            Timer(
-              Duration(seconds: 1),
-                  () => Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation1, animation2) => Attendance(
-                    GlobalLists.mainlisttab[widget.manTag].clientName,
-                  ),
-                  transitionDuration: Duration(seconds: 0),
-                ),
-              ),
-            );
-            ShowDialogs.showToast(resp.msg);
-          } else {
-            ShowDialogs.showToast(resp.msg);
-          }
-        },
-        (error) {
-          ShowDialogs.showToast("Error: $error");
-        },
-        false,
-        "",
-        jsonval: map,
-      );
-    } catch (e) {
-      log("Submit error => $e");
-      ShowDialogs.showToast("Something went wrong");
+//         "user_id": GlobalLists.clientrole == role ? "" : supervisorid,
+//         "is_client": GlobalLists.clientrole == role ? "true" : "false",
+//         "is_final_submitted":isFinalSubmitted,
+//       };
+
+//       log('map check in submit $map');
+
+//       /// ---------------- API CALL ----------------
+
+//       await APIManager().apiRequest(
+//         context,
+//         API.approved_rejected_om_oe_client_submit_attendance_rooster,
+//         (response) {
+//           ApproveRejectSubmit resp = response;
+
+//           if (resp.status == 1) {
+//             Timer(
+//               Duration(seconds: 1),
+//               () => Navigator.push(
+//                 context,
+//                 PageRouteBuilder(
+//                   pageBuilder: (context, animation1, animation2) => Attendance(
+//                     GlobalLists.mainlisttab[widget.manTag].clientName,
+//                   ),
+//                   transitionDuration: Duration(seconds: 0),
+//                 ),
+//               ),
+//             );
+//             ShowDialogs.showToast(resp.msg);
+//           } else {
+//             ShowDialogs.showToast(resp.msg);
+//           }
+//         },
+//         (error) {
+//           ShowDialogs.showToast("Error: $error");
+//         },
+//         false,
+//         "",
+//         jsonval: map,
+//       );
+//     } catch (e) {
+//       log("Submit error => $e");
+//       ShowDialogs.showToast("Something went wrong");
+//     }
+//   }
+
+_submitAttendaceRoster() async {
+  // Check for OM/OE read-only mode
+  if (_isOmOeReadOnly) {
+    ShowDialogs.showToast("OPs approval already completed");
+    return;
+  }
+
+  // Check for client permission to submit
+  if (GlobalLists.clientrole == role && _hasPendingOmOeApproval) {
+    ShowDialogs.showToast("Pending approval from OPs side");
+    return;
+  }
+
+  List<Record> allRecords = [];
+  for (var d in attendanceData!.data) {
+    allRecords.addAll(d.records);
+  }
+
+  if (approvalSelection.length != allRecords.length) {
+    ShowDialogs.showToast("Please approve or reject all records");
+    return;
+  }
+
+  /// ======== FIXED: Check only for NEW rejections ========
+  bool hasNewReject = false;
+
+  for (var record in allRecords) {
+    final userSelection = approvalSelection[record.id];
+
+    // Only count it as a new rejection if:
+    // 1. User selected "reject" AND
+    // 2. It wasn't already rejected from API
+    if (userSelection == "reject" &&
+        !alreadyRejectedFromApi.contains(record.id)) {
+      hasNewReject = true;
+      break; // No need to check further
     }
   }
+
+  if (hasNewReject) {
+    universalRejectReason = await _rejectReasonDialog();
+    if (universalRejectReason == null) return;
+  }
+
+  try {
+    if (!await ConnectionDetector.checkInternetConnection()) {
+      ShowDialogs.showToast("Please check internet connection");
+      return;
+    }
+
+    var supervisorid = await SPManager().getsupervisorid();
+
+    /// ---------------- BUILD attendance_id_list ----------------
+
+    List<Map<String, dynamic>> attendanceIdList = [];
+
+    for (var d in attendanceData!.data) {
+      for (var r in d.records) {
+        final status = approvalSelection[r.id];
+
+        // Use the appropriate status based on whether it's a new rejection or existing
+        String finalStatus;
+        String approveStatus;
+
+        if (alreadyRejectedFromApi.contains(r.id) && status == "reject") {
+          // Keep existing API rejection status
+          finalStatus = r.previousStatus == 'yes'
+              ? "no"
+              : "yes"; // Opposite of original
+          approveStatus = "rejected";
+        } else {
+          // Use user's new selection
+          finalStatus = status == "approve" ? "yes" : "no";
+          approveStatus = status == "approve" ? "approved" : "rejected";
+        }
+
+        attendanceIdList.add({
+          "date": DateFormat('yyyy-MM-dd').format(r.date),
+          "attendance_status": finalStatus,
+          "attendance_id": r.id,
+          "approve_status": approveStatus,
+        });
+      }
+    }
+
+    /// ---------------- CHECK IF USER IS APPROVING ALL RECORDS ----------------
+    bool allRecordsApprovedByUser = true;
+    
+    for (var record in allRecords) {
+      final userSelection = approvalSelection[record.id];
+      if (userSelection != "approve") {
+        setState(() {
+           allRecordsApprovedByUser = false;
+        });
+       
+        break;
+      }
+    }
+    
+    // Determine is_final_submitted value
+    String isFinalSubmitted;
+    
+    if (GlobalLists.clientrole == role) {
+      // For client users, always use "true" as per original logic
+      isFinalSubmitted = "true";
+    } else {
+      // For non-client users (OM/OE):
+      // - If user is approving ALL records, use "true"
+      // - Otherwise, use "false"
+      isFinalSubmitted = allRecordsApprovedByUser ? "true" : "false";
+    }
+
+    /// ---------------- FINAL MAP ----------------
+
+    var map = {
+      "reason": hasNewReject ? universalRejectReason : "",
+      "attendance_id_list": jsonEncode(attendanceIdList),
+      "client_id": GlobalLists.clientrole == role
+          ? widget.clientid
+          : supervisorid,
+
+      "user_id": GlobalLists.clientrole == role ? "" : supervisorid,
+      "is_client": GlobalLists.clientrole == role ? "true" : "false",
+      "is_final_submitted": isFinalSubmitted, // Updated logic
+    };
+
+
+    log('check this $map');
+
+    /// ---------------- API CALL ----------------
+
+    await APIManager().apiRequest(
+      context,
+      API.approved_rejected_om_oe_client_submit_attendance_rooster,
+      (response) {
+        ApproveRejectSubmit resp = response;
+
+        if (resp.status == 1) {
+          // Timer(
+          //   Duration(seconds: 1),
+          //       () => 
+          Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) => Attendance(
+                  GlobalLists.mainlisttab[widget.manTag].clientName,
+                ),
+                transitionDuration: Duration(seconds: 0),
+              ),
+            );
+          // );
+          ShowDialogs.showToast(resp.msg);
+        } else {
+          ShowDialogs.showToast(resp.msg);
+        }
+      },
+      (error) {
+        ShowDialogs.showToast("Error: $error");
+      },
+      false,
+      "",
+      jsonval: map,
+    );
+  
+  
+  } catch (e) {
+    log("Submit error => $e");
+    ShowDialogs.showToast("Something went wrong");
+  }
+}
+
+
 }
 
 // Extension for capitalizing first letter

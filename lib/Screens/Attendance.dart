@@ -143,6 +143,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       ],
     );
   }
+  // int count
 
   _fetchAttendanceRoster() async {
     try {
@@ -154,6 +155,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
       // Get current date
       final now = DateTime.now();
+
+      log('now check this ');
 
       // Set default month and year if not provided
 
@@ -998,7 +1001,13 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                   Icons.close,
                                   color: customcolor.darkgrey,
                                 ),
-                                onPressed: () => Navigator.of(context).pop(),
+                                onPressed: () {
+                                  // check
+
+                                  // selectedYear=0;
+                                  // monthNames.clear();
+                                  Navigator.of(context).pop();
+                                },
                               ),
                             ],
                           ),
@@ -1313,575 +1322,678 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                           ),
                         ),
 
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      selectedShift.employeeList.isEmpty
+                          ? Center(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    width: 120,
-                                    height: 45,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                      horizontal: 12,
-                                    ),
-                                    color: customcolor.skybluebg,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "Janitor's Name",
-                                          style: TextStyle(
-                                            fontFamily: AppFonts.semibold,
-                                            color: customcolor.blue,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
+                                  SizedBox(height: 200,),
+                                  Text(
+                                    "No employees assigned",
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.regular,
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  ...selectedShift.employeeList.map(
-                                    (emp) => SizedBox(
-                                      height: 45,
-                                      child: Container(
-                                        width: 120,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                          horizontal: 12,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          border: Border(
-                                            bottom: BorderSide(
-                                              color: customcolor.greyborder,
-                                            ),
-                                          ),
-                                        ),
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          emp.empName,
-                                          style: TextStyle(
-                                            fontFamily: AppFonts.regular,
-                                            fontSize: 14,
-                                            color: customcolor.title,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // Fixed: "No employees assigned" centered properly
-                                  if (selectedShift.employeeList.isEmpty)
-                                    Container(
-                                      width: 120,
-                                      height: 45,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                        horizontal: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: customcolor.greyborder,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          "No employees assigned",
-                                          style: TextStyle(
-                                            fontFamily: AppFonts.regular,
-                                            fontSize: 12,
-                                            color: Colors.grey,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                 ],
                               ),
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  key: _horizontalScrollKey,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (sortedDates.isNotEmpty)
-                                        Row(
-                                          children: sortedDates
-                                              .map(
-                                                (date) => Container(
-                                                  height: 45,
-                                                  width: 50,
-                                                  alignment: Alignment.center,
+                            )
+                          : Expanded(
+                              child: SingleChildScrollView(
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 120,
+                                          height: 45,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                            horizontal: 12,
+                                          ),
+                                          color: customcolor.skybluebg,
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                "Janitor's Name",
+                                                style: TextStyle(
+                                                  fontFamily: AppFonts.semibold,
+                                                  color: customcolor.blue,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        ...(selectedShift?.employeeList ?? [])
+                                            .map(
+                                              (emp) => SizedBox(
+                                                height: 45,
+                                                child: Container(
+                                                  width: 120,
                                                   padding:
                                                       const EdgeInsets.symmetric(
                                                         vertical: 8,
+                                                        horizontal: 12,
                                                       ),
-                                                  color: customcolor.skybluebg,
+                                                  decoration: BoxDecoration(
+                                                    border: Border(
+                                                      bottom: BorderSide(
+                                                        color: customcolor
+                                                            .greyborder,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  alignment:
+                                                      Alignment.centerLeft,
                                                   child: Text(
-                                                    date.split('-')[2],
+                                                    emp.empName,
                                                     style: TextStyle(
                                                       fontFamily:
-                                                          AppFonts.semibold,
-                                                      color: customcolor.blue,
-                                                      fontSize: 12,
+                                                          AppFonts.regular,
+                                                      fontSize: 14,
+                                                      color: customcolor.title,
                                                     ),
                                                   ),
                                                 ),
-                                              )
-                                              .toList(),
-                                        ),
-
-                                      ...selectedShift.employeeList.map(
-                                        (emp) => Row(
-                                          children: sortedDates.map((date) {
-                                            AttendanceData? day;
-
-                                            try {
-                                              day = emp.attendData.firstWhere(
-                                                (d) => d.date == date,
-                                              );
-                                            } catch (e) {
-                                              day = null;
-                                            }
-
-                                            final key =
-                                                '${emp.empName},$date,${day?.attendanceStatus ?? ''}';
-                                            final selected = selectedCells
-                                                .contains(key);
-                                            final isFuture = DateTime.parse(
-                                              date,
-                                            ).isAfter(DateTime.now());
-
-                                            // Determine if cell can be edited based on role
-                                            bool canEdit = false;
-
-                                            // Only for client role
-                                            if (role ==
-                                                GlobalLists.clientrole) {
-                                              // Check all conditions for client role
-                                              canEdit =
-                                                  !isFuture &&
-                                                  selectedShift
-                                                          ?.is_final_submitted ==
-                                                      false &&
-                                                  day?.act_deact_janitor ==
-                                                      true &&
-                                                  day?.attendanceStatus !=
-                                                      '-' &&
-                                                  (day?.client_approval_status ==
-                                                          null ||
-                                                      day!.client_approval_status ==
-                                                          '') &&
-                                                  (day?.reason == null ||
-                                                      day?.reason == '');
-                                            } else {
-                                              // For non-client roles, canEdit remains false
-                                              canEdit = false;
-                                            }
-
-                                            final currentStatus =
-                                                day?.attendanceStatus ?? '';
-
-                                            Color circleColor() {
-                                              if (day?.act_deact_janitor ==
-                                                  false) {
-                                                return Colors.grey[300]!;
-                                              }
-                                              // Client approval status takes precedence
-                                              if (day?.client_approval_status !=
-                                                      null &&
-                                                  day!
-                                                      .client_approval_status!
-                                                      .isNotEmpty) {
-                                                return day.client_approval_status ==
-                                                        'approved'
-                                                    ? Colors.green
-                                                    : Colors.green;
-                                              }
-
-                                              // OM/OE approval status (only if no client approval)
-                                              if (day?.om_oe_approval_status !=
-                                                      null &&
-                                                  day!
-                                                      .om_oe_approval_status!
-                                                      .isNotEmpty) {
-                                                return day.om_oe_approval_status ==
-                                                        'approved'
-                                                    ? Colors.green
-                                                    : customcolor.red;
-                                              }
-
-                                              if (day?.reason != null &&
-                                                  day!.reason!.isNotEmpty) {
-                                                return customcolor.pink;
-                                              }
-
-                                              if (day == null)
-                                                return customcolor.greybg;
-
-                                              if (day.attendanceStatus ==
-                                                  'yes') {
-                                                return customcolor.lightgreen;
-                                              }
-
-                                              if (day.attendanceStatus ==
-                                                      'no' &&
-                                                  !isFuture) {
-                                                return customcolor.lightgreen;
-                                              }
-
-                                              return Colors.grey[300]!;
-                                            }
-
-                                            return GestureDetector(
-                                              onLongPress: () {
-                                                bool hasClientApproval = false;
-                                                if (canEdit) {
-                                                  if (day!.client_approval_status !=
-                                                          null &&
-                                                      day
-                                                          .client_approval_status!
-                                                          .isNotEmpty) {
-                                                    hasClientApproval = true;
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                          'Cannot modify attendance that already has client approval',
+                                              ),
+                                            ),
+                                        // Fixed: "No employees assigned" centered properly
+                                        if (selectedShift.employeeList.isEmpty)
+                                          Container(
+                                            width: 120,
+                                            height: 45,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                              horizontal: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                bottom: BorderSide(
+                                                  color: customcolor.greyborder,
+                                                ),
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                "No employees assigned",
+                                                style: TextStyle(
+                                                  fontFamily: AppFonts.regular,
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        key: _horizontalScrollKey,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            if (sortedDates.isNotEmpty)
+                                              Row(
+                                                children: sortedDates
+                                                    .map(
+                                                      (date) => Container(
+                                                        height: 45,
+                                                        width: 50,
+                                                        alignment:
+                                                            Alignment.center,
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 8,
+                                                            ),
+                                                        color: customcolor
+                                                            .skybluebg,
+                                                        child: Text(
+                                                          date.split('-')[2],
+                                                          style: TextStyle(
+                                                            fontFamily: AppFonts
+                                                                .semibold,
+                                                            color: customcolor
+                                                                .blue,
+                                                            fontSize: 12,
+                                                          ),
                                                         ),
-                                                        backgroundColor:
-                                                            Colors.red,
                                                       ),
-                                                    );
-                                                    return;
+                                                    )
+                                                    .toList(),
+                                              ),
+
+                                            ...selectedShift.employeeList.map(
+                                              (emp) => Row(
+                                                children: sortedDates.map((
+                                                  date,
+                                                ) {
+                                                  AttendanceData? day;
+
+                                                  try {
+                                                    day = emp.attendData
+                                                        .firstWhere(
+                                                          (d) => d.date == date,
+                                                        );
+                                                  } catch (e) {
+                                                    day = null;
                                                   }
-                                                  // If multiSelectMode is off, start it with this cell
-                                                  if (!multiSelectMode) {
-                                                    setState(() {
-                                                      multiSelectMode = true;
-                                                      selectedCells.clear();
-                                                      selectedCells.add(key);
-                                                    });
+
+                                                  final key =
+                                                      '${emp.empName},$date,${day?.attendanceStatus ?? ''}';
+                                                  final selected = selectedCells
+                                                      .contains(key);
+                                                  final isFuture =
+                                                      DateTime.parse(
+                                                        date,
+                                                      ).isAfter(DateTime.now());
+
+                                                  // Determine if cell can be edited based on role
+                                                  bool canEdit = false;
+
+                                                  // Only for client role
+                                                  if (role ==
+                                                      GlobalLists.clientrole) {
+                                                    // Check all conditions for client role
+                                                    canEdit =
+                                                        !isFuture &&
+                                                        selectedShift
+                                                                ?.is_final_submitted ==
+                                                            false &&
+                                                        day?.act_deact_janitor ==
+                                                            true &&
+                                                        day?.attendanceStatus !=
+                                                            '-' &&
+                                                        (day?.client_approval_status ==
+                                                                null ||
+                                                            day!.client_approval_status ==
+                                                                '') &&
+                                                        (day?.reason == null ||
+                                                            day?.reason == '');
                                                   } else {
-                                                    // If already in multiSelectMode, check if we can add this cell
-                                                    final selectedStatus =
-                                                        _getCurrentSelectedStatus();
+                                                    // For non-client roles, canEdit remains false
+                                                    canEdit = false;
+                                                  }
 
-                                                    if (selectedStatus ==
-                                                            null ||
-                                                        selectedStatus ==
-                                                            currentStatus ||
-                                                        selectedCells.isEmpty) {
-                                                      setState(() {
-                                                        selected
-                                                            ? selectedCells
-                                                                  .remove(key)
-                                                            : selectedCells.add(
-                                                                key,
-                                                              );
-                                                      });
-                                                    } else {
-                                                      // Show warning that you can't mix different statuses
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(
-                                                            'Cannot mix different attendance statuses in multi-select',
-                                                          ),
-                                                          backgroundColor:
-                                                              Colors.orange,
-                                                        ),
-                                                      );
+                                                  final currentStatus =
+                                                      day?.attendanceStatus ??
+                                                      '';
+
+                                                  Color circleColor() {
+                                                    if (day?.act_deact_janitor ==
+                                                        false) {
+                                                      return Colors.grey[300]!;
                                                     }
+                                                    // Client approval status takes precedence
+                                                    if (day?.client_approval_status !=
+                                                            null &&
+                                                        day!
+                                                            .client_approval_status!
+                                                            .isNotEmpty) {
+                                                      return day.client_approval_status ==
+                                                              'approved'
+                                                          ? Colors.green
+                                                          : Colors.green;
+                                                    }
+
+                                                    // OM/OE approval status (only if no client approval)
+                                                    if (day?.om_oe_approval_status !=
+                                                            null &&
+                                                        day!
+                                                            .om_oe_approval_status!
+                                                            .isNotEmpty) {
+                                                      return day.om_oe_approval_status ==
+                                                              'approved'
+                                                          ? Colors.green
+                                                          : customcolor.red;
+                                                    }
+
+                                                    if (day?.reason != null &&
+                                                        day!
+                                                            .reason!
+                                                            .isNotEmpty) {
+                                                      return customcolor.pink;
+                                                    }
+
+                                                    if (day == null)
+                                                      return customcolor.greybg;
+
+                                                    if (day.attendanceStatus ==
+                                                        'yes') {
+                                                      return customcolor
+                                                          .lightgreen;
+                                                    }
+
+                                                    if (day.attendanceStatus ==
+                                                            'no' &&
+                                                        !isFuture) {
+                                                      return customcolor
+                                                          .lightgreen;
+                                                    }
+
+                                                    return Colors.grey[300]!;
                                                   }
-                                                }
-                                              },
-                                              onTap: () {
-                                                if (!canEdit) return;
-                                                multiSelectMode = true;
-                                                log(
-                                                  'day?.reason: ${day?.reason}',
-                                                );
 
-                                                bool hasClientApproval = false;
-
-                                                if (day!.client_approval_status !=
-                                                        null &&
-                                                    day
-                                                        .client_approval_status!
-                                                        .isNotEmpty) {
-                                                  hasClientApproval = true;
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Cannot modify attendance that already has client approval',
-                                                      ),
-                                                      backgroundColor:
-                                                          Colors.red,
-                                                      behavior: SnackBarBehavior
-                                                          .floating,
-                                                      margin:
-                                                          const EdgeInsets.only(
-                                                            left: 16,
-                                                            right: 16,
-                                                            bottom: 30,
-                                                          ),
-                                                    ),
-                                                  );
-
-                                                  return;
-                                                }
-
-                                                if (multiSelectMode) {
-                                                  if (day.client_approval_status !=
-                                                          null &&
-                                                      day
-                                                          .client_approval_status!
-                                                          .isNotEmpty) {
-                                                    hasClientApproval = true;
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                          'Cannot modify attendance that already has client approval',
-                                                        ),
-                                                        backgroundColor:
-                                                            Colors.red,
-                                                      ),
-                                                    );
-                                                    return;
-                                                  }
-                                                  final selectedStatus =
-                                                      _getCurrentSelectedStatus();
-
-                                                  // Check if we can select/deselect this cell
-                                                  if (selectedStatus == null ||
-                                                      selectedStatus ==
-                                                          currentStatus ||
-                                                      selectedCells.isEmpty) {
-                                                    setState(() {
-                                                      selected
-                                                          ? selectedCells
-                                                                .remove(key)
-                                                          : selectedCells.add(
+                                                  return GestureDetector(
+                                                    onLongPress: () {
+                                                      bool hasClientApproval =
+                                                          false;
+                                                      if (canEdit) {
+                                                        if (day!.client_approval_status !=
+                                                                null &&
+                                                            day
+                                                                .client_approval_status!
+                                                                .isNotEmpty) {
+                                                          hasClientApproval =
+                                                              true;
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                'Cannot modify attendance that already has client approval',
+                                                              ),
+                                                              backgroundColor:
+                                                                  Colors.red,
+                                                            ),
+                                                          );
+                                                          return;
+                                                        }
+                                                        // If multiSelectMode is off, start it with this cell
+                                                        if (!multiSelectMode) {
+                                                          setState(() {
+                                                            multiSelectMode =
+                                                                true;
+                                                            selectedCells
+                                                                .clear();
+                                                            selectedCells.add(
                                                               key,
                                                             );
-                                                    });
-                                                  } else {
-                                                    // Show warning
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                          'Cannot mix different attendance statuses in multi-select',
+                                                          });
+                                                        } else {
+                                                          // If already in multiSelectMode, check if we can add this cell
+                                                          final selectedStatus =
+                                                              _getCurrentSelectedStatus();
+
+                                                          if (selectedStatus ==
+                                                                  null ||
+                                                              selectedStatus ==
+                                                                  currentStatus ||
+                                                              selectedCells
+                                                                  .isEmpty) {
+                                                            setState(() {
+                                                              selected
+                                                                  ? selectedCells
+                                                                        .remove(
+                                                                          key,
+                                                                        )
+                                                                  : selectedCells
+                                                                        .add(
+                                                                          key,
+                                                                        );
+                                                            });
+                                                          } else {
+                                                            // Show warning that you can't mix different statuses
+                                                            ScaffoldMessenger.of(
+                                                              context,
+                                                            ).showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(
+                                                                  'Cannot mix different attendance statuses in multi-select',
+                                                                ),
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .orange,
+                                                              ),
+                                                            );
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    onTap: () {
+                                                      print(
+                                                        'day.attendanceStatus: ${day?.attendanceStatus}',
+                                                      );
+                                                      if (!canEdit) return;
+                                                      multiSelectMode = true;
+                                                      log(
+                                                        'day?.reason: ${day?.reason}',
+                                                      );
+
+                                                      bool hasClientApproval =
+                                                          false;
+
+                                                      if (day!.client_approval_status !=
+                                                              null &&
+                                                          day
+                                                              .client_approval_status!
+                                                              .isNotEmpty) {
+                                                        hasClientApproval =
+                                                            true;
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              'Cannot modify attendance that already has client approval',
+                                                            ),
+                                                            backgroundColor:
+                                                                Colors.red,
+                                                            behavior:
+                                                                SnackBarBehavior
+                                                                    .floating,
+                                                            margin:
+                                                                const EdgeInsets.only(
+                                                                  left: 16,
+                                                                  right: 16,
+                                                                  bottom: 30,
+                                                                ),
+                                                          ),
+                                                        );
+
+                                                        return;
+                                                      }
+
+                                                      if (multiSelectMode) {
+                                                        if (day.client_approval_status !=
+                                                                null &&
+                                                            day
+                                                                .client_approval_status!
+                                                                .isNotEmpty) {
+                                                          hasClientApproval =
+                                                              true;
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                'Cannot modify attendance that already has client approval',
+                                                              ),
+                                                              backgroundColor:
+                                                                  Colors.red,
+                                                            ),
+                                                          );
+                                                          return;
+                                                        }
+                                                        final selectedStatus =
+                                                            _getCurrentSelectedStatus();
+
+                                                        // Check if we can select/deselect this cell
+                                                        if (selectedStatus ==
+                                                                null ||
+                                                            selectedStatus ==
+                                                                currentStatus ||
+                                                            selectedCells
+                                                                .isEmpty) {
+                                                          setState(() {
+                                                            selected
+                                                                ? selectedCells
+                                                                      .remove(
+                                                                        key,
+                                                                      )
+                                                                : selectedCells
+                                                                      .add(key);
+                                                          });
+                                                        } else {
+                                                          // Show warning
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                'Cannot mix different attendance statuses in multi-select',
+                                                              ),
+                                                              backgroundColor:
+                                                                  Colors.orange,
+                                                            ),
+                                                          );
+                                                        }
+                                                      } else {
+                                                        _handleSingleTap(
+                                                          key,
+                                                          day,
+                                                        );
+                                                      }
+                                                    },
+                                                    child: Container(
+                                                      width: 50,
+                                                      height: 45,
+                                                      alignment:
+                                                          Alignment.center,
+                                                      decoration: BoxDecoration(
+                                                        border: Border(
+                                                          bottom: BorderSide(
+                                                            color: customcolor
+                                                                .greyborder,
+                                                          ),
                                                         ),
-                                                        backgroundColor:
-                                                            Colors.orange,
                                                       ),
-                                                    );
-                                                  }
-                                                } else {
-                                                  _handleSingleTap(key, day);
-                                                }
-                                              },
-                                              child: Container(
-                                                width: 50,
-                                                height: 45,
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  border: Border(
-                                                    bottom: BorderSide(
-                                                      color: customcolor
-                                                          .greyborder,
-                                                    ),
-                                                  ),
-                                                ),
-                                                child: Container(
-                                                  width: 24,
-                                                  height: 24,
-                                                  decoration: BoxDecoration(
-                                                    color: selected
-                                                        ? customcolor.pink
-                                                        : circleColor(),
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                      color: selected
-                                                          ? customcolor.blue
-                                                          : Colors.transparent,
-                                                      width: 2,
-                                                    ),
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: Stack(
-                                                    children: [
-                                                      Text(
-                                                        isFuture
-                                                            ? '-'
-                                                            : day == null
-                                                            ? '-'
-                                                            : (day.attendanceStatus ==
-                                                                      '-'
+                                                      child: Container(
+                                                        width: 24,
+                                                        height: 24,
+                                                        decoration: BoxDecoration(
+                                                          color: selected
+                                                              ? customcolor.pink
+                                                              : circleColor(),
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          border: Border.all(
+                                                            color: selected
+                                                                ? customcolor
+                                                                      .blue
+                                                                : Colors
+                                                                      .transparent,
+                                                            width: 2,
+                                                          ),
+                                                        ),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Stack(
+                                                          children: [
+                                                            Text(
+                                                              isFuture
                                                                   ? '-'
-                                                                  : day.attendanceStatus ==
-                                                                        'yes'
-                                                                  ? 'P'
-                                                                  : 'A'),
+                                                                  : day == null
+                                                                  ? '-'
+                                                                  : (day.attendanceStatus ==
+                                                                            '-'
+                                                                        ? '-'
+                                                                        : day.attendanceStatus ==
+                                                                              'yes'
+                                                                        ? 'P'
+                                                                        : day.attendanceStatus ==
+                                                                              'no'
+                                                                        ? 'A'
+                                                                        : ''),
+                                                              style: TextStyle(
+                                                                fontSize: 14,
+                                                                fontFamily:
+                                                                    AppFonts
+                                                                        .regular,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    selected ||
+                                                                        day?.reason?.isNotEmpty ==
+                                                                            true
+                                                                    ? Colors
+                                                                          .white
+                                                                    : isFuture ||
+                                                                          day ==
+                                                                              null
+                                                                    ? customcolor
+                                                                          .greytext
+                                                                    : ((day.attendanceStatus ==
+                                                                              'yes') &&
+                                                                          day.client_approval_status ==
+                                                                              null &&
+                                                                          day.om_oe_approval_status ==
+                                                                              null)
+                                                                    ? customcolor
+                                                                          .green
+                                                                    : customcolor
+                                                                          .white,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                              ),
+                                            ),
+
+                                            if (selectedShift
+                                                    .employeeList
+                                                    .isEmpty &&
+                                                sortedDates.isNotEmpty)
+                                              Row(
+                                                children: sortedDates.map((
+                                                  date,
+                                                ) {
+                                                  return Container(
+                                                    width: 50,
+                                                    height: 45,
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      border: Border(
+                                                        bottom: BorderSide(
+                                                          color: customcolor
+                                                              .greyborder,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        "-",
                                                         style: TextStyle(
                                                           fontSize: 14,
                                                           fontFamily:
                                                               AppFonts.regular,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color:
-                                                              selected ||
-                                                                  day
-                                                                          ?.reason
-                                                                          ?.isNotEmpty ==
-                                                                      true
-                                                              ? Colors.white
-                                                              : isFuture ||
-                                                                    day == null
-                                                              ? customcolor
-                                                                    .greytext
-                                                              : (day.attendanceStatus ==
-                                                                        'yes' &&
-                                                                    day.client_approval_status ==
-                                                                        null &&
-                                                                    day.om_oe_approval_status ==
-                                                                        null)
-                                                              ? customcolor
-                                                                    .green
-                                                              : customcolor
-                                                                    .white,
+                                                          color: Colors.grey,
                                                         ),
                                                       ),
-                                                    ],
-                                                  ),
-                                                ),
+                                                    ),
+                                                  );
+                                                }).toList(),
                                               ),
-                                            );
-                                          }).toList(),
+                                          ],
                                         ),
                                       ),
-
-                                      if (selectedShift.employeeList.isEmpty &&
-                                          sortedDates.isNotEmpty)
-                                        Row(
-                                          children: sortedDates.map((date) {
-                                            return Container(
-                                              width: 50,
-                                              height: 45,
-                                              alignment: Alignment.center,
-                                              decoration: BoxDecoration(
-                                                border: Border(
-                                                  bottom: BorderSide(
-                                                    color:
-                                                        customcolor.greyborder,
-                                                  ),
-                                                ),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  "-",
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontFamily:
-                                                        AppFonts.regular,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
+                            ),
 
                       if (selectedCells.isNotEmpty &&
                           multiSelectMode &&
                           _allSelectedHaveSameStatus())
                         SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: ElevatedButton(
-                          onPressed: () {
-                          
-                            if (selectedShift?.is_month_end == 1 &&
-                                selectedShift?.is_final_submitted == true) {
-                              log('roster finalize');
+                      selectedShift?.employeeList.isEmpty ||
+                              selectedShift?.employeeList.length == 0
+                          ? SizedBox()
+                          : Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (selectedShift?.is_month_end == 1 &&
+                                      selectedShift?.is_final_submitted ==
+                                          true) {
+                                    log('roster finalize');
 
-                              return;
-                            }
-                       
-                            selectedShift?.is_month_end == 1 &&
-                                    selectedShift?.is_final_submitted ==
-                                        false &&
-                                    selectedCells.isEmpty &&
-                                    !multiSelectMode&&role==GlobalLists.clientrole && selectedShift.review_updated_by_oe_om==false
-                                ? _submitAttendaceRosterfinal(selectedShift.id.toString())
-                                : selectedCells.isNotEmpty && multiSelectMode
-                                ? _showReasonDialog(isMultiSelect: true)
-                                : Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ViewRemarkAttendance(
-                                            month: month,
-                                            year: year,
-                                            attendancesiteid: attendancesiteid,
-                                            clientid: attendanceclientid,
-                                            manTag: maintag,
+                                    return;
+                                  }
+
+                                  selectedShift?.is_month_end == 1 &&
+                                          selectedShift?.is_final_submitted ==
+                                              false &&
+                                          selectedCells.isEmpty &&
+                                          !multiSelectMode &&
+                                          role == GlobalLists.clientrole &&
+                                          selectedShift
+                                                  .review_updated_by_oe_om ==
+                                              false &&
+                                          selectedShift
+                                                  .review_updated_by_client ==
+                                              false
+                                      ? _submitAttendaceRosterfinal(
+                                          selectedShift.id.toString(),
+                                        )
+                                      : selectedCells.isNotEmpty &&
+                                            multiSelectMode
+                                      ? _showReasonDialog(isMultiSelect: true)
+                                      : Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ViewRemarkAttendance(
+                                                  month: month,
+                                                  year: year,
+                                                  attendancesiteid:
+                                                      attendancesiteid,
+                                                  clientid: attendanceclientid,
+                                                  manTag: maintag,
+                                                  shiftId: selectedShift?.id,
+                                                ),
                                           ),
-                                    ),
-                                  );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                selectedShift?.is_month_end == 1 &&
-                                    selectedShift?.is_final_submitted == true
-                                ? Colors.grey
-                                : customcolor.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                                        );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      selectedShift?.is_month_end == 1 &&
+                                          selectedShift?.is_final_submitted ==
+                                              true
+                                      ? Colors.grey
+                                      : customcolor.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  minimumSize: Size(double.infinity, 48),
+                                ),
+                                child: Text(
+                                  selectedShift?.is_month_end == 1 &&
+                                          selectedShift?.is_final_submitted ==
+                                              true
+                                      ? "Finalize Roster"
+                                      : selectedCells.isNotEmpty &&
+                                            multiSelectMode
+                                      ? "Report Discrepancy"
+                                      : role == GlobalLists.clientrole &&
+                                            selectedShift
+                                                    ?.review_updated_by_oe_om ==
+                                                false &&
+                                            selectedShift
+                                                    .review_updated_by_client ==
+                                                false
+                                      ? "Approve Roster"
+                                      : role == GlobalLists.clientrole &&
+                                            selectedShift
+                                                    ?.review_updated_by_oe_om ==
+                                                true
+                                      ? "Review Updates"
+                                      : "Review Discrepancy",
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.semibold,
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
-                            minimumSize: Size(double.infinity, 48),
-                          ),
-                          child: Text(
-                            selectedShift?.is_month_end == 1 &&
-                                    selectedShift?.is_final_submitted == true
-                                ? "Finalize Roster"
-                                : selectedCells.isNotEmpty && multiSelectMode
-                                ? "Report Discrepancy"
-                                : role == GlobalLists.clientrole &&selectedShift?.review_updated_by_oe_om==false
-                                ? "Approve Roster"
-                                : role == GlobalLists.clientrole &&selectedShift?.review_updated_by_oe_om==true?"Review Updates":
-                                "Review Discrepancy",
-                            style: TextStyle(
-                              fontFamily: AppFonts.semibold,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -1977,20 +2089,18 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
       // Prepare the map according to API requirements
       var map = {
-      
-      'site_id': '$attendancesiteid', // Use attendancesiteid directly
-      'to_date': currentDate,
-      'shift': selectedShift?.id?.toString() ?? '', // Get from selectedShift
-      'client_id': GlobalLists.clientrole == role 
-          ? '$attendanceclientid' 
-          : supervisorid,
-      'user_id': GlobalLists.clientrole == role 
-          ? '$attendanceclientid' 
-          : supervisorid,
-      'emp_id': jsonEncode([]),
-      'month': month,
-      'year': year,
-  
+        'site_id': '$attendancesiteid', // Use attendancesiteid directly
+        'to_date': currentDate,
+        'shift': selectedShift?.id?.toString() ?? '', // Get from selectedShift
+        'client_id': GlobalLists.clientrole == role
+            ? '$attendanceclientid'
+            : supervisorid,
+        'user_id': GlobalLists.clientrole == role
+            ? '$attendanceclientid'
+            : supervisorid,
+        'emp_id': jsonEncode([]),
+        'month': month,
+        'year': year,
       };
 
       log('Submitting attendance data: $map');
