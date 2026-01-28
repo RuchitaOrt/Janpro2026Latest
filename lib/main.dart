@@ -18,6 +18,7 @@ import 'package:janpro/Screens/splashScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/model/Note.dart';
@@ -445,6 +446,8 @@ class _MyAppState extends State<MyApp> {
   void handleNavigationFromPayload(Map valueMap) {
     String type = valueMap['type'];
 
+    log('valueMap["type"] $type');
+
     if (type == "complaint") {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
@@ -495,7 +498,19 @@ class _MyAppState extends State<MyApp> {
           builder: (_) => SpecialActivity(valueMap['client_site_name']),
         ),
       );
-    } else if (type == "rating") {
+    }
+    else if (type == "Roster Finalized"||type == "Roster Reviewed"||type == "Roster Review Due"||type == "Discrepancy Reported"||type == "Roster Approved") {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => Attendance(
+            valueMap['client_site_name']
+            
+          ),
+        ),
+      );
+    }
+    
+     else if (type == "rating") {
       navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (_) => Rating(valueMap['client_site_name'])),
       );

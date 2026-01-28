@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Screens/Training.dart';
+import 'package:janpro/Screens/view_attendance_roster.dart';
 import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
@@ -1327,9 +1328,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  SizedBox(height: 200,),
+                                  SizedBox(height: 200),
                                   Text(
-                                    "No employees assigned",
+                                    "No janitor assigned",
                                     style: TextStyle(
                                       fontFamily: AppFonts.regular,
                                       fontSize: 14,
@@ -1406,7 +1407,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                 ),
                                               ),
                                             ),
-                                        // Fixed: "No employees assigned" centered properly
+                                        // Fixed: "No janitor assigned" centered properly
                                         if (selectedShift.employeeList.isEmpty)
                                           Container(
                                             width: 120,
@@ -1424,7 +1425,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                             ),
                                             child: Center(
                                               child: Text(
-                                                "No employees assigned",
+                                                "No janitor assigned",
                                                 style: TextStyle(
                                                   fontFamily: AppFonts.regular,
                                                   fontSize: 12,
@@ -1910,13 +1911,16 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               padding: const EdgeInsets.only(top: 8),
                               child: ElevatedButton(
                                 onPressed: () {
-                                  if (selectedShift?.is_month_end == 1 &&
-                                      selectedShift?.is_final_submitted ==
-                                          true) {
-                                    log('roster finalize');
+                                  log(
+                                    'check this ${selectedShift?.is_final_submitted},${selectedShift?.is_month_end}',
+                                  );
+                                  // if (selectedShift?.is_month_end == 1 &&
+                                  //     selectedShift?.is_final_submitted ==
+                                  //         true) {
+                                  //   log('roster finalize');
 
-                                    return;
-                                  }
+                                  //   return;
+                                  // }
 
                                   selectedShift?.is_month_end == 1 &&
                                           selectedShift?.is_final_submitted ==
@@ -1968,7 +1972,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                   selectedShift?.is_month_end == 1 &&
                                           selectedShift?.is_final_submitted ==
                                               true
-                                      ? "Finalize Roster"
+                                      ? "View Finalize Roster"
                                       : selectedCells.isNotEmpty &&
                                             multiSelectMode
                                       ? "Report Discrepancy"
@@ -2058,6 +2062,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                   ),
                 ),
               );
+              ShowDialogs.showToast('${resp.msg}');
             });
           } else {}
         },
@@ -2087,11 +2092,20 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       log('Current date for submission final: $currentDate');
       var supervisorid = await SPManager().getsupervisorid();
 
+      // Handle selectedShift - if it's already a string, use it directly
+      // If it's an object with id property, get the id
+      String shiftValue = "";
+      if (selectedShift is String) {
+        shiftValue = selectedShift;
+      } else if (selectedShift != null && selectedShift.id != null) {
+        shiftValue = selectedShift.id.toString();
+      }
+
       // Prepare the map according to API requirements
       var map = {
         'site_id': '$attendancesiteid', // Use attendancesiteid directly
         'to_date': currentDate,
-        'shift': selectedShift?.id?.toString() ?? '', // Get from selectedShift
+        'shift': shiftValue, // Use the properly extracted shift value
         'client_id': GlobalLists.clientrole == role
             ? '$attendanceclientid'
             : supervisorid,
@@ -2126,8 +2140,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                   ),
                 ),
               );
+              ShowDialogs.showToast('${resp.msg}');
             });
-          } else {}
+          } else {
+            // Handle non-successful response if needed
+          }
         },
         (error) {
           print('Error submitting attendance: $error');
@@ -2776,7 +2793,29 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     SizedBox(height: 10),
                                     ElevatedButton(
                                       onPressed: () {
-                                        _fetchAttendanceRoster();
+                                        // _fetchAttendanceRoster();
+                                        Navigator.push(
+                                          context,
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation1,
+                                                animation2) =>
+                                                ViewAttendanceRoster(
+                                              maintag: maintag.toString(),
+                                              attendancesiteid: GlobalLists
+                                                  .mainlisttab[maintag]
+                                                  .siteId,
+                                              attendanceRosterData: _attendanceRosterData,
+                                              month: month,
+                                              year: year,
+                                              attendanceclientid: attendanceclientid,
+                                              role: role.toString(),
+                                              // onReloadData: refreshData,
+                                            ),
+                                            transitionDuration:
+                                                Duration(seconds: 0),
+                                          ),
+                                        );
+                                     
                                       },
                                       child: Text('View Attendance Roster'),
                                       style: ElevatedButton.styleFrom(
@@ -4090,6 +4129,214 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     });
   }
 
+  List<int> selectedJanitorIds = [];
+
+  // addaddtendance(BuildContext context) {
+  //   showModalBottomSheet(
+  //     backgroundColor: Colors.white,
+  //     isScrollControlled: true,
+  //     isDismissible: true,
+  //     enableDrag: true,
+  //     elevation: 5.0,
+  //     barrierColor: Colors.black.withOpacity(0.7),
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.only(
+  //         topLeft: const Radius.circular(20.0),
+  //         topRight: const Radius.circular(20.0),
+  //       ),
+  //     ),
+  //     context: context,
+  //     builder: (builder) {
+  //       return StatefulBuilder(
+  //         builder: (BuildContext context, StateSetter setStateDialgoue) {
+  //           return new Container(
+  //             height:
+  //                 (role == GlobalLists.headrole ||
+  //                     role == GlobalLists.reginalmanagerrole ||
+  //                     role == GlobalLists.clientrole)
+  //                 ? SizeConfig.blockSizeVertical * 48 +
+  //                       MediaQuery.of(context).viewInsets.bottom
+  //                 : SizeConfig.blockSizeVertical * 47 +
+  //                       MediaQuery.of(context).viewInsets.bottom,
+  //             color: Colors.white,
+  //             margin: EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 2),
+  //             padding: EdgeInsets.all(5),
+  //             child: Stack(
+  //               children: [
+  //                 Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: <Widget>[
+  //                     SizedBox(height: 5),
+  //                     Center(
+  //                       child: Container(
+  //                         width: 50,
+  //                         child: Divider(
+  //                           thickness: 4,
+  //                           color: customcolor.greytext,
+  //                           height: 2,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     SizedBox(height: 20),
+  //                     Text(
+  //                       "Mark Attendance",
+  //                       textAlign: TextAlign.left,
+  //                       style: AppFonts.headerStyle(
+  //                         fontSize: 22,
+  //                         color: customcolor.black,
+  //                         fontWeight: FontWeight.w400,
+  //                       ),
+  //                     ),
+  //                     SizedBox(height: 15),
+  //                     Stack(
+  //                       children: [
+  //                         Column(
+  //                           children: [
+  //                             // clientnamecontroller.text==""?Container():
+  //                             SizedBox(height: 20),
+
+  //                             Stack(
+  //                               children: [
+  //                                 Column(
+  //                                   children: [
+  //                                     GestureDetector(
+  //                                       onTap: () {
+  //                                         setStateDialgoue(() {
+  //                                           isexpandedjanitor =
+  //                                               !isexpandedjanitor;
+
+  //                                           isexpandedclient = false;
+  //                                         });
+  //                                       },
+  //                                       child: FormTextField(
+  //                                         isEnable: false,
+  //                                         textcontroller: namecontroller,
+  //                                         placeholderStr:
+  //                                             "Select Janitor's Name",
+  //                                         textInputType: TextInputType.text,
+  //                                         onchange: (val) {},
+  //                                         suffixWidget: Padding(
+  //                                           padding: EdgeInsets.only(right: 20),
+  //                                           child: Image.asset(
+  //                                             "assets/images/dropdown.png",
+  //                                             width: 10,
+  //                                             height: 10,
+  //                                           ),
+  //                                         ),
+  //                                       ),
+  //                                     ),
+  //                                     Stack(
+  //                                       children: [
+  //                                         Column(
+  //                                           children: [
+  //                                             SizedBox(height: 20),
+  //                                             FormTextField(
+  //                                               isEnable: false,
+  //                                               textcontroller:
+  //                                                   mobilecontroller,
+  //                                               placeholderStr: "Mobile Number",
+  //                                               lengthofmobile: 10,
+  //                                               //   maxLength: 10,
+  //                                               textInputType:
+  //                                                   TextInputType.number,
+  //                                               onchange: (val) {},
+  //                                             ),
+  //                                             SizedBox(height: 30),
+  //                                           ],
+  //                                         ),
+  //                                         isexpandedjanitor
+  //                                             ? janitorsDropdown(
+  //                                                 setStateDialgoue,
+  //                                               )
+  //                                             : Container(),
+  //                                       ],
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //                                 isexpanded
+  //                                     ? siteDropdown(setStateDialgoue)
+  //                                     : Container(),
+  //                               ],
+  //                             ),
+  //                           ],
+  //                         ),
+  //                         isexpandedclient
+  //                             ? clientDropdown(setStateDialgoue)
+  //                             : Container(),
+  //                       ],
+  //                     ),
+  //                     GestureDetector(
+  //                       onTap: () {
+  //                         if (role == GlobalLists.clientrole ||
+  //                             role == GlobalLists.headrole ||
+  //                             role == GlobalLists.reginalmanagerrole ||
+  //                             role == GlobalLists.operationrole ||
+  //                             role == GlobalLists.unitrole ||
+  //                             role == GlobalLists.operationmanagerrole) {
+  //                           // Navigator.pop(context);
+  //                           if (lat == null || long == null) {
+  //                             grantPermission();
+  //                           }
+
+  //                           else if (namecontroller.text.isEmpty) {
+  //                             ShowDialogs.showToast("Please Enter Name");
+  //                           } else if (mobilecontroller.text.isEmpty) {
+  //                             ShowDialogs.showToast("Please Enter Mobile No");
+  //                           } else if (mobilecontroller.text.length != 10) {
+  //                             ShowDialogs.showToast(
+  //                               "Please Enter Valid Mobile No",
+  //                             );
+  //                           } else {
+  //                             addattendanceApi();
+  //                           }
+  //                         } else {
+  //                           // Navigator.pop(context);
+  //                           if (lat == null || long == null) {
+  //                             grantPermission();
+  //                           } else if (namecontroller.text.isEmpty) {
+  //                             ShowDialogs.showToast("Please Enter Name");
+  //                           } else if (mobilecontroller.text.isEmpty) {
+  //                             ShowDialogs.showToast("Please Enter Mobile No");
+  //                           } else if (mobilecontroller.text.length != 10) {
+  //                             ShowDialogs.showToast(
+  //                               "Please Enter Valid Mobile No",
+  //                             );
+  //                           } else {
+  //                             print("RUCHIADD");
+  //                             addattendanceApi();
+  //                           }
+  //                         }
+  //                       },
+  //                       child: Align(
+  //                         alignment: Alignment.bottomRight,
+  //                         child: ValueListenableBuilder<bool>(
+  //                           valueListenable: GlobalLists.isaddAttendance,
+  //                           builder: (context, isLoading, _) {
+  //                             if (isLoading) {
+  //                               return CircularProgressIndicator(
+  //                                 color: customcolor.blue,
+  //                               );
+  //                             }
+  //                             return Image.asset(
+  //                               'assets/images/next.png',
+  //                               width: 50,
+  //                               height: 50,
+  //                             );
+  //                           },
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
+
   addaddtendance(BuildContext context) {
     showModalBottomSheet(
       backgroundColor: Colors.white,
@@ -4100,15 +4347,15 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       barrierColor: Colors.black.withOpacity(0.7),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(20.0),
-          topRight: const Radius.circular(20.0),
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
         ),
       ),
       context: context,
       builder: (builder) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setStateDialgoue) {
-            return new Container(
+            return Container(
               height:
                   (role == GlobalLists.headrole ||
                       role == GlobalLists.reginalmanagerrole ||
@@ -4117,157 +4364,130 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         MediaQuery.of(context).viewInsets.bottom
                   : SizeConfig.blockSizeVertical * 47 +
                         MediaQuery.of(context).viewInsets.bottom,
-              color: Colors.white,
               margin: EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 2),
               padding: EdgeInsets.all(5),
+              color: Colors.white,
               child: Stack(
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
+                    children: [
                       SizedBox(height: 5),
+
+                      /// drag indicator
                       Center(
                         child: Container(
                           width: 50,
                           child: Divider(
                             thickness: 4,
                             color: customcolor.greytext,
-                            height: 2,
                           ),
                         ),
                       ),
+
                       SizedBox(height: 20),
+
+                      /// title
                       Text(
                         "Mark Attendance",
-                        textAlign: TextAlign.left,
                         style: AppFonts.headerStyle(
                           fontSize: 22,
                           color: customcolor.black,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
+
                       SizedBox(height: 15),
-                      Stack(
-                        children: [
-                          Column(
-                            children: [
-                              // clientnamecontroller.text==""?Container():
-                              SizedBox(height: 20),
 
-                              Stack(
-                                children: [
-                                  Column(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          setStateDialgoue(() {
-                                            isexpandedjanitor =
-                                                !isexpandedjanitor;
+                    
+                      Expanded(
+                        child: GlobalLists.dropdownList.isEmpty
+                            ? Center(
+                                child: Text(
+                                  "No janitor's present",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: customcolor.greytext,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: GlobalLists.dropdownList.length,
+                                itemBuilder: (context, index) {
+                                  final janitor =
+                                      GlobalLists.dropdownList[index];
+                                  final isSelected = selectedJanitorIds
+                                      .contains(int.parse(janitor.id));
 
-                                            isexpandedclient = false;
-                                          });
-                                        },
-                                        child: FormTextField(
-                                          isEnable: false,
-                                          textcontroller: namecontroller,
-                                          placeholderStr:
-                                              "Select Janitor's Name",
-                                          textInputType: TextInputType.text,
-                                          onchange: (val) {},
-                                          suffixWidget: Padding(
-                                            padding: EdgeInsets.only(right: 20),
-                                            child: Image.asset(
-                                              "assets/images/dropdown.png",
-                                              width: 10,
-                                              height: 10,
-                                            ),
-                                          ),
+                                  return Container(
+                                    margin: EdgeInsets.only(bottom: 8),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? customcolor.blue.withOpacity(0.08)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: customcolor.greybg,
+                                      ),
+                                    ),
+                                    child: CheckboxListTile(
+                                      value: isSelected,
+                                      activeColor: customcolor.blue,
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                      title: Text(
+                                        janitor.name,
+                                        style: AppFonts.headerStyle(
+                                          fontSize: 15,
+                                          color: customcolor.black,
+                                          fontWeight: FontWeight.normal,
                                         ),
                                       ),
-                                      Stack(
-                                        children: [
-                                          Column(
-                                            children: [
-                                              SizedBox(height: 20),
-                                              FormTextField(
-                                                isEnable: false,
-                                                textcontroller:
-                                                    mobilecontroller,
-                                                placeholderStr: "Mobile Number",
-                                                lengthofmobile: 10,
-                                                //   maxLength: 10,
-                                                textInputType:
-                                                    TextInputType.number,
-                                                onchange: (val) {},
-                                              ),
-                                              SizedBox(height: 30),
-                                            ],
-                                          ),
-                                          isexpandedjanitor
-                                              ? janitorsDropdown(
-                                                  setStateDialgoue,
-                                                )
-                                              : Container(),
-                                        ],
+                                      subtitle: Text(
+                                        janitor.contact,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: customcolor.greytext,
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                  isexpanded
-                                      ? siteDropdown(setStateDialgoue)
-                                      : Container(),
-                                ],
+                                      onChanged: (value) {
+                                        setStateDialgoue(() {
+                                          if (value == true) {
+                                            selectedJanitorIds.add(
+                                              int.parse(janitor.id),
+                                            );
+                                            log(
+                                              'Selected IDs: $selectedJanitorIds',
+                                            );
+                                          } else {
+                                            selectedJanitorIds.remove(
+                                              int.parse(janitor.id),
+                                            );
+                                            log(
+                                              'remove IDs: $selectedJanitorIds',
+                                            );
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  );
+                                },
                               ),
-                            ],
-                          ),
-                          isexpandedclient
-                              ? clientDropdown(setStateDialgoue)
-                              : Container(),
-                        ],
                       ),
+
+                      SizedBox(height: 10),
+
+                      ///  SUBMIT BUTTON
                       GestureDetector(
                         onTap: () {
-                          if (role == GlobalLists.clientrole ||
-                              role == GlobalLists.headrole ||
-                              role == GlobalLists.reginalmanagerrole ||
-                              role == GlobalLists.operationrole ||
-                              role == GlobalLists.unitrole ||
-                              role == GlobalLists.operationmanagerrole) {
-                            // Navigator.pop(context);
-                            if (lat == null || long == null) {
-                              grantPermission();
-                            }
-                            // else if(clientnamecontroller.text.isEmpty)
-                            // {
-                            //      ShowDialogs.showToast(
-                            //                 "Please Select Client Name");
-                            //   }
-                            else if (namecontroller.text.isEmpty) {
-                              ShowDialogs.showToast("Please Enter Name");
-                            } else if (mobilecontroller.text.isEmpty) {
-                              ShowDialogs.showToast("Please Enter Mobile No");
-                            } else if (mobilecontroller.text.length != 10) {
-                              ShowDialogs.showToast(
-                                "Please Enter Valid Mobile No",
-                              );
-                            } else {
-                              addattendanceApi();
-                            }
+                          if (lat == null || long == null) {
+                            grantPermission();
+                          } else if (selectedJanitorIds.isEmpty) {
+                            ShowDialogs.showToast(
+                              "Please select at least one janitor",
+                            );
                           } else {
-                            // Navigator.pop(context);
-                            if (lat == null || long == null) {
-                              grantPermission();
-                            } else if (namecontroller.text.isEmpty) {
-                              ShowDialogs.showToast("Please Enter Name");
-                            } else if (mobilecontroller.text.isEmpty) {
-                              ShowDialogs.showToast("Please Enter Mobile No");
-                            } else if (mobilecontroller.text.length != 10) {
-                              ShowDialogs.showToast(
-                                "Please Enter Valid Mobile No",
-                              );
-                            } else {
-                              print("RUCHIADD");
-                              addattendanceApi();
-                            }
+                            addattendanceApi();
                           }
                         },
                         child: Align(
@@ -5455,10 +5675,23 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     log(' In side addattendanceApi');
     var status1 = await ConnectionDetector.checkInternetConnection();
     var map = <String, dynamic>{};
+      List<Map<String, dynamic>> attendanceDetails = [];
+
+  for (var janitor in GlobalLists.dropdownList) {
+    final id = int.parse(janitor.id);
+    if (selectedJanitorIds.contains(id)) {
+      attendanceDetails.add({
+        "name": janitor.name,
+        "contact": int.parse(janitor.contact),
+      });
+    }
+  }
 
     if (role == GlobalLists.unitrole ||
         role == GlobalLists.operationrole ||
         role == GlobalLists.operationmanagerrole) {
+      map['attendnace_details'] = jsonEncode(attendanceDetails);
+
       map['name'] = namecontroller.text.trim();
       map['contact'] = mobilecontroller.text.trim();
       map['client_id'] = attendanceclientid;
@@ -5473,8 +5706,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           .split('T')[1]
           .split('.')[0];
     } else {
+    map['attendnace_details'] = jsonEncode(attendanceDetails);
+
       map['name'] = namecontroller.text.trim();
-      map['contact'] = mobilecontroller.text.trim();
+      map['contact'] = mobilecontroller.text.trim();  
       map['client_id'] = GlobalLists.clientid;
       map['site_id'] = GlobalLists.siteid;
       map['latitude'] = lat;
@@ -5487,6 +5722,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           .split('T')[1]
           .split('.')[0];
     }
+
+    log('addattendanceApi Map: $map');
 
     if (status1) {
       //  Online mode
@@ -5612,10 +5849,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   janotoragendaApi(String idclient, String idsite) async {
     var status1 = await ConnectionDetector.checkInternetConnection();
 
-    // setState(() {
-    //   print("JANITORSUPER");
-    //   // GlobalLists.dropdownList = [];
-    // });
+ 
 
     var map = {'client_id': idclient, 'site_id': idsite};
 

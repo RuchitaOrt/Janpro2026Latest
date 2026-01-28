@@ -4127,7 +4127,7 @@ print(isUpdateButtonVisible);
 //opertatio
   operationexpandedheader(int tabindexmain, int tabindex) {
     log("RUCHITARANE $tabindex");
-//  print("RANU");
+ print("checkoperationexpandedheader");
 //                _scrollToTab(4);
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,

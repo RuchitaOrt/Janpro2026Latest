@@ -226,7 +226,7 @@ class APIManager {
             "/api/attendancemaster/mobileapi_test_supervisor_attendance_list";
         break;
       case API.addattendance:
-        apiPathString = "/api/attendancemaster/Add_AttendanceMaster";
+        apiPathString = "/api/attendancemaster/Mobile_Add_AttendanceMaster";
         break;
 
       case API.updatedworkflowstatus:
