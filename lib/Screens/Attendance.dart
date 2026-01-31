@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Screens/Training.dart';
+import 'package:janpro/Screens/view_attenance_roster_new.dart';
 import 'package:janpro/Screens/view_attendance_roster.dart';
 import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
@@ -2828,8 +2829,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       ),
                                     ),
 
-                                    //workflow
-                                    // SizedBox(height: 10),
+                                    // workflow
+                                    SizedBox(height: 10),
                                     unitmodule(),
                                   ],
                                 ),
@@ -3121,10 +3122,54 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                         ],
                                       ),
                                     ),
+                                 
                                     SizedBox(height: 10),
                                     GlobalLists.mainlisttab.length > 0
                                         ? Wrap(children: _buildChoicemainList())
                                         : Container(),
+                                        SizedBox(height: 10,),
+
+                                            role ==
+                                                                    GlobalLists
+                                                                        .supervisorrole
+                                                                ?      
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        // _fetchAttendanceRoster();
+                                        Navigator.push(
+                                          context,
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation1,
+                                                animation2) =>
+                                                ViewAttendanceRoster(
+                                              maintag: maintag.toString(),
+                                              attendancesiteid: GlobalLists
+                                                  .mainlisttab[maintag]
+                                                  .siteId,
+                                              attendanceRosterData: _attendanceRosterData,
+                                              month: month,
+                                              year: year,
+                                              attendanceclientid: attendanceclientid,
+                                              role: role.toString(),
+                                              // onReloadData: refreshData,
+                                            ),
+                                            transitionDuration:
+                                                Duration(seconds: 0),
+                                          ),
+                                        );
+                                     
+                                      },
+                                      child: Text('View Attendance Roster'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: customcolor.blue,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                      ),
+                                    ):SizedBox(height: 10),
+                                  
                                     //workflow
                                     SizedBox(height: 10),
                                     maintag == 0

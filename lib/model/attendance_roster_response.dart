@@ -33,6 +33,9 @@ class ShiftData {
   final bool review_updated_by_oe_om;
   final bool review_updated_by_client;
 
+  
+
+
 
   ShiftData({
     required this.id,
@@ -45,6 +48,7 @@ class ShiftData {
     required this.is_final_submitted,
     required this.review_updated_by_oe_om,
     required this.review_updated_by_client
+
   });
 
   factory ShiftData.fromJson(Map<String, dynamic> json) {
@@ -54,6 +58,9 @@ class ShiftData {
       shiftStartTime: json['shift_start_time'] ?? '',
       shiftEndTime: json['shift_end_time'] ?? '',
       supervisor: json['supervisor'] ?? '',
+    
+      
+
       employeeList: (json['employee_list'] as List<dynamic>?)
               ?.map((e) => EmployeeData.fromJson(e))
               .toList() ??
@@ -98,6 +105,7 @@ class AttendanceData {
   final String? om_oe_approval_status;
   final String? client_approval_status;
   final bool? act_deact_janitor;
+    final int? ot_hours;
 
 
   final String? statusPresentAbsent;
@@ -113,12 +121,14 @@ class AttendanceData {
     this.statusPresentAbsent,
     this.attendanceId,
      this.act_deact_janitor,
+     this.ot_hours,
   });
 
   factory AttendanceData.fromJson(Map<String, dynamic> json) {
     return AttendanceData(
       date: json['date'] ?? '',
       attendanceStatus: json['attendance_status'] ?? '',
+        ot_hours: json['ot_hours'] ?? 0,
       reason: json['reason'],
       om_oe_resson: json['om_oe_resson'],
       om_oe_approval_status: json['om_oe_approval_status'],
