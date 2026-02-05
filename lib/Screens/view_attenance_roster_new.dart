@@ -1,20 +1,67 @@
-
-import 'dart:async';
+// ignore_for_file: unnecessary_null_comparison, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, must_be_immutable, prefer_typing_uninitialized_variables, use_key_in_widget_constructors, library_private_types_in_public_api, curly_braces_in_flow_control_structures, prefer_conditional_assignment, unused_element
 import 'dart:convert';
-import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:janpro/Screens/Attendance.dart';
-import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
-import 'package:janpro/Utitlity/GlobalLists.dart';
+import 'package:janpro/Utitlity/AppDrawer.dart';
+import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
+import 'package:janpro/Utitlity/appbar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
-
 import 'package:janpro/model/attendance_roster_response.dart';
 import 'package:flutter/services.dart';
+
+// Global OT Hours Storage
+class OTHoursManager {
+  static final OTHoursManager _instance = OTHoursManager._internal();
+  factory OTHoursManager() => _instance;
+  OTHoursManager._internal();
+
+  // Store OT hours: Map<empId, Map<date, hours>>
+  Map<String, Map<String, double>> otHoursData = {};
+
+  void setOTHours(String empId, String date, double hours) {
+    if (!otHoursData.containsKey(empId)) {
+      otHoursData[empId] = {};
+    }
+    otHoursData[empId]![date] = hours;
+    print('✅ OT Saved: Employee $empId, Date $date, Hours $hours');
+    print('📊 Total stored OT entries: ${otHoursData.length} employees');
+  }
+
+  double? getOTHours(String empId, String date) {
+    final hours = otHoursData[empId]?[date];
+    if (hours != null) {
+      print('📖 OT Retrieved: Employee $empId, Date $date, Hours $hours');
+    }
+    return hours;
+  }
+
+  void clearOTHours(String empId, String date) {
+    otHoursData[empId]?.remove(date);
+    print('🗑️ OT Cleared: Employee $empId, Date $date');
+  }
+
+  void clearAllForEmployee(String empId) {
+    otHoursData.remove(empId);
+  }
+
+  void printAllOTData() {
+    if (otHoursData.isEmpty) {
+      print('   (No OT data stored)');
+    } else {
+      otHoursData.forEach((empId, dates) {
+        print('   Employee $empId:');
+        dates.forEach((date, hours) {
+          print('      $date: ${hours.toStringAsFixed(1)} hours');
+        });
+      });
+    }
+  }
+}
 
 class ViewAttendanceRoster extends StatefulWidget {
   final List<dynamic> attendanceRosterData;
@@ -42,15 +89,26 @@ class ViewAttendanceRoster extends StatefulWidget {
 class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   String month = '';
   String year = '';
-  late int selectedYear;
-  late int selectedMonthIndex;
+  int? selectedYear;
+  int? selectedMonthIndex;
   dynamic selectedShift;
   var maintag;
   Set<String> selectedCells = {};
   bool multiSelectMode = false;
   bool isBulkMode = false;
   Set<String> selectedEmployees = {};
-  
+
+  // NEW: Multi-date selection
+  Set<String> selectedDates = {};
+  bool isDateSelectionMode = false;
+
+  // Bulk operation state
+  String? bulkSelectedDate;
+  String? bulkAttendanceStatus;
+  bool bulkHasOT = false;
+  String bulkOTHours = '';
+  final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
+
   final List<String> monthNames = [
     '',
     'January',
@@ -66,7 +124,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     'November',
     'December',
   ];
-  
+
   final List<String> monthNamesShort = [
     '',
     'JAN',
@@ -82,14 +140,15 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     'NOV',
     'DEC',
   ];
-  
+
   final List<int> availableYears = [2026, 2025];
 
   Map<String, List<dynamic>> groupedByMonth = {};
   var role;
-  
+
   getrole() async {
     role = await SPManager().getroleid();
+    await _fetchAttendanceRoster();
   }
 
   var attendancesiteid;
@@ -98,21 +157,25 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
   @override
   void initState() {
-    getrole();
     maintag = widget.maintag;
     attendancesiteid = widget.attendancesiteid;
     attendanceclientid = widget.attendanceclientid;
+    getrole();
+
     super.initState();
-    _fetchAttendanceRoster();
   }
 
   @override
   void dispose() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
     ]);
     super.dispose();
   }
+
+  bool _isLoad = false;
+  bool _isLandscap = false;
 
   _fetchAttendanceRoster() async {
     try {
@@ -179,6 +242,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
             if (rosterResponse.status == "success") {
               setState(() {
+                _isLoad = true;
                 _attendanceRosterData = rosterResponse.data;
               });
               Navigator.pop(context);
@@ -186,12 +250,14 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
               ShowDialogs.showToast(rosterResponse.msg);
             }
           } catch (e) {
+            _isLoad = false;
             print('Error parsing response: $e');
             ShowDialogs.showToast('Error processing data: ${e.toString()}');
           }
         },
         (error) {
           ShowDialogs.showToast('Error: ${error.toString()}');
+          _isLoad = false;
         },
         false,
         "",
@@ -207,10 +273,26 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   var userId;
   var siteId;
 
+  void _reloadDataForMonth(int monthIndex) {
+    final monthIndexStr = monthIndex.toString().padLeft(2, '0');
+    month = monthIndexStr;
+    selectedCells.clear();
+    multiSelectMode = false;
+    isBulkMode = false;
+    selectedEmployees.clear();
+    selectedDates.clear();
+    isDateSelectionMode = false;
+    _fetchAttendanceRoster();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!mounted || context == null || _attendanceRosterData.isEmpty)
-      return SizedBox.shrink();
+         return Scaffold(
+            backgroundColor: Color(0xFFFAFBFC),
+
+    
+    );
 
     String getMonthYear(String date) {
       final parts = date.split('-');
@@ -252,7 +334,9 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       }
     }
 
-    int selectedYear = int.parse(year);
+    if (selectedYear == null) {
+      selectedYear = int.parse(year);
+    }
     String selectedMonth = '${monthNames[currentMonth]}';
 
     void _reloadDataForMonthYear(String newMonth, int newYear) {
@@ -266,7 +350,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     final availableMonths = groupedByMonth.keys.toList()
       ..sort((a, b) => getMonthYearDate(a).compareTo(getMonthYearDate(b)));
 
-    if (!availableMonths.contains(selectedMonth) && availableMonths.isNotEmpty) {
+    if (!availableMonths.contains(selectedMonth) &&
+        availableMonths.isNotEmpty) {
       selectedMonth = availableMonths[0];
     }
 
@@ -274,54 +359,79 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         ? groupedByMonth[selectedMonth]![0]
         : null;
 
-    int selectedMonthIndex = currentMonth;
-
-    void _reloadDataForMonth(int monthIndex) {
-      final monthIndexStr = monthIndex.toString().padLeft(2, '0');
-      month = monthIndexStr;
-      selectedCells.clear();
-      multiSelectMode = false;
-      isBulkMode = false;
-      selectedEmployees.clear();
-      _fetchAttendanceRoster();
+    if (selectedMonthIndex == null) {
+      selectedMonthIndex = currentMonth;
     }
 
     final shifts = groupedByMonth[selectedMonth] ?? [];
 
-    // Calculate statistics
+    // Calculate statistics with OT from global storage
     int presentCount = 0;
     int absentCount = 0;
+    int hoildayCount = 0;
+    int hlfdayCount = 0;
+    int whoildayCount = 0;
+
     double otHours = 0;
     int pendingCount = 0;
-    
+
     if (selectedShift != null) {
       for (var emp in selectedShift.employeeList ?? []) {
         for (var att in emp.attendData ?? []) {
-          if (att.attendanceStatus == 'yes') presentCount++;
-          if (att.attendanceStatus == 'no') absentCount++;
-          if (att.ot_hours != null) otHours += att.ot_hours ?? 0;
+          if (att.attendance_type == 'P') presentCount++;
+          if (att.attendance_type == 'A') absentCount++;
+          if (att.attendance_type == 'W') whoildayCount++;
+          if (att.attendance_type == 'F') hlfdayCount++;
+          if (att.attendance_type == 'H') hoildayCount++;
+
+          // Check global OT storage first, then fall back to server data
+          final globalOT = OTHoursManager().getOTHours(
+            emp.empId.toString(),
+            att.date,
+          );
+          if (globalOT != null) {
+            otHours += globalOT;
+          } else if (att.ot_hours != null) {
+            otHours += att.ot_hours ?? 0;
+          }
         }
       }
     }
 
     return Scaffold(
       backgroundColor: Color(0xFFFAFBFC),
+      key: _scaffoldKey1,
+      endDrawer: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: customcolor.blue,
+          primaryColor: customcolor.blue,
+        ),
+        child: AppDrawerfilter(role),
+      ),
+      resizeToAvoidBottomInset: false,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(148),
+        child: AppbarComman(
+          setStyleStr: 'View Attendance Roster',
+          onPressedBack: () {},
+          onPressedNotify: () {},
+          onPressedSearch: () {},
+          onPressedSort: () {},
+          onPressedmenu: () {
+            _scaffoldKey1.currentState!.openEndDrawer();
+          },
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
             // Header with dark background
             Container(
               decoration: BoxDecoration(
-                color: Color(0xFF0F172A),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 6,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                // color: customcolor.blue,
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Top header with title and month navigation
                   Padding(
@@ -332,87 +442,218 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         Row(
                           children: [
                             IconButton(
-                              icon: Icon(Icons.arrow_back, color: Colors.white),
+                              icon: Icon(Icons.arrow_back, color: Colors.black),
                               onPressed: () => Navigator.pop(context),
+                              padding: EdgeInsets.zero,
+                              constraints: BoxConstraints(),
                             ),
-                            SizedBox(width: 8),
+                            SizedBox(width: 12),
                             Text(
                               'Team Roster',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.5,
+                              style: AppFonts.headerStyle(
+                                fontSize: ResponsiveFlutter.of(
+                                  context,
+                                ).fontSize(2.3),
+                                // color: customcolor.white,
+                                fontWeight: FontWeight.w300,
                               ),
                             ),
                           ],
                         ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  if (selectedMonthIndex > 1) {
-                                    setState(() {
-                                      selectedMonthIndex--;
-                                      _reloadDataForMonth(selectedMonthIndex);
-                                    });
-                                  }
-                                },
-                                child: Icon(Icons.chevron_left, color: Colors.white, size: 20),
+
+                        Row(
+                          children: [
+                            // Month Dropdown
+                            GestureDetector(
+                              onTap: () => _showMonthPicker(
+                                context,
+                                selectedMonthIndex ?? int.parse(month),
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                '${monthNamesShort[selectedMonthIndex]} $selectedYear',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'monospace',
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+
+                                elevation: 1,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        monthNamesShort[selectedMonthIndex ??
+                                            int.parse(month)],
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Icon(
+                                        Icons.arrow_drop_down,
+                                        color: customcolor.blue,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () {
-                                  if (selectedMonthIndex < 12) {
-                                    setState(() {
-                                      selectedMonthIndex++;
-                                      _reloadDataForMonth(selectedMonthIndex);
-                                    });
-                                  }
-                                },
-                                child: Icon(Icons.chevron_right, color: Colors.white, size: 20),
+                            ),
+                            SizedBox(width: 8),
+                            // Year Dropdown
+                            GestureDetector(
+                              onTap: () => _showYearPicker(
+                                context,
+                                selectedYear ?? int.parse(year),
                               ),
-                            ],
-                          ),
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  // decoration: BoxDecoration(
+                                  //   color: Colors.white,
+                                  //   borderRadius: BorderRadius.circular(8),
+                                  //   border: Border.all(
+                                  //     color: Colors.white.withOpacity(0.3),
+                                  //     width: 1,
+                                  //   ),
+                                  // ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${selectedYear ?? int.parse(year)}',
+                                        style: TextStyle(
+                                          // color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Icon(
+                                        Icons.arrow_drop_down,
+                                        color: customcolor.blue,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  
+                  selectedShift?.employeeList?.isEmpty
+                      ? SizedBox()
+                      : Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Row(
+                            children: [
+                          ! _isLandscap?  ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: customcolor.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isLandscap = true;
+                                  });
+                                  SystemChrome.setPreferredOrientations([
+                                    DeviceOrientation.landscapeLeft,
+                                    DeviceOrientation.landscapeRight,
+                                  ]);
+                                },
+                                child: const Text('Landscape'),
+                              ):SizedBox(),
+
+                              const SizedBox(width: 12),
+                           _isLandscap?   ElevatedButton(
+                                 style: ElevatedButton.styleFrom(
+                                  backgroundColor: customcolor.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                
+                                onPressed: () {
+                                  setState(() {
+                                    _isLandscap = false;
+                                  });
+                                  SystemChrome.setPreferredOrientations([
+                                    DeviceOrientation.portraitUp,
+                                  ]);
+                                },
+                                child: const Text('Portrait'),
+                              ):SizedBox(),
+                            ],
+                          ),
+                        ),
                   // Stats bar
-                  Container(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildStatChip('$presentCount Present'),
-                          SizedBox(width: 8),
-                          _buildStatChip('$absentCount Absent'),
-                          SizedBox(width: 8),
-                          _buildStatChip('${otHours.toStringAsFixed(1)} OT Hrs'),
-                          SizedBox(width: 8),
-                          _buildStatChip('$pendingCount Pending'),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _isLandscap || selectedShift?.employeeList?.isEmpty
+                      ? SizedBox()
+                      : Container(
+                          padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _buildStatChip(
+                                  '$presentCount',
+                                  'Present',
+                                  Color(0xFF22C55E),
+                                ),
+                                SizedBox(width: 10),
+                                _buildStatChip(
+                                  '$absentCount',
+                                  'Absent',
+                                  Color(0xFFEF4444),
+                                ),
+                                // SizedBox(width: 10),
+                                //  _buildStatChip('$absentCount', 'Holiday',Color(0xFFEF4444)),
+                                SizedBox(width: 10),
+                                _buildStatChip(
+                                  '$hoildayCount',
+                                  'Holiday',
+                                  Color(0xFF7DD3FC),
+                                ),
+                                SizedBox(width: 10),
+                                _buildStatChip(
+                                  '$whoildayCount',
+                                  'Working Holiday',
+                                  Color(0xFF2563EB),
+                                ),
+                                SizedBox(width: 10),
+                                _buildStatChip(
+                                  '$hlfdayCount',
+                                  'Halfday',
+                                  Color(0xFF4ADE80),
+                                ),
+                                SizedBox(width: 10),
+
+                                _buildStatChip(
+                                  '${otHours.toStringAsFixed(1)}',
+                                  'OT Hrs',
+                                  Color(0xFF8B5CF6),
+                                ),
+                                SizedBox(width: 10),
+                              ],
+                            ),
+                          ),
+                        ),
                 ],
               ),
             ),
@@ -423,11 +664,11 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFFA855F7)],
+                    colors: [customcolor.blue, Color(0xFFA855F7)],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFF8B5CF6).withOpacity(0.3),
+                      color: customcolor.blue.withOpacity(0.3),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -438,20 +679,25 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                   children: [
                     Row(
                       children: [
-                        Text('✓', style: TextStyle(color: Colors.white, fontSize: 18)),
+                        Text(
+                          '✓',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
                         SizedBox(width: 12),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '${selectedEmployees.length} selected',
+                            '${selectedEmployees.length} employee${selectedEmployees.length != 1 ? 's' : ''}',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
-                              fontFamily: 'monospace',
                             ),
                           ),
                         ),
@@ -475,26 +721,31 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                          Icon(
+                            Icons.people_outline,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
                           SizedBox(height: 16),
                           Text(
                             "No janitor assigned",
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey[600],
-                              fontStyle: FontStyle.italic,
                             ),
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      itemCount: selectedShift.employeeList.length,
+                      padding: EdgeInsets.only(top: 12, bottom: 80),
+                      itemCount: selectedShift?.employeeList?.length ?? 0,
                       itemBuilder: (context, index) {
                         final emp = selectedShift.employeeList[index];
-                        final isSelected = selectedEmployees.contains(emp.empId.toString());
-                        
+                        final isSelected = selectedEmployees.contains(
+                          emp.empId.toString(),
+                        );
+
                         return _buildEmployeeCard(emp, isSelected);
                       },
                     ),
@@ -511,24 +762,40 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             }
           });
         },
-        backgroundColor: Color(0xFF8B5CF6),
-        child: Icon(Icons.people, color: Colors.white),
+        backgroundColor: customcolor.blue,
+        child: Icon(
+          isBulkMode ? Icons.close : Icons.people,
+          color: Colors.white,
+        ),
       ),
     );
   }
 
-  Widget _buildStatChip(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
+  Widget _buildStatChip(String value, String label, Color color) {
+    return Card(
+      color: color,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        // decoration: BoxDecoration(
+        // color: Colors.red,
+        // borderRadius: BorderRadius.circular(6),
+        // ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(width: 4),
+            Text(label, style: TextStyle(fontSize: 12, color: Colors.white)),
+          ],
         ),
       ),
     );
@@ -548,40 +815,51 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isPrimary ? Colors.white : Colors.transparent,
-        foregroundColor: isPrimary ? Color(0xFF8B5CF6) : Colors.white,
+        foregroundColor: isPrimary ? customcolor.blue : Colors.white,
         side: BorderSide(color: Colors.white, width: 2),
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 0,
       ),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
     );
   }
 
   Widget _buildEmployeeCard(dynamic emp, bool isSelected) {
-    // Get all dates for this employee
     final allDates = <String>[];
     for (var att in emp.attendData ?? []) {
       allDates.add(att.date);
     }
     allDates.sort();
-    
-    // Calculate summary
+
+    // Calculate summary with global OT storage
     int presentCount = 0;
     int absentCount = 0;
+    int hoildayCount = 0;
+    int hlfdayCount = 0;
+    int whoildayCount = 0;
     double otHours = 0;
-    
+
     for (var att in emp.attendData ?? []) {
-      if (att.attendanceStatus == 'yes') presentCount++;
-      if (att.attendanceStatus == 'no') absentCount++;
-      if (att.ot_hours != null) otHours += att.ot_hours ?? 0;
+      if (att.attendance_type == 'P') presentCount++;
+      if (att.attendance_type == 'A') absentCount++;
+      if (att.attendance_type == 'W') whoildayCount++;
+      if (att.attendance_type == 'F') hlfdayCount++;
+      if (att.attendance_type == 'H') hoildayCount++;
+
+      // Check global storage first
+      final globalOT = OTHoursManager().getOTHours(
+        emp.empId.toString(),
+        att.date,
+      );
+      if (globalOT != null) {
+        otHours += globalOT;
+      } else if (att.ot_hours != null) {
+        otHours += att.ot_hours ?? 0;
+      }
     }
 
     return GestureDetector(
@@ -597,12 +875,12 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         }
       },
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        margin: EdgeInsets.fromLTRB(12, 0, 12, 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: isSelected
-              ? Border.all(color: Color(0xFF8B5CF6), width: 3)
+              ? Border.all(color: customcolor.blue, width: 3)
               : null,
           boxShadow: [
             BoxShadow(
@@ -613,30 +891,34 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Employee Header
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                   colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
                 ),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
                 ),
-                border: Border(
-                  bottom: BorderSide(color: Color(0xFFE2E8F0)),
-                ),
+                border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
               ),
               child: Stack(
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Employee Info
-                      Expanded(
+                      Flexible(
                         child: Column(
+                          // mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               emp.empName,
@@ -645,6 +927,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF0F172A),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             SizedBox(height: 2),
                             Text(
@@ -652,26 +936,61 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF64748B),
-                                fontFamily: 'monospace',
                               ),
                             ),
                           ],
                         ),
                       ),
-                      
+                      SizedBox(width: 12),
+
                       // Summary Stats
-                      Row(
-                        children: [
-                          _buildSummaryItem(presentCount.toString(), 'P', Color(0xFF22C55E)),
-                          SizedBox(width: 12),
-                          _buildSummaryItem(absentCount.toString(), 'A', Color(0xFFEF4444)),
-                          SizedBox(width: 12),
-                          _buildSummaryItem(otHours.toStringAsFixed(1), 'OT', Color(0xFF8B5CF6)),
-                        ],
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildSummaryItem(
+                              presentCount.toString(),
+                              'P',
+                              Color(0xFF22C55E),
+                            ),
+                            SizedBox(width: 12),
+                            _buildSummaryItem(
+                              absentCount.toString(),
+                              'A',
+                              Color(0xFFEF4444),
+                            ),
+                            SizedBox(width: 12),
+
+                            _buildSummaryItem(
+                              hoildayCount.toString(),
+                              'H',
+                              Color(0xFF7DD3FC),
+                            ),
+                            SizedBox(width: 12),
+                            _buildSummaryItem(
+                              whoildayCount.toString(),
+                              'W',
+                              Color(0xFF2563EB),
+                            ),
+                            SizedBox(width: 12),
+                            _buildSummaryItem(
+                              hlfdayCount.toString(),
+                              'F',
+                              Color(0xFF4ADE80),
+                            ),
+                            SizedBox(width: 12),
+                            _buildSummaryItem(
+                              otHours.toStringAsFixed(1),
+                              'OT',
+                              customcolor.blue,
+                            ),
+                          ],
+                        ),
                       ),
+                      if (isBulkMode) SizedBox(width: 12),
                     ],
                   ),
-                  
+
                   // Selection Checkbox (top-right)
                   if (isBulkMode)
                     Positioned(
@@ -681,9 +1000,11 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: isSelected ? Color(0xFF8B5CF6) : Colors.white,
+                          color: isSelected ? customcolor.blue : Colors.white,
                           border: Border.all(
-                            color: isSelected ? Color(0xFF8B5CF6) : Color(0xFFE2E8F0),
+                            color: isSelected
+                                ? customcolor.blue
+                                : Color(0xFFE2E8F0),
                             width: 2,
                           ),
                           borderRadius: BorderRadius.circular(6),
@@ -696,13 +1017,13 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                 ],
               ),
             ),
-            
+
             // Timeline Container - Horizontal Scroll
             Container(
-              height: 120,
+              height: 135,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: allDates.map((date) {
                     return _buildDateColumn(emp, date);
@@ -718,6 +1039,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
   Widget _buildSummaryItem(String value, String label, Color color) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
@@ -725,16 +1047,9 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: color,
-            fontFamily: 'monospace',
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Color(0xFF64748B),
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
       ],
     );
   }
@@ -746,14 +1061,22 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     } catch (e) {
       day = null;
     }
-    
+
     final dateObj = DateTime.parse(date);
     final dayNum = dateObj.day.toString();
-    final dayName = DateFormat('EEE').format(dateObj).toUpperCase();
+    final dayName = DateFormat(
+      'EEE',
+    ).format(dateObj).substring(0, 3).toUpperCase();
     final isToday = DateFormat('yyyy-MM-dd').format(DateTime.now()) == date;
     final isWeekend = dateObj.weekday == 6 || dateObj.weekday == 7;
     final isFuture = dateObj.isAfter(DateTime.now());
-    
+
+    // Get OT hours from global storage
+    final globalOT = OTHoursManager().getOTHours(emp.empId.toString(), date);
+    final hasOT =
+        globalOT != null || (day?.ot_hours != null && day!.ot_hours! > 0);
+    final displayOT = globalOT ?? day?.ot_hours ?? 0.0;
+
     return GestureDetector(
       onTap: () {
         if (!isFuture && day != null) {
@@ -761,22 +1084,21 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         }
       },
       child: Container(
+        height: 120,
         width: 62,
         margin: EdgeInsets.only(right: 6),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Date Header
             Container(
-              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
               decoration: BoxDecoration(
-                color: isToday 
-                    ? Color(0xFFDBEAFE) 
-                    : isWeekend 
-                        ? Color(0xFFFEF2F2) 
-                        : Color(0xFFFAFBFC),
+                color: Color(0xFFFAFBFC),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     dayName,
@@ -794,14 +1116,13 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: isToday ? Color(0xFF3B82F6) : Color(0xFF0F172A),
-                      fontFamily: 'monospace',
                     ),
                   ),
                 ],
               ),
             ),
             SizedBox(height: 6),
-            
+
             // Attendance Marker
             Container(
               height: 28,
@@ -825,95 +1146,79 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                 ),
               ),
             ),
+
+            // OT Container with Input Box (always shown)
             SizedBox(height: 4),
-            
-            // OT Marker
-            if (day != null && day.ot_hours != null && day.ot_hours! > 0)
-              Container(
-                height: 20,
+            GestureDetector(
+              onTap: () {
+                if (!isFuture && day != null) {
+                  _showOTDialog(emp, day, date, displayOT.toDouble());
+                }
+              },
+              child: Container(
+                height: 28,
+                width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Color(0xFFF3E8FF),
+                  color: hasOT ? Color(0xFFF3E8FF) : Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: Color(0xFF8B5CF6),
+                    color: hasOT ? customcolor.blue : Color(0xFFE2E8F0),
                     width: 1.5,
                   ),
                 ),
                 child: Center(
-                  child: Text(
-                    '${day.ot_hours}h',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF6B21A8),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 10,
+                        color: hasOT ? Color(0xFF6B21A8) : Color(0xFF94A3B8),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        hasOT ? '${displayOT.toStringAsFixed(1)}h' : 'OT',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: hasOT ? Color(0xFF6B21A8) : Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
-    if (isFuture || day == null) return Color(0xFFCBD5E1);
-    
-    switch (day.attendanceStatus) {
-      case 'yes':
-        return Color(0xFF22C55E); // Present - green
-      case 'no':
-        return Color(0xFFEF4444); // Absent - red
-      default:
-        return Color(0xFFCBD5E1); // Unmarked - gray
-    }
-  }
+  void _showOTDialog(
+    dynamic emp,
+    AttendanceData day,
+    String date,
+    double currentOT,
+  ) {
+    TextEditingController otController = TextEditingController(
+      text: currentOT > 0 ? currentOT.toStringAsFixed(1) : '',
+    );
 
-  Color _getAttendanceTextColor(AttendanceData? day, bool isFuture) {
-    if (isFuture || day == null) return Color(0xFFCBD5E1);
-    
-    switch (day.attendanceStatus) {
-      case 'yes':
-        return Color(0xFF166534); // Dark green
-      case 'no':
-        return Color(0xFF991B1B); // Dark red
-      default:
-        return Color(0xFF64748B); // Gray
-    }
-  }
-
-  String _getAttendanceLabel(AttendanceData? day, bool isFuture) {
-    if (isFuture || day == null) return '-';
-    
-    switch (day.attendanceStatus) {
-      case 'yes':
-        return 'P';
-      case 'no':
-        return 'A';
-      default:
-        return '-';
-    }
-  }
-
-  void _showAttendanceDialog(dynamic emp, AttendanceData day, String date) {
-    String? selectedAttendance = day.attendanceStatus;
-    bool hasOT = day.ot_hours != null && day.ot_hours! > 0;
-    String otHours = hasOT ? day.ot_hours.toString() : '';
-    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
-          padding: EdgeInsets.all(24),
+        ),
+        padding: EdgeInsets.all(24),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -930,24 +1235,24 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                   ),
                 ),
               ),
-              
+
               // Header
               Text(
-                'Mark Attendance',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
+                'Enter Overtime Hours',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
               SizedBox(height: 6),
               Row(
                 children: [
-                  Text(
-                    emp.empName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF3B82F6),
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      emp.empName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF3B82F6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(' • ', style: TextStyle(color: Color(0xFF64748B))),
@@ -962,132 +1267,52 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                 ],
               ),
               SizedBox(height: 24),
-              
-              // Attendance Status Section
+
+              // OT Input
               Text(
-                'ATTENDANCE STATUS',
+                'OT HOURS',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w800,
                   color: Color(0xFF64748B),
                   letterSpacing: 0.5,
                 ),
               ),
               SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildModalOptionButton(
-                      '✓',
-                      'Present',
-                      selectedAttendance == 'yes',
-                      () {
-                        setDialogState(() {
-                          selectedAttendance = 'yes';
-                        });
-                      },
-                    ),
+              TextField(
+                controller: otController,
+                decoration: InputDecoration(
+                  hintText: 'Enter hours (e.g., 2.5)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
                   ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: _buildModalOptionButton(
-                      '✗',
-                      'Absent',
-                      selectedAttendance == 'no',
-                      () {
-                        setDialogState(() {
-                          selectedAttendance = 'no';
-                        });
-                      },
-                    ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
                   ),
-                ],
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Color(0xFF3B82F6), width: 2),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  prefixIcon: Icon(Icons.access_time, color: Color(0xFF64748B)),
+                  suffixText: 'hours',
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
-              SizedBox(height: 24),
-              
-              // Overtime Section
+              SizedBox(height: 8),
               Text(
-                'OVERTIME',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF64748B),
-                  letterSpacing: 0.5,
-                ),
+                'Enter overtime hours worked on this date',
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
               ),
-              SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildModalOptionButton(
-                      '⏱',
-                      'Yes',
-                      hasOT,
-                      () {
-                        setDialogState(() {
-                          hasOT = true;
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: _buildModalOptionButton(
-                      '—',
-                      'No',
-                      !hasOT,
-                      () {
-                        setDialogState(() {
-                          hasOT = false;
-                          otHours = '';
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              
-              if (hasOT) ...[
-                SizedBox(height: 12),
-                Text(
-                  'OT Hours',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-                SizedBox(height: 8),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'e.g., 2.5',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Color(0xFF3B82F6), width: 2),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'monospace',
-                  ),
-                  onChanged: (value) {
-                    otHours = value;
-                  },
-                ),
-              ],
-              
-              SizedBox(height: 24),
-              
+
+              SizedBox(height: 32),
+
               // Action Buttons
               Row(
                 children: [
@@ -1116,17 +1341,33 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Save attendance
+                        final otText = otController.text.trim();
+                        if (otText.isNotEmpty) {
+                          final hours = double.tryParse(otText) ?? 0.0;
+                          OTHoursManager().setOTHours(
+                            emp.empId.toString(),
+                            date,
+                            hours,
+                          );
+                        } else {
+                          OTHoursManager().clearOTHours(
+                            emp.empId.toString(),
+                            date,
+                          );
+                        }
+
                         Navigator.pop(context);
+                        setState(() {}); // Refresh UI
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Attendance marked successfully'),
+                            content: Text('OT hours updated successfully'),
                             backgroundColor: Color(0xFF22C55E),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF3B82F6),
+                        backgroundColor: customcolor.blue,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -1153,7 +1394,394 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     );
   }
 
-  Widget _buildModalOptionButton(String icon, String label, bool isSelected, VoidCallback onTap) {
+  Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
+    if (isFuture || day == null) {
+      return const Color(0xFFCBD5E1); // Grey
+    }
+
+    switch (day.attendance_type) {
+      case 'P': // Present
+        return const Color(0xFF22C55E); // Green
+
+      case 'A': // Absent
+        return const Color(0xFFEF4444); // Red
+
+      case 'H': // Holiday
+        return const Color(0xFF7DD3FC); // Light Blue
+
+      case 'W': // Working on Holiday
+        return const Color(0xFF2563EB); // Dark Blue
+
+      case 'F': // Half Day
+        return const Color(0xFF4ADE80); // Semi Green
+
+      default: // Week Off
+        return const Color(0xFFCBD5E1); // Grey
+    }
+  }
+
+  Color _getAttendanceTextColor(AttendanceData? day, bool isFuture) {
+    if (isFuture || day == null) {
+      return const Color(0xFFCBD5E1); // Grey
+    }
+
+    switch (day.attendance_type) {
+      case 'P': // Present
+        return const Color(0xFF166534); // Dark Green
+
+      case 'A': // Absent
+        return const Color(0xFF991B1B); // Dark Red
+
+      case 'H': // Holiday
+        return const Color(0xFF075985); // Blue
+
+      case 'W': // Working on Holiday
+        return const Color(0xFF6B21A8); // Dark Purple
+
+      case 'F': // Half Day
+        return const Color(0xFF92400E); // Semi Brown
+
+      default: // Week Off
+        return const Color(0xFF64748B); // Neutral Grey
+    }
+  }
+
+  String _getAttendanceLabel(AttendanceData? day, bool isFuture) {
+    if (isFuture || day == null) return '';
+
+    switch (day.attendance_type) {
+      case 'P': // Present
+        return 'P';
+      case 'A': // Absent
+        return 'A';
+      case 'H': // Holiday
+        return 'H';
+      case 'W': // Working on Holiday
+        return 'W';
+      case 'F': // Half Day
+        return 'F';
+      case '': // Half Day
+        return '-';
+      default: // Week Off
+        return '';
+    }
+  }
+
+  void _showAttendanceDialog(dynamic emp, AttendanceData day, String date) {
+    String? selectedAttendance = day.attendance_type;
+
+    // Get OT hours from global storage
+    final globalOT = OTHoursManager().getOTHours(emp.empId.toString(), date);
+    bool hasOT =
+        globalOT != null || (day.ot_hours != null && day.ot_hours! > 0);
+    String otHours =
+        globalOT?.toStringAsFixed(1) ?? (hasOT ? day.ot_hours.toString() : '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Modal Handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                // Header
+                Text(
+                  'Mark Attendance',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 6),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        emp.empName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF3B82F6),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(' • ', style: TextStyle(color: Color(0xFF64748B))),
+                    Text(
+                      DateFormat('EEE, MMM d').format(DateTime.parse(date)),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24),
+
+                // Attendance Status Section
+                Text(
+                  'ATTENDANCE STATUS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '✓',
+                        'Present',
+                        selectedAttendance == 'yes',
+                        () {
+                          setDialogState(() {
+                            selectedAttendance = 'yes';
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '✗',
+                        'Absent',
+                        selectedAttendance == 'no',
+                        () {
+                          setDialogState(() {
+                            selectedAttendance = 'no';
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '◐',
+                        'Half Day',
+                        selectedAttendance == 'halfday',
+                        () {
+                          setDialogState(() {
+                            selectedAttendance = 'halfday';
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '📅',
+                        'Leave',
+                        selectedAttendance == 'leave',
+                        () {
+                          setDialogState(() {
+                            selectedAttendance = 'leave';
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24),
+
+                // Overtime Section
+                Text(
+                  'OVERTIME',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton('⏱', 'Yes', hasOT, () {
+                        setDialogState(() {
+                          hasOT = true;
+                        });
+                      }),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton('—', 'No', !hasOT, () {
+                        setDialogState(() {
+                          hasOT = false;
+                          otHours = '';
+                        });
+                      }),
+                    ),
+                  ],
+                ),
+
+                if (hasOT) ...[
+                  SizedBox(height: 12),
+                  Text(
+                    'OT Hours',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                  ),
+                  SizedBox(height: 8),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'e.g., 2.5',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFF3B82F6),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    controller: TextEditingController(text: otHours),
+                    onChanged: (value) {
+                      otHours = value;
+                    },
+                  ),
+                ],
+
+                SizedBox(height: 24),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFF1F5F9),
+                          foregroundColor: Color(0xFF0F172A),
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Save OT hours to global storage
+                          if (hasOT && otHours.isNotEmpty) {
+                            final hours = double.tryParse(otHours) ?? 0.0;
+                            OTHoursManager().setOTHours(
+                              emp.empId.toString(),
+                              date,
+                              hours,
+                            );
+                          } else {
+                            OTHoursManager().clearOTHours(
+                              emp.empId.toString(),
+                              date,
+                            );
+                          }
+
+                          Navigator.pop(context);
+                          setState(() {}); // Refresh UI
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Attendance marked successfully'),
+                              backgroundColor: Color(0xFF22C55E),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: customcolor.blue,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Save',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalOptionButton(
+    String icon,
+    String label,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1168,12 +1796,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         ),
         child: Column(
           children: [
-            Text(
-              icon,
-              style: TextStyle(
-                fontSize: 22,
-              ),
-            ),
+            Text(icon, style: TextStyle(fontSize: 22)),
             SizedBox(height: 6),
             Text(
               label,
@@ -1190,66 +1813,530 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   }
 
   void _showBulkMarkingDialog() {
-    // Implementation for bulk marking
+    if (selectedEmployees.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select at least one employee'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+      return;
+    }
+
+    // Reset bulk selection state
+    selectedDates.clear();
+    bulkAttendanceStatus = null;
+    bulkHasOT = false;
+    bulkOTHours = '';
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                // Header
+                Text(
+                  'Bulk Mark Attendance',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 8),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF3E8FF),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${selectedEmployees.length} employee${selectedEmployees.length != 1 ? 's' : ''} selected',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6B21A8),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24),
+
+                // Multi-Date Selection
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'SELECT DATES',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    if (selectedDates.isNotEmpty)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Color(0xFFDBEAFE),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${selectedDates.length} date${selectedDates.length != 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF3B82F6),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(height: 12),
+
+                // Date selection buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDateSelectionButton(
+                        'Pick Dates',
+                        Icons.calendar_today,
+                        () => _showMultiDatePicker(context, setDialogState),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildDateSelectionButton(
+                        'Date Range',
+                        Icons.date_range,
+                        () => _showDateRangePicker(context, setDialogState),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Show selected dates
+                if (selectedDates.isNotEmpty) ...[
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Color(0xFFE2E8F0)),
+                    ),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children:
+                          (selectedDates.toList()
+                                ..sort((a, b) => a.compareTo(b)))
+                              .map<Widget>((date) {
+                                return Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF3B82F6),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        DateFormat(
+                                          'MMM d',
+                                        ).format(DateTime.parse(date)),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(width: 6),
+                                      GestureDetector(
+                                        onTap: () {
+                                          setDialogState(() {
+                                            selectedDates.remove(date);
+                                          });
+                                        },
+                                        child: Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              })
+                              .toList(),
+                    ),
+                  ),
+                ],
+
+                SizedBox(height: 24),
+
+                // Attendance Status
+                Text(
+                  'ATTENDANCE STATUS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '✓',
+                        'Present',
+                        bulkAttendanceStatus == 'yes',
+                        () {
+                          setDialogState(() {
+                            bulkAttendanceStatus = 'yes';
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '✗',
+                        'Absent',
+                        bulkAttendanceStatus == 'no',
+                        () {
+                          setDialogState(() {
+                            bulkAttendanceStatus = 'no';
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '◐',
+                        'Half Day',
+                        bulkAttendanceStatus == 'halfday',
+                        () {
+                          setDialogState(() {
+                            bulkAttendanceStatus = 'halfday';
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '📅',
+                        'Leave',
+                        bulkAttendanceStatus == 'leave',
+                        () {
+                          setDialogState(() {
+                            bulkAttendanceStatus = 'leave';
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24),
+
+                // Overtime Section
+                Text(
+                  'OVERTIME',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton('⏱', 'Yes', bulkHasOT, () {
+                        setDialogState(() {
+                          bulkHasOT = true;
+                        });
+                      }),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton('—', 'No', !bulkHasOT, () {
+                        setDialogState(() {
+                          bulkHasOT = false;
+                          bulkOTHours = '';
+                        });
+                      }),
+                    ),
+                  ],
+                ),
+
+                if (bulkHasOT) ...[
+                  SizedBox(height: 12),
+                  Text(
+                    'OT Hours (Same for all selected dates)',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                  ),
+                  SizedBox(height: 8),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'e.g., 2.5',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFF3B82F6),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.access_time,
+                        color: Color(0xFF64748B),
+                      ),
+                      suffixText: 'hours',
+                    ),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    onChanged: (value) {
+                      bulkOTHours = value;
+                    },
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Note: This OT value will be applied to all selected dates',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF94A3B8),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+
+                SizedBox(height: 24),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFF1F5F9),
+                          foregroundColor: Color(0xFF0F172A),
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Validation
+                          if (selectedDates.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Please select at least one date',
+                                ),
+                                backgroundColor: Color(0xFFEF4444),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (bulkAttendanceStatus == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Please select attendance status',
+                                ),
+                                backgroundColor: Color(0xFFEF4444),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (bulkHasOT && bulkOTHours.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please enter OT hours'),
+                                backgroundColor: Color(0xFFEF4444),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Apply bulk marking
+                          final hours = bulkHasOT && bulkOTHours.isNotEmpty
+                              ? (double.tryParse(bulkOTHours) ?? 0.0)
+                              : 0.0;
+
+                          int successCount = 0;
+
+                          for (var empId in selectedEmployees) {
+                            for (var date in selectedDates) {
+                              // Save OT hours if applicable
+                              if (bulkHasOT && hours > 0) {
+                                OTHoursManager().setOTHours(empId, date, hours);
+                                successCount++;
+                              } else {
+                                // Clear OT hours if not selected
+                                OTHoursManager().clearOTHours(empId, date);
+                                successCount++;
+                              }
+                            }
+                          }
+
+                          print(
+                            ' Bulk apply completed: $successCount operations',
+                          );
+                          OTHoursManager().printAllOTData();
+
+                          Navigator.pop(context);
+                          setState(() {
+                            isBulkMode = false;
+                            selectedEmployees.clear();
+                          });
+
+                          // Show success message
+                          final employeeCount = selectedEmployees.length;
+                          final dateCount = selectedDates.length;
+
+                          String message =
+                              'Marked $employeeCount employee${employeeCount != 1 ? 's' : ''} for $dateCount date${dateCount != 1 ? 's' : ''}';
+                          if (bulkHasOT && hours > 0) {
+                            message += ' with ${hours.toStringAsFixed(1)}h OT';
+                          }
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(message),
+                              backgroundColor: Color(0xFF22C55E),
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: customcolor.blue,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Apply to All',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+              ],
+            ),
           ),
         ),
-        padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      ),
+    );
+  }
+
+  Widget _buildDateSelectionButton(
+    String label,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        decoration: BoxDecoration(
+          color: Color(0xFFF8FAFC),
+          border: Border.all(color: Color(0xFFE2E8F0), width: 2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            Icon(icon, color: Color(0xFF3B82F6), size: 18),
+            SizedBox(width: 8),
             Text(
-              'Bulk Operations',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '${selectedEmployees.length} employees selected',
+              label,
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0F172A),
               ),
-            ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  isBulkMode = false;
-                  selectedEmployees.clear();
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF3B82F6),
-                minimumSize: Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text('Apply to All', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -1257,20 +2344,660 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     );
   }
 
-  // Keep all your existing API methods
-  _submitAttendaceRosterfinal(dynamic selectedShift) async {
-    // ... existing implementation
+  void _showMultiDatePicker(
+    BuildContext context,
+    StateSetter setDialogState,
+  ) async {
+    final currentYear = int.parse(year);
+    final currentMonth = int.parse(month);
+
+    // Get available dates from the current month
+    final firstDay = DateTime(currentYear, currentMonth, 1);
+    final lastDay = DateTime(currentYear, currentMonth + 1, 0);
+    final today = DateTime.now();
+
+    final availableDates = <DateTime>[];
+    for (var i = 1; i <= lastDay.day; i++) {
+      final date = DateTime(currentYear, currentMonth, i);
+      if (!date.isAfter(today)) {
+        availableDates.add(date);
+      }
+    }
+
+    final tempSelectedDates = Set<String>.from(selectedDates);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setPickerState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Handle
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(top: 12, bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                // Header
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Select Multiple Dates',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            '${monthNames[currentMonth]} $currentYear - Tap to select/deselect',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (tempSelectedDates.isNotEmpty)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF3B82F6),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${tempSelectedDates.length}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 20),
+
+                // Weekday headers
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day) {
+                      return Container(
+                        width:
+                            (MediaQuery.of(context).size.width - 48 - 42) / 7,
+                        child: Center(
+                          child: Text(
+                            day,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+
+                SizedBox(height: 12),
+
+                // Date grid
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 7,
+                          crossAxisSpacing: 6,
+                          mainAxisSpacing: 6,
+                          childAspectRatio: 1.0,
+                        ),
+                        itemCount: availableDates.length,
+                        itemBuilder: (context, index) {
+                          final date = availableDates[index];
+                          final dateStr = DateFormat('yyyy-MM-dd').format(date);
+                          final isSelected = tempSelectedDates.contains(
+                            dateStr,
+                          );
+                          final isToday =
+                              DateFormat('yyyy-MM-dd').format(DateTime.now()) ==
+                              dateStr;
+                          final isWeekend =
+                              date.weekday == 6 || date.weekday == 7;
+
+                          return InkWell(
+                            onTap: () {
+                              setPickerState(() {
+                                if (isSelected) {
+                                  tempSelectedDates.remove(dateStr);
+                                } else {
+                                  tempSelectedDates.add(dateStr);
+                                }
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Color(0xFF3B82F6)
+                                    : isToday
+                                    ? Color(0xFFDBEAFE)
+                                    : isWeekend
+                                    ? Color(0xFFFEF2F2)
+                                    : Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Color(0xFF3B82F6)
+                                      : isToday
+                                      ? Color(0xFF3B82F6).withOpacity(0.3)
+                                      : Color(0xFFE2E8F0),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  date.day.toString(),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: isSelected || isToday
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : isToday
+                                        ? Color(0xFF3B82F6)
+                                        : Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Action buttons
+                Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFF1F5F9),
+                            foregroundColor: Color(0xFF0F172A),
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setDialogState(() {
+                              selectedDates = tempSelectedDates;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: customcolor.blue,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Done (${tempSelectedDates.length})',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
-  _rejectAttendaceRoster(Map<String, dynamic> apiData) async {
-    // ... existing implementation
+  void _showDateRangePicker(
+    BuildContext context,
+    StateSetter setDialogState,
+  ) async {
+    final currentYear = int.parse(year);
+    final currentMonth = int.parse(month);
+    final today = DateTime.now();
+
+    final result = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(currentYear, currentMonth, 1),
+      lastDate: today,
+      initialDateRange: null,
+      helpText: 'Select Date Range',
+      cancelText: 'Cancel',
+      confirmText: 'Done',
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: customcolor.blue,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF0F172A),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: customcolor.blue,
+                textStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (result != null) {
+      setDialogState(() {
+        selectedDates.clear();
+
+        // Add all dates in the range
+        DateTime current = result.start;
+        while (current.isBefore(result.end) ||
+            current.isAtSameMomentAs(result.end)) {
+          selectedDates.add(DateFormat('yyyy-MM-dd').format(current));
+          current = current.add(Duration(days: 1));
+        }
+      });
+
+      // Show confirmation snackbar
+      final daysCount = selectedDates.length;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Selected $daysCount date${daysCount != 1 ? 's' : ''} from ${DateFormat('MMM d').format(result.start)} to ${DateFormat('MMM d').format(result.end)}',
+          ),
+          backgroundColor: Color(0xFF3B82F6),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+    }
   }
 
-  _approveAttendaceRoster(Map<String, dynamic> apiData) async {
-    // ... existing implementation
+  // NEW: Month Picker
+  void _showMonthPicker(BuildContext context, int currentMonth) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+
+      builder: (context) => Container(
+        height: _isLandscap ? 280 : 350,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: SafeArea(
+          // top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(top: 12, bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Month',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: Color(0xFF64748B)),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 8),
+
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: 12,
+                  itemBuilder: (context, index) {
+                    final monthIndex = index + 1;
+                    final monthName = monthNames[monthIndex];
+                    final monthNameShort = monthNamesShort[monthIndex];
+                    final isSelected = monthIndex == currentMonth;
+                    final isCurrentMonth =
+                        monthIndex == DateTime.now().month &&
+                        selectedYear == DateTime.now().year;
+
+                    return InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          selectedMonthIndex = monthIndex;
+                          _reloadDataForMonth(selectedMonthIndex!);
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Color(0xFFEFF6FF)
+                              : Colors.transparent,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Color(0xFFE2E8F0),
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  monthName,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? Color(0xFF3B82F6)
+                                        : Color(0xFF0F172A),
+                                  ),
+                                ),
+                                if (isCurrentMonth) ...[
+                                  SizedBox(width: 8),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF22C55E),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      'Current',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            Text(
+                              monthNameShort,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF64748B),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF3B82F6),
+                                size: 24,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  _submitAttendaceRoster(Map<String, dynamic>? apiData) async {
-    // ... existing implementation
+  void _showYearPicker(BuildContext context, int currentYear) {
+    final currentYearNow = DateTime.now().year;
+    final years = List.generate(
+      currentYearNow - 2023 + 2,
+      (index) => 2023 + index,
+    ).reversed.toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: _isLandscap ? 350 : 350,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: EdgeInsets.only(top: 12, bottom: 16),
+                decoration: BoxDecoration(
+                  color: Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Select Year',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Color(0xFF64748B)),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 8),
+
+            Expanded(
+              // constraints: BoxConstraints(maxHeight: 400),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: years.length,
+                itemBuilder: (context, index) {
+                  final year = years[index];
+                  final isSelected = year == currentYear;
+                  final isCurrent = year == currentYearNow;
+
+                  return InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      setState(() {
+                        this.year = year.toString();
+                        selectedYear = year;
+                        _reloadDataForMonth(selectedMonthIndex!);
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Color(0xFFEFF6FF)
+                            : Colors.transparent,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color(0xFFE2E8F0),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                year.toString(),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? Color(0xFF3B82F6)
+                                      : Color(0xFF0F172A),
+                                ),
+                              ),
+                              if (isCurrent) ...[
+                                SizedBox(width: 8),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF22C55E),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'Current',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (isSelected)
+                            Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF3B82F6),
+                              size: 24,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -106,6 +106,7 @@ class AttendanceData {
   final String? client_approval_status;
   final bool? act_deact_janitor;
     final int? ot_hours;
+  final String?attendance_type;
 
 
   final String? statusPresentAbsent;
@@ -122,12 +123,15 @@ class AttendanceData {
     this.attendanceId,
      this.act_deact_janitor,
      this.ot_hours,
+     this.attendance_type,
   });
 
   factory AttendanceData.fromJson(Map<String, dynamic> json) {
     return AttendanceData(
       date: json['date'] ?? '',
       attendanceStatus: json['attendance_status'] ?? '',
+      attendance_type: json['attendance_type'] ?? '',
+
         ot_hours: json['ot_hours'] ?? 0,
       reason: json['reason'],
       om_oe_resson: json['om_oe_resson'],
