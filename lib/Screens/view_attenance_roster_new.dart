@@ -1,16 +1,22 @@
 // ignore_for_file: unnecessary_null_comparison, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, must_be_immutable, prefer_typing_uninitialized_variables, use_key_in_widget_constructors, library_private_types_in_public_api, curly_braces_in_flow_control_structures, prefer_conditional_assignment, unused_element
+import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:janpro/Screens/Attendance.dart';
+import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
+import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
+import 'package:janpro/model/SubmitAttendanceRooster.dart';
 import 'package:janpro/model/attendance_roster_response.dart';
 import 'package:flutter/services.dart';
 
@@ -106,6 +112,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   String? bulkSelectedDate;
   String? bulkAttendanceStatus;
   bool bulkHasOT = false;
+  bool _isreasonshow = false;
   String bulkOTHours = '';
   final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
 
@@ -288,11 +295,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   @override
   Widget build(BuildContext context) {
     if (!mounted || context == null || _attendanceRosterData.isEmpty)
-         return Scaffold(
-            backgroundColor: Color(0xFFFAFBFC),
-
-    
-    );
+      return Scaffold(backgroundColor: Color(0xFFFAFBFC));
 
     String getMonthYear(String date) {
       final parts = date.split('-');
@@ -423,333 +426,431 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         ),
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            // Header with dark background
-            Container(
-              decoration: BoxDecoration(
-                // color: customcolor.blue,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top header with title and month navigation
-                  Padding(
-                    padding: EdgeInsets.all(16),
+            Column(
+              children: [
+                // Header with dark background
+                Container(
+                  decoration: BoxDecoration(
+                    // color: customcolor.blue,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top header with title and month navigation
+                      Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.arrow_back, color: Colors.black),
+                                  onPressed: () => Navigator.pop(context),
+                                  padding: EdgeInsets.zero,
+                                  constraints: BoxConstraints(),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Team Roster',
+                                  style: AppFonts.headerStyle(
+                                    fontSize: ResponsiveFlutter.of(
+                                      context,
+                                    ).fontSize(2.3),
+                                    // color: customcolor.white,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ],
+                            ),
+            
+                            Row(
+                              children: [
+                                // Month Dropdown
+                                GestureDetector(
+                                  onTap: () => _showMonthPicker(
+                                    context,
+                                    selectedMonthIndex ?? int.parse(month),
+                                  ),
+                                  child: Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+            
+                                    elevation: 1,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+            
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            monthNamesShort[selectedMonthIndex ??
+                                                int.parse(month)],
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Icon(
+                                            Icons.arrow_drop_down,
+                                            color: customcolor.blue,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                // Year Dropdown
+                                GestureDetector(
+                                  onTap: () => _showYearPicker(
+                                    context,
+                                    selectedYear ?? int.parse(year),
+                                  ),
+                                  child: Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      // decoration: BoxDecoration(
+                                      //   color: Colors.white,
+                                      //   borderRadius: BorderRadius.circular(8),
+                                      //   border: Border.all(
+                                      //     color: Colors.white.withOpacity(0.3),
+                                      //     width: 1,
+                                      //   ),
+                                      // ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '${selectedYear ?? int.parse(year)}',
+                                            style: TextStyle(
+                                              // color: Colors.white,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Icon(
+                                            Icons.arrow_drop_down,
+                                            color: customcolor.blue,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      selectedShift?.employeeList?.isEmpty
+                          ? SizedBox()
+                          : Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Row(
+                                children: [
+                                  !_isLandscap
+                                      ? ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: customcolor.blue,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                12,
+                                              ),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _isLandscap = true;
+                                            });
+                                            SystemChrome.setPreferredOrientations([
+                                              DeviceOrientation.landscapeLeft,
+                                              DeviceOrientation.landscapeRight,
+                                            ]);
+                                          },
+                                          child: const Text('Landscape'),
+                                        )
+                                      : SizedBox(),
+            
+                                  const SizedBox(width: 12),
+                                  _isLandscap
+                                      ? ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: customcolor.blue,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                12,
+                                              ),
+                                            ),
+                                          ),
+            
+                                          onPressed: () {
+                                            setState(() {
+                                              _isLandscap = false;
+                                            });
+                                            SystemChrome.setPreferredOrientations([
+                                              DeviceOrientation.portraitUp,
+                                            ]);
+                                          },
+                                          child: const Text('Portrait'),
+                                        )
+                                      : SizedBox(),
+                                ],
+                              ),
+                            ),
+                      // Stats bar
+                      _isLandscap || selectedShift?.employeeList?.isEmpty
+                          ? SizedBox()
+                          : Container(
+                              padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    _buildStatChip(
+                                      '$presentCount',
+                                      'Present',
+                                      Color(0xFF22C55E),
+                                    ),
+                                    SizedBox(width: 10),
+                                    _buildStatChip(
+                                      '$absentCount',
+                                      'Absent',
+                                      Color(0xFFEF4444),
+                                    ),
+                                    // SizedBox(width: 10),
+                                    //  _buildStatChip('$absentCount', 'Holiday',Color(0xFFEF4444)),
+                                    SizedBox(width: 10),
+                                    _buildStatChip(
+                                      '$hoildayCount',
+                                      'Holiday',
+                                      Color(0xFF7DD3FC),
+                                    ),
+                                    SizedBox(width: 10),
+                                    _buildStatChip(
+                                      '$whoildayCount',
+                                      'Working Holiday',
+                                      Color(0xFF2563EB),
+                                    ),
+                                    SizedBox(width: 10),
+                                    _buildStatChip(
+                                      '$hlfdayCount',
+                                      'Halfday',
+                                      Color(0xFF4ADE80),
+                                    ),
+                                    SizedBox(width: 10),
+            
+                                    _buildStatChip(
+                                      '${otHours.toStringAsFixed(1)}',
+                                      'OT Hrs',
+                                      Color(0xFF8B5CF6),
+                                    ),
+                                    SizedBox(width: 10),
+                                  ],
+                                ),
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
+            
+                // Bulk Mode Banner
+                if (isBulkMode)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [customcolor.blue, Color(0xFFA855F7)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: customcolor.blue.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            IconButton(
-                              icon: Icon(Icons.arrow_back, color: Colors.black),
-                              onPressed: () => Navigator.pop(context),
-                              padding: EdgeInsets.zero,
-                              constraints: BoxConstraints(),
+                            Text(
+                              '✓',
+                              style: TextStyle(color: Colors.white, fontSize: 18),
                             ),
                             SizedBox(width: 12),
-                            Text(
-                              'Team Roster',
-                              style: AppFonts.headerStyle(
-                                fontSize: ResponsiveFlutter.of(
-                                  context,
-                                ).fontSize(2.3),
-                                // color: customcolor.white,
-                                fontWeight: FontWeight.w300,
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '${selectedEmployees.length} employee${selectedEmployees.length != 1 ? 's' : ''}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ],
                         ),
-
                         Row(
                           children: [
-                            // Month Dropdown
-                            GestureDetector(
-                              onTap: () => _showMonthPicker(
-                                context,
-                                selectedMonthIndex ?? int.parse(month),
-                              ),
-                              child: Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-
-                                elevation: 1,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        monthNamesShort[selectedMonthIndex ??
-                                            int.parse(month)],
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(width: 4),
-                                      Icon(
-                                        Icons.arrow_drop_down,
-                                        color: customcolor.blue,
-                                        size: 18,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                            _buildBulkButton('Cancel', false),
                             SizedBox(width: 8),
-                            // Year Dropdown
-                            GestureDetector(
-                              onTap: () => _showYearPicker(
-                                context,
-                                selectedYear ?? int.parse(year),
-                              ),
-                              child: Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  // decoration: BoxDecoration(
-                                  //   color: Colors.white,
-                                  //   borderRadius: BorderRadius.circular(8),
-                                  //   border: Border.all(
-                                  //     color: Colors.white.withOpacity(0.3),
-                                  //     width: 1,
-                                  //   ),
-                                  // ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '${selectedYear ?? int.parse(year)}',
-                                        style: TextStyle(
-                                          // color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(width: 4),
-                                      Icon(
-                                        Icons.arrow_drop_down,
-                                        color: customcolor.blue,
-                                        size: 18,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
+                            _buildBulkButton('Mark', true),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  selectedShift?.employeeList?.isEmpty
-                      ? SizedBox()
-                      : Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Row(
+            
+                // Employee Cards
+                Expanded(
+                  child: selectedShift?.employeeList?.isEmpty ?? true
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                          ! _isLandscap?  ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: customcolor.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                              Icon(
+                                Icons.people_outline,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                "No janitor assigned",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isLandscap = true;
-                                  });
-                                  SystemChrome.setPreferredOrientations([
-                                    DeviceOrientation.landscapeLeft,
-                                    DeviceOrientation.landscapeRight,
-                                  ]);
-                                },
-                                child: const Text('Landscape'),
-                              ):SizedBox(),
-
-                              const SizedBox(width: 12),
-                           _isLandscap?   ElevatedButton(
-                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: customcolor.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                
-                                onPressed: () {
-                                  setState(() {
-                                    _isLandscap = false;
-                                  });
-                                  SystemChrome.setPreferredOrientations([
-                                    DeviceOrientation.portraitUp,
-                                  ]);
-                                },
-                                child: const Text('Portrait'),
-                              ):SizedBox(),
+                              ),
                             ],
                           ),
+                        )
+                      : ListView.builder(
+                          padding: EdgeInsets.only(top: 12, bottom: 80),
+                          itemCount: selectedShift?.employeeList?.length ?? 0,
+                          itemBuilder: (context, index) {
+                            final emp = selectedShift.employeeList[index];
+                            final isSelected = selectedEmployees.contains(
+                              emp.empId.toString(),
+                            );
+            
+                            return _buildEmployeeCard(emp, isSelected);
+                          },
                         ),
-                  // Stats bar
-                  _isLandscap || selectedShift?.employeeList?.isEmpty
-                      ? SizedBox()
-                      : Container(
-                          padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _buildStatChip(
-                                  '$presentCount',
-                                  'Present',
-                                  Color(0xFF22C55E),
-                                ),
-                                SizedBox(width: 10),
-                                _buildStatChip(
-                                  '$absentCount',
-                                  'Absent',
-                                  Color(0xFFEF4444),
-                                ),
-                                // SizedBox(width: 10),
-                                //  _buildStatChip('$absentCount', 'Holiday',Color(0xFFEF4444)),
-                                SizedBox(width: 10),
-                                _buildStatChip(
-                                  '$hoildayCount',
-                                  'Holiday',
-                                  Color(0xFF7DD3FC),
-                                ),
-                                SizedBox(width: 10),
-                                _buildStatChip(
-                                  '$whoildayCount',
-                                  'Working Holiday',
-                                  Color(0xFF2563EB),
-                                ),
-                                SizedBox(width: 10),
-                                _buildStatChip(
-                                  '$hlfdayCount',
-                                  'Halfday',
-                                  Color(0xFF4ADE80),
-                                ),
-                                SizedBox(width: 10),
-
-                                _buildStatChip(
-                                  '${otHours.toStringAsFixed(1)}',
-                                  'OT Hrs',
-                                  Color(0xFF8B5CF6),
-                                ),
-                                SizedBox(width: 10),
-                              ],
-                            ),
-                          ),
-                        ),
-                ],
-              ),
-            ),
-
-            // Bulk Mode Banner
-            if (isBulkMode)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [customcolor.blue, Color(0xFFA855F7)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: customcolor.blue.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '✓',
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                        SizedBox(width: 12),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
+              ],
+            ),
+         
+              // if (selectedCells.isNotEmpty &&
+              //     multiSelectMode &&
+              //     _allSelectedHaveSameStatus())
+              //   SizedBox(height: 10),
+              selectedShift?.employeeList.isEmpty ||
+                      selectedShift?.employeeList.length == 0
+                  ? SizedBox()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 8,bottom: 12),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: ElevatedButton(
+                          onPressed: () {
+                        
+                            selectedShift?.is_month_end == 1 &&
+                                    selectedShift?.is_final_submitted == false &&
+                                    selectedCells.isEmpty &&
+                                    !multiSelectMode &&
+                                    role == GlobalLists.clientrole &&
+                                    selectedShift.review_updated_by_oe_om ==
+                                        false &&
+                                    selectedShift.review_updated_by_client ==
+                                        false
+                                ? _submitAttendaceRosterfinal(
+                                    selectedShift.id.toString(),
+                                  )
+                                // :
+                                //  selectedCells.isNotEmpty && multiSelectMode
+                                // ? _showReasonDialog(isMultiSelect: true)
+                                : Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ViewRemarkAttendance(
+                                        month: month,
+                                        year: year,
+                                        attendancesiteid: attendancesiteid,
+                                        clientid: attendanceclientid,
+                                        manTag: maintag,
+                                        shiftId: selectedShift?.id,
+                                      ),
+                                    ),
+                                  );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                            role==GlobalLists.supervisorrole?customcolor.blue:
+                                selectedShift?.is_month_end == 1 &&
+                                    selectedShift?.is_final_submitted == true
+                                ? Colors.grey
+                                : customcolor.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            minimumSize: Size(double.infinity, 48),
                           ),
                           child: Text(
-                            '${selectedEmployees.length} employee${selectedEmployees.length != 1 ? 's' : ''}',
+                            selectedShift?.is_month_end == 1 &&
+                                    selectedShift?.is_final_submitted == true
+                                ? "View Finalize Roster"
+                                : selectedCells.isNotEmpty && multiSelectMode
+                                ? "Report Discrepancy"
+                                : role == GlobalLists.clientrole &&
+                                      selectedShift?.review_updated_by_oe_om ==
+                                          false &&
+                                      selectedShift.review_updated_by_client ==
+                                          false
+                                ? "Approve Roster"
+                                : role == GlobalLists.clientrole &&
+                                      selectedShift?.review_updated_by_oe_om ==
+                                          true
+                                ? "Review Updates"
+                                : "Review Discrepancy",
                             style: TextStyle(
+                              fontFamily: AppFonts.semibold,
+                              fontSize: 16,
                               color: Colors.white,
-                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        _buildBulkButton('Cancel', false),
-                        SizedBox(width: 8),
-                        _buildBulkButton('Mark', true),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-            // Employee Cards
-            Expanded(
-              child: selectedShift?.employeeList?.isEmpty ?? true
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            "No janitor assigned",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
                       ),
-                    )
-                  : ListView.builder(
-                      padding: EdgeInsets.only(top: 12, bottom: 80),
-                      itemCount: selectedShift?.employeeList?.length ?? 0,
-                      itemBuilder: (context, index) {
-                        final emp = selectedShift.employeeList[index];
-                        final isSelected = selectedEmployees.contains(
-                          emp.empId.toString(),
-                        );
-
-                        return _buildEmployeeCard(emp, isSelected);
-                      },
                     ),
-            ),
+          
+         
+         
+         
           ],
         ),
       ),
@@ -1195,6 +1296,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     );
   }
 
+  final reasonController = TextEditingController();
+
   void _showOTDialog(
     dynamic emp,
     AttendanceData day,
@@ -1340,7 +1443,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                   SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        final reason = reasonController.text.trim();
                         final otText = otController.text.trim();
                         if (otText.isNotEmpty) {
                           final hours = double.tryParse(otText) ?? 0.0;
@@ -1355,6 +1459,12 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             date,
                           );
                         }
+                        //        final apiData = _prepareApiData(
+                        //   reason,
+                        //   selectedCells.toList(),
+                        //   'submit', // Action type
+                        // );
+                        //   await _submitAttendaceRoster(apiData);
 
                         Navigator.pop(context);
                         setState(() {}); // Refresh UI
@@ -1469,6 +1579,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
   void _showAttendanceDialog(dynamic emp, AttendanceData day, String date) {
     String? selectedAttendance = day.attendance_type;
+    _isreasonshow = false;
 
     // Get OT hours from global storage
     final globalOT = OTHoursManager().getOTHours(emp.empId.toString(), date);
@@ -1561,6 +1672,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         selectedAttendance == 'yes',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             selectedAttendance = 'yes';
                           });
                         },
@@ -1574,6 +1686,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         selectedAttendance == 'no',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             selectedAttendance = 'no';
                           });
                         },
@@ -1591,6 +1704,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         selectedAttendance == 'halfday',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             selectedAttendance = 'halfday';
                           });
                         },
@@ -1604,6 +1718,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         selectedAttendance == 'leave',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             selectedAttendance = 'leave';
                           });
                         },
@@ -1611,90 +1726,42 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     ),
                   ],
                 ),
-                SizedBox(height: 24),
 
-                // Overtime Section
-                Text(
-                  'OVERTIME',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildModalOptionButton('⏱', 'Yes', hasOT, () {
-                        setDialogState(() {
-                          hasOT = true;
-                        });
-                      }),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: _buildModalOptionButton('—', 'No', !hasOT, () {
-                        setDialogState(() {
-                          hasOT = false;
-                          otHours = '';
-                        });
-                      }),
-                    ),
-                  ],
-                ),
+                !_isreasonshow
+                    ? SizedBox()
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 24),
 
-                if (hasOT) ...[
-                  SizedBox(height: 12),
-                  Text(
-                    'OT Hours',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'e.g., 2.5',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Color(0xFFE2E8F0),
-                          width: 2,
-                        ),
+                          Text(
+                            'REASON',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          TextFormField(
+                            maxLines: 3,
+                          controller: reasonController,
+                            decoration: InputDecoration(
+                              hintText: 'Enter reason',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              // attendanceReason = value;
+                            },
+                          ),
+                        ],
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Color(0xFFE2E8F0),
-                          width: 2,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Color(0xFF3B82F6),
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    controller: TextEditingController(text: otHours),
-                    onChanged: (value) {
-                      otHours = value;
-                    },
-                  ),
-                ],
 
                 SizedBox(height: 24),
 
-                // Action Buttons
                 Row(
                   children: [
                     Expanded(
@@ -1721,32 +1788,75 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Save OT hours to global storage
-                          if (hasOT && otHours.isNotEmpty) {
-                            final hours = double.tryParse(otHours) ?? 0.0;
-                            OTHoursManager().setOTHours(
-                              emp.empId.toString(),
-                              date,
-                              hours,
+                        onPressed: () async {
+                          if (selectedAttendance == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Please select attendance status',
+                                ),
+                                backgroundColor: Color(0xFFEF4444),
+                              ),
                             );
-                          } else {
-                            OTHoursManager().clearOTHours(
-                              emp.empId.toString(),
-                              date,
-                            );
+                            return;
                           }
 
-                          Navigator.pop(context);
-                          setState(() {}); // Refresh UI
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Attendance marked successfully'),
-                              backgroundColor: Color(0xFF22C55E),
-                            ),
+                          // Get OT hours from global storage
+                          final otHours = OTHoursManager().getOTHours(
+                            emp.empId.toString(),
+                            date,
                           );
+
+                          // Prepare API data for single attendance
+                          final attendanceEntry = {
+                            "date": date,
+                            "attendance_status": selectedAttendance,
+                            "emp_id": emp.empId,
+                            "reason": reasonController.text.trim(),
+                            "attendance_type":_convertAttendanceTypeToAPI(
+                              selectedAttendance),
+                            
+                          };
+
+                          // Add OT hours if present
+                          if (otHours != null && otHours > 0) {
+                            attendanceEntry["ot_hours"] = otHours
+                                .toStringAsFixed(1);
+                          }
+
+                          // Get shift ID from the employee's data
+                          // var shiftId = '';
+                          // if (_attendanceRosterData.isNotEmpty &&
+                          //     _attendanceRosterData[0] != null) {
+                          //   shiftId =
+                          //       _attendanceRosterData[0].shiftId?.toString() ??
+                          //       '';
+                          // }
+
+                        
+
+                          final apiData = {
+                            'site_id': attendancesiteid.toString(),
+                            'to_date': date,
+                            'shift': shiftId,
+                            'emp_id': [attendanceEntry],
+                            'roster_image': '',
+                            'user_id': attendanceclientid,
+                            'client_id': attendanceclientid,
+                            'month': month,
+                            'year': year,
+                            'ot_hours': otHours != null
+                                ? otHours.toStringAsFixed(1)
+                                : '',
+                          };
+
+
+                          Navigator.pop(context);
+
+                          // Submit to API
+                          await _submitAttendaceRoster(apiData);
                         },
+
                         style: ElevatedButton.styleFrom(
                           backgroundColor: customcolor.blue,
                           foregroundColor: Colors.white,
@@ -1828,6 +1938,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     bulkAttendanceStatus = null;
     bulkHasOT = false;
     bulkOTHours = '';
+    _isreasonshow = false;
 
     showModalBottomSheet(
       context: context,
@@ -2023,6 +2134,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         bulkAttendanceStatus == 'yes',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             bulkAttendanceStatus = 'yes';
                           });
                         },
@@ -2036,6 +2148,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         bulkAttendanceStatus == 'no',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             bulkAttendanceStatus = 'no';
                           });
                         },
@@ -2053,6 +2166,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         bulkAttendanceStatus == 'halfday',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             bulkAttendanceStatus = 'halfday';
                           });
                         },
@@ -2066,6 +2180,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         bulkAttendanceStatus == 'leave',
                         () {
                           setDialogState(() {
+                            _isreasonshow = true;
                             bulkAttendanceStatus = 'leave';
                           });
                         },
@@ -2073,6 +2188,39 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     ),
                   ],
                 ),
+
+                !_isreasonshow
+                    ? SizedBox()
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 24),
+
+                          Text(
+                            'REASON',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          TextFormField(
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              hintText: 'Enter reason',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              // attendanceReason = value;
+                            },
+                          ),
+                        ],
+                      ),
+
                 SizedBox(height: 24),
 
                 // Overtime Section
@@ -2196,7 +2344,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           // Validation
                           if (selectedDates.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -2232,55 +2380,76 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             return;
                           }
 
-                          // Apply bulk marking
+                          // Apply bulk marking and save to global storage
                           final hours = bulkHasOT && bulkOTHours.isNotEmpty
                               ? (double.tryParse(bulkOTHours) ?? 0.0)
                               : 0.0;
 
-                          int successCount = 0;
+                          // Prepare bulk attendance entries
+                          List<Map<String, dynamic>> attendanceEntries = [];
 
                           for (var empId in selectedEmployees) {
                             for (var date in selectedDates) {
-                              // Save OT hours if applicable
+                              // Save OT hours to global storage
                               if (bulkHasOT && hours > 0) {
                                 OTHoursManager().setOTHours(empId, date, hours);
-                                successCount++;
-                              } else {
-                                // Clear OT hours if not selected
-                                OTHoursManager().clearOTHours(empId, date);
-                                successCount++;
                               }
+
+                              // Create entry for this employee and date
+                              Map<String, dynamic> entry = {
+                                "date": date,
+                                "attendance_status": bulkAttendanceStatus,
+                                "emp_id": int.parse(empId),
+                                "reason": reasonController.text,
+                                "attendance_type":
+                                _convertAttendanceTypeToAPI(
+                                  bulkAttendanceStatus,)
+                                
+                              };
+
+                              // Add OT hours if applicable
+                              if (bulkHasOT && hours > 0) {
+                                entry["ot_hours"] = hours.toStringAsFixed(1);
+                              }
+
+                              attendanceEntries.add(entry);
                             }
                           }
 
-                          print(
-                            ' Bulk apply completed: $successCount operations',
-                          );
-                          OTHoursManager().printAllOTData();
+                          // Get shift ID
+                          // var shiftId = '';
+                          // if (_attendanceRosterData.isNotEmpty &&
+                          //     _attendanceRosterData[0] != null) {
+                          //   shiftId =
+                          //       _attendanceRosterData[0].shiftId?.toString() ??
+                          //       '';
+                          // }
+
+                          // var supervisorid = await SPManager()
+                          //     .getsupervisorid();
+
+                          // Prepare bulk API data
+                          final apiData = {
+                            'site_id': attendancesiteid.toString(),
+                            'to_date': selectedDates.first,
+                            'shift': shiftId,
+                            'emp_id': attendanceEntries,
+                            'roster_image': '',
+                            'user_id': attendanceclientid,
+                            'client_id': attendanceclientid,
+                            'month': month,
+                            'year': year,
+                            'ot_hours': bulkHasOT
+                                ? hours.toStringAsFixed(1)
+                                : '',
+                          };
+
+                         
 
                           Navigator.pop(context);
-                          setState(() {
-                            isBulkMode = false;
-                            selectedEmployees.clear();
-                          });
 
-                          // Show success message
-                          final employeeCount = selectedEmployees.length;
-                          final dateCount = selectedDates.length;
-
-                          String message =
-                              'Marked $employeeCount employee${employeeCount != 1 ? 's' : ''} for $dateCount date${dateCount != 1 ? 's' : ''}';
-                          if (bulkHasOT && hours > 0) {
-                            message += ' with ${hours.toStringAsFixed(1)}h OT';
-                          }
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(message),
-                              backgroundColor: Color(0xFF22C55E),
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
+                          // Submit to API
+                          await _submitAttendaceRoster(apiData);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: customcolor.blue,
@@ -3000,4 +3169,195 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       ),
     );
   }
+// Helper method to convert attendance status to API format
+String _convertAttendanceTypeToAPI(String? status) {
+  switch (status) {
+    case 'yes':
+      return 'P'; // Present
+    case 'no':
+      return 'A'; // Absent
+    case 'halfday':
+      return 'F'; // Half day
+    case 'leave':
+      return 'H'; // Holiday/Leave
+    default:
+      return '';
+  }
+}
+
+  _submitAttendaceRoster(Map<String, dynamic>? apiData) async {
+    try {
+      var status1 = await ConnectionDetector.checkInternetConnection();
+      if (!status1) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
+      }
+
+      String currentDate = DateTime.now().toIso8601String().split('T').first;
+      log('Current date for submission: $currentDate');
+
+      var supervisorid = await SPManager().getsupervisorid();
+
+      // Prepare the map according to API requirements
+      var map = {
+        'site_id': apiData!['site_id'] ?? '',
+        'to_date': apiData['to_date'] ?? currentDate,
+        // 'shift': apiData['shift'] ?? '',
+        'client_id':GlobalLists.clientrole == role?apiData['user_id'] ?? '': supervisorid,
+        'user_id': GlobalLists.clientrole == role?apiData['user_id'] ?? '': supervisorid,
+        'emp_id': jsonEncode(apiData['emp_id'] ?? []),
+        'month': month,
+        'year': year,
+        'ot_hours': apiData['ot_hours'] ?? '',
+        'roster_image': apiData['roster_image'] ?? '',
+      };
+
+      log(' API Request Data: ${jsonEncode(map)}');
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      await APIManager().apiRequest(
+        context,
+        API.submit_client_attendance_rooster,
+        (response) async {
+          Navigator.pop(context); // Close loading dialog
+
+          SubmitAttendanceRooster resp = response;
+          log(' API Response: ${resp.status} - ${resp.msg}');
+
+          if (resp.status == 1) {
+            // Clear OT data after successful submission
+            if (apiData['emp_id'] is List) {
+              for (var entry in apiData['emp_id']) {
+                if (entry is Map) {
+                  OTHoursManager().clearOTHours(
+                    entry['emp_id'].toString(),
+                    entry['date'].toString(),
+                  );
+                }
+              }
+            }
+
+            setState(() {
+              isBulkMode = false;
+              selectedEmployees.clear();
+              selectedDates.clear();
+            });
+
+            ShowDialogs.showToast('${resp.msg}');
+
+            // Refresh the data
+            await _fetchAttendanceRoster();
+          } else {
+            ShowDialogs.showToast('${resp.msg}');
+          }
+        },
+        (error) {
+          Navigator.pop(context); // Close loading dialog
+          log(' Error submitting attendance: $error');
+          ShowDialogs.showToast('Error: $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log(' Exception in _submitAttendaceRoster: $e');
+      ShowDialogs.showToast('Exception: $e');
+    }
+  }
+
+
+  _submitAttendaceRosterfinal(dynamic selectedShift) async {
+    try {
+      var status1 = await ConnectionDetector.checkInternetConnection();
+      if (!status1) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
+      }
+      String currentDate = DateTime.now().toIso8601String().split('T').first;
+
+      log('Current date for submission final: $currentDate');
+      var supervisorid = await SPManager().getsupervisorid();
+
+      // Handle selectedShift - if it's already a string, use it directly
+      // If it's an object with id property, get the id
+      String shiftValue = "";
+      if (selectedShift is String) {
+        shiftValue = selectedShift;
+      } else if (selectedShift != null && selectedShift.id != null) {
+        shiftValue = selectedShift.id.toString();
+      }
+
+      // Prepare the map according to API requirements
+      var map = {
+        'site_id': '$attendancesiteid', // Use attendancesiteid directly
+        'to_date': currentDate,
+        'shift': shiftValue, // Use the properly extracted shift value
+        'client_id': GlobalLists.clientrole == role
+            ? '$attendanceclientid'
+            : supervisorid,
+        'user_id': GlobalLists.clientrole == role
+            ? '$attendanceclientid'
+            : supervisorid,
+        'emp_id': jsonEncode([]),
+        'month': month,
+        'year': year,
+      };
+
+      log('Submitting attendance data: $map');
+
+      await APIManager().apiRequest(
+        context,
+        API.submit_client_attendance_rooster,
+        (response) async {
+          SubmitAttendanceRooster resp = response;
+          print('API Response: $resp');
+          if (resp.status == 1) {
+            setState(() {
+              Timer(Duration(seconds: 1), () => Navigator.pop(context));
+
+              Timer(
+                Duration(seconds: 1),
+                () => Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        Attendance(GlobalLists.mainlisttab[maintag].clientName),
+                    transitionDuration: Duration(seconds: 0),
+                  ),
+                ),
+              );
+              ShowDialogs.showToast('${resp.msg}');
+            });
+          } else {
+            // Handle non-successful response if needed
+          }
+        },
+        (error) {
+          print('Error submitting attendance: $error');
+          ShowDialogs.showToast('Error: $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log('Error submitting attendance roster: $e');
+      ShowDialogs.showToast('Exception: $e');
+    }
+  }
+
+
+
+
+
+
+
+
+
 }
