@@ -34,8 +34,8 @@ class OTHoursManager {
       otHoursData[empId] = {};
     }
     otHoursData[empId]![date] = hours;
-    print('✅ OT Saved: Employee $empId, Date $date, Hours $hours');
-    print('📊 Total stored OT entries: ${otHoursData.length} employees');
+    log(' OT Saved: Employee $empId, Date $date, Hours $hours');
+    log('Total stored OT entries: ${otHoursData.length} employees');
   }
 
   double? getOTHours(String empId, String date) {
@@ -168,6 +168,17 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     attendancesiteid = widget.attendancesiteid;
     attendanceclientid = widget.attendanceclientid;
     getrole();
+      final now = DateTime.now();
+
+  if (now.month == 1) {
+    selectedMonthIndex = 12;
+    selectedYear = now.year - 1;
+  } else {
+    selectedMonthIndex = now.month - 1;
+    selectedYear = now.year;
+  }
+
+  // _reloadDataForMonth(selectedMonthIndex!);
 
     super.initState();
   }
@@ -185,6 +196,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   bool _isLandscap = false;
 
   _fetchAttendanceRoster() async {
+    log('_fetchAttendanceRoster ');
     try {
       var status1 = await ConnectionDetector.checkInternetConnection();
       if (!status1) {
@@ -258,11 +270,12 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             }
           } catch (e) {
             _isLoad = false;
-            print('Error parsing response: $e');
+            log('Error parsing response: $e');
             ShowDialogs.showToast('Error processing data: ${e.toString()}');
           }
         },
         (error) {
+          log('Error: ${error.toString()}');
           ShowDialogs.showToast('Error: ${error.toString()}');
           _isLoad = false;
         },
@@ -447,7 +460,10 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             Row(
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.arrow_back, color: Colors.black),
+                                  icon: Icon(
+                                    Icons.arrow_back,
+                                    color: Colors.black,
+                                  ),
                                   onPressed: () => Navigator.pop(context),
                                   padding: EdgeInsets.zero,
                                   constraints: BoxConstraints(),
@@ -465,7 +481,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                 ),
                               ],
                             ),
-            
+
                             Row(
                               children: [
                                 // Month Dropdown
@@ -478,14 +494,14 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20),
                                     ),
-            
+
                                     elevation: 1,
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
                                         horizontal: 10,
                                         vertical: 6,
                                       ),
-            
+
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -563,58 +579,105 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                       selectedShift?.employeeList?.isEmpty
                           ? SizedBox()
                           : Padding(
-                              padding: const EdgeInsets.only(left: 10),
+                              padding: const EdgeInsets.only(
+                                left: 10,
+                                right: 10,
+                                bottom: 8,
+                              ),
                               child: Row(
                                 children: [
+                                  // Landscape / Portrait toggle
                                   !_isLandscap
-                                      ? ElevatedButton(
+                                      ? ElevatedButton.icon(
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: customcolor.blue,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                12,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                           ),
                                           onPressed: () {
-                                            setState(() {
-                                              _isLandscap = true;
-                                            });
-                                            SystemChrome.setPreferredOrientations([
-                                              DeviceOrientation.landscapeLeft,
-                                              DeviceOrientation.landscapeRight,
-                                            ]);
+                                            setState(() => _isLandscap = true);
+                                            SystemChrome.setPreferredOrientations(
+                                              [
+                                                DeviceOrientation.landscapeLeft,
+                                                DeviceOrientation
+                                                    .landscapeRight,
+                                              ],
+                                            );
                                           },
-                                          child: const Text('Landscape'),
+                                          icon: Icon(
+                                            Icons.screen_rotation,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            'Landscape',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                         )
-                                      : SizedBox(),
-            
-                                  const SizedBox(width: 12),
-                                  _isLandscap
-                                      ? ElevatedButton(
+                                      : ElevatedButton.icon(
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: customcolor.blue,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                12,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                           ),
-            
                                           onPressed: () {
-                                            setState(() {
-                                              _isLandscap = false;
-                                            });
-                                            SystemChrome.setPreferredOrientations([
-                                              DeviceOrientation.portraitUp,
-                                            ]);
+                                            setState(() => _isLandscap = false);
+                                            SystemChrome.setPreferredOrientations(
+                                              [DeviceOrientation.portraitUp],
+                                            );
                                           },
-                                          child: const Text('Portrait'),
-                                        )
-                                      : SizedBox(),
+                                          icon: Icon(
+                                            Icons.stay_current_portrait,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            'Portrait',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+
+                                  SizedBox(width: 10),
+
+                                  // Bulk mode toggle — moved here from FAB
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isBulkMode
+                                          ? Colors.red
+                                          : customcolor.blue,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        isBulkMode = !isBulkMode;
+                                        if (!isBulkMode)
+                                          selectedEmployees.clear();
+                                      });
+                                    },
+                                    icon: Icon(
+                                      isBulkMode ? Icons.close : Icons.people,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      isBulkMode ? 'Cancel Bulk' : 'Bulk Mark',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
+
                       // Stats bar
                       _isLandscap || selectedShift?.employeeList?.isEmpty
                           ? SizedBox()
@@ -656,7 +719,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                       Color(0xFF4ADE80),
                                     ),
                                     SizedBox(width: 10),
-            
+
                                     _buildStatChip(
                                       '${otHours.toStringAsFixed(1)}',
                                       'OT Hrs',
@@ -670,7 +733,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     ],
                   ),
                 ),
-            
+
                 // Bulk Mode Banner
                 if (isBulkMode)
                   Container(
@@ -694,7 +757,10 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           children: [
                             Text(
                               '✓',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
                             ),
                             SizedBox(width: 12),
                             Container(
@@ -726,7 +792,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                       ],
                     ),
                   ),
-            
+
                 // Employee Cards
                 Expanded(
                   child: selectedShift?.employeeList?.isEmpty ?? true
@@ -758,117 +824,136 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             final isSelected = selectedEmployees.contains(
                               emp.empId.toString(),
                             );
-            
+
                             return _buildEmployeeCard(emp, isSelected);
                           },
                         ),
                 ),
               ],
             ),
-         
-              // if (selectedCells.isNotEmpty &&
-              //     multiSelectMode &&
-              //     _allSelectedHaveSameStatus())
-              //   SizedBox(height: 10),
-              selectedShift?.employeeList.isEmpty ||
-                      selectedShift?.employeeList.length == 0
-                  ? SizedBox()
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 8,bottom: 12),
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: ElevatedButton(
-                          onPressed: () {
-                        
-                            selectedShift?.is_month_end == 1 &&
-                                    selectedShift?.is_final_submitted == false &&
-                                    selectedCells.isEmpty &&
-                                    !multiSelectMode &&
-                                    role == GlobalLists.clientrole &&
-                                    selectedShift.review_updated_by_oe_om ==
-                                        false &&
-                                    selectedShift.review_updated_by_client ==
-                                        false
-                                ? _submitAttendaceRosterfinal(
-                                    selectedShift.id.toString(),
-                                  )
-                                // :
-                                //  selectedCells.isNotEmpty && multiSelectMode
-                                // ? _showReasonDialog(isMultiSelect: true)
-                                : Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ViewRemarkAttendance(
-                                        month: month,
-                                        year: year,
-                                        attendancesiteid: attendancesiteid,
-                                        clientid: attendanceclientid,
-                                        manTag: maintag,
-                                        shiftId: selectedShift?.id,
-                                      ),
-                                    ),
-                                  );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            role==GlobalLists.supervisorrole?customcolor.blue:
-                                selectedShift?.is_month_end == 1 &&
-                                    selectedShift?.is_final_submitted == true
-                                ? Colors.grey
-                                : customcolor.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            minimumSize: Size(double.infinity, 48),
+
+            selectedShift?.employeeList.isEmpty ||
+                    selectedShift?.employeeList.length == 0
+                ? SizedBox()
+                :  GlobalLists.supervisorrole == role?Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 12,right: 12,left: 12),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ElevatedButton(
+                        onPressed: () {
+                       
+                      
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                               customcolor.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            selectedShift?.is_month_end == 1 &&
-                                    selectedShift?.is_final_submitted == true
-                                ? "View Finalize Roster"
-                                : selectedCells.isNotEmpty && multiSelectMode
-                                ? "Report Discrepancy"
-                                : role == GlobalLists.clientrole &&
-                                      selectedShift?.review_updated_by_oe_om ==
-                                          false &&
-                                      selectedShift.review_updated_by_client ==
-                                          false
-                                ? "Approve Roster"
-                                : role == GlobalLists.clientrole &&
-                                      selectedShift?.review_updated_by_oe_om ==
-                                          true
-                                ? "Review Updates"
-                                : "Review Discrepancy",
-                            style: TextStyle(
-                              fontFamily: AppFonts.semibold,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
+                          minimumSize: Size(double.infinity, 48),
+                        ),
+                        child: Text(
+                          "Submit",
+                          style: TextStyle(
+                            fontFamily: AppFonts.semibold,
+                            fontSize: 16,
+                            color: Colors.white,
                           ),
                         ),
                       ),
                     ),
-          
-         
-         
-         
+                  )
+          : Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 12),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ElevatedButton(
+                        onPressed: () {
+                       
+                          selectedShift?.is_month_end == 1 &&
+                                  selectedShift?.is_final_submitted == false &&
+                                  selectedCells.isEmpty &&
+                                  !multiSelectMode &&
+                                  role == GlobalLists.clientrole &&
+                                  selectedShift.review_updated_by_oe_om ==
+                                      false &&
+                                  selectedShift.review_updated_by_client ==
+                                      false
+                              ? _submitAttendaceRosterfinal(
+                                  selectedShift.id.toString(),
+                                )
+                              : Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ViewRemarkAttendance(
+                                      month: month,
+                                      year: year,
+                                      attendancesiteid: attendancesiteid,
+                                      clientid: attendanceclientid,
+                                      manTag: maintag,
+                                      shiftId: selectedShift?.id,
+                                    ),
+                                  ),
+                                );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: role == GlobalLists.supervisorrole
+                              ? customcolor.blue
+                              : selectedShift?.is_month_end == 1 &&
+                                    selectedShift?.is_final_submitted == true
+                              ? Colors.grey
+                              : customcolor.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          minimumSize: Size(double.infinity, 48),
+                        ),
+                        child: Text(
+                          selectedShift?.is_month_end == 1 &&
+                                  selectedShift?.is_final_submitted == true
+                              ? "View Finalize Roster"
+                              : selectedCells.isNotEmpty && multiSelectMode
+                              ? "Report Discrepancy"
+                              : role == GlobalLists.clientrole &&
+                                    selectedShift?.review_updated_by_oe_om ==
+                                        false &&
+                                    selectedShift.review_updated_by_client ==
+                                        false
+                              ? "Approve Roster"
+                              : role == GlobalLists.clientrole &&
+                                    selectedShift?.review_updated_by_oe_om ==
+                                        true
+                              ? "Review Updates"
+                              : "Review Discrepancy",
+                          style: TextStyle(
+                            fontFamily: AppFonts.semibold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            isBulkMode = !isBulkMode;
-            if (!isBulkMode) {
-              selectedEmployees.clear();
-            }
-          });
-        },
-        backgroundColor: customcolor.blue,
-        child: Icon(
-          isBulkMode ? Icons.close : Icons.people,
-          color: Colors.white,
-        ),
-      ),
+
+      // floatingActionButton: FloatingActionButton(
+      //    heroTag: 'view_attendance_roster_fab',
+      //   onPressed: () {
+      //     setState(() {
+      //       isBulkMode = !isBulkMode;
+      //       if (!isBulkMode) {
+      //         selectedEmployees.clear();
+      //       }
+      //     });
+      //   },
+      //   backgroundColor: customcolor.blue,
+      //   child: Icon(
+      //     isBulkMode ? Icons.close : Icons.people,
+      //     color: Colors.white,
+      //   ),
+      // ),
     );
   }
 
@@ -879,10 +964,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        // decoration: BoxDecoration(
-        // color: Colors.red,
-        // borderRadius: BorderRadius.circular(6),
-        // ),
+
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1444,10 +1526,11 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final reason = reasonController.text.trim();
                         final otText = otController.text.trim();
+                        double hours = 0.0;
+
                         if (otText.isNotEmpty) {
-                          final hours = double.tryParse(otText) ?? 0.0;
+                          hours = double.tryParse(otText) ?? 0.0;
                           OTHoursManager().setOTHours(
                             emp.empId.toString(),
                             date,
@@ -1459,22 +1542,36 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             date,
                           );
                         }
-                        //        final apiData = _prepareApiData(
-                        //   reason,
-                        //   selectedCells.toList(),
-                        //   'submit', // Action type
-                        // );
-                        //   await _submitAttendaceRoster(apiData);
+
+                        // Prepare attendance entry with current day's attendance status
+                        final attendanceEntry = {
+                          "date": date,
+                          "attendance_status": day.attendance_type ?? '',
+                          "emp_id": emp.empId,
+                          "reason": reasonController.text.trim(),
+                          "attendance_type": day.attendance_type,
+                          // ),
+                          if (hours > 0) "ot_hours": hours.toStringAsFixed(1),
+                        };
+
+                        final apiData = {
+                          'site_id': attendancesiteid.toString(),
+                          'to_date': date,
+                          'shift': shiftId,
+                          'emp_id': [attendanceEntry],
+                          'roster_image': '',
+                          'user_id': attendanceclientid,
+                          'client_id': attendanceclientid,
+                          'month': month,
+                          'year': year,
+                        };
 
                         Navigator.pop(context);
-                        setState(() {}); // Refresh UI
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('OT hours updated successfully'),
-                            backgroundColor: Color(0xFF22C55E),
-                          ),
-                        );
+                        // Submit to API
+                        await _submitAttendaceRoster(apiData).then((v) async {
+                          await _fetchAttendanceRoster();
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: customcolor.blue,
@@ -1699,7 +1796,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                   children: [
                     Expanded(
                       child: _buildModalOptionButton(
-                        '◐',
+                        '½',
                         'Half Day',
                         selectedAttendance == 'halfday',
                         () {
@@ -1726,6 +1823,38 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '⚒',
+                        'Working on Holiday',
+                        selectedAttendance == 'working on holiday',
+                        () {
+                          setDialogState(() {
+                            _isreasonshow = true;
+                            selectedAttendance = 'working on holiday';
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '⏹',
+                        'Week off',
+                        selectedAttendance == 'week off',
+                        () {
+                          setDialogState(() {
+                            _isreasonshow = true;
+                            selectedAttendance = 'week off';
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
 
                 !_isreasonshow
                     ? SizedBox()
@@ -1746,7 +1875,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           SizedBox(height: 8),
                           TextFormField(
                             maxLines: 3,
-                          controller: reasonController,
+                            controller: reasonController,
                             decoration: InputDecoration(
                               hintText: 'Enter reason',
                               border: OutlineInputBorder(
@@ -1813,9 +1942,9 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             "attendance_status": selectedAttendance,
                             "emp_id": emp.empId,
                             "reason": reasonController.text.trim(),
-                            "attendance_type":_convertAttendanceTypeToAPI(
-                              selectedAttendance),
-                            
+                            "attendance_type": _convertAttendanceTypeToAPI(
+                              selectedAttendance,
+                            ),
                           };
 
                           // Add OT hours if present
@@ -1823,17 +1952,6 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             attendanceEntry["ot_hours"] = otHours
                                 .toStringAsFixed(1);
                           }
-
-                          // Get shift ID from the employee's data
-                          // var shiftId = '';
-                          // if (_attendanceRosterData.isNotEmpty &&
-                          //     _attendanceRosterData[0] != null) {
-                          //   shiftId =
-                          //       _attendanceRosterData[0].shiftId?.toString() ??
-                          //       '';
-                          // }
-
-                        
 
                           final apiData = {
                             'site_id': attendancesiteid.toString(),
@@ -1849,7 +1967,6 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                 ? otHours.toStringAsFixed(1)
                                 : '',
                           };
-
 
                           Navigator.pop(context);
 
@@ -1924,10 +2041,21 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
   void _showBulkMarkingDialog() {
     if (selectedEmployees.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please select at least one employee'),
+      ScaffoldMessenger.of(context).showMaterialBanner(
+        MaterialBanner(
+          content: const Text(
+            'Please select at least one employee',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Color(0xFFEF4444),
+          actions: [
+            TextButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              },
+              child: const Text('OK', style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
       );
       return;
@@ -2161,7 +2289,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                   children: [
                     Expanded(
                       child: _buildModalOptionButton(
-                        '◐',
+                        '½',
                         'Half Day',
                         bulkAttendanceStatus == 'halfday',
                         () {
@@ -2188,6 +2316,38 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '⚒',
+                        'Working on Holiday',
+                        bulkAttendanceStatus == 'working on holiday',
+                        () {
+                          setDialogState(() {
+                            _isreasonshow = true;
+                            bulkAttendanceStatus = 'working on holiday';
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: _buildModalOptionButton(
+                        '⏹',
+                        'Week off',
+                        bulkAttendanceStatus == 'week off',
+                        () {
+                          setDialogState(() {
+                            _isreasonshow = true;
+                            bulkAttendanceStatus = 'week off';
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
 
                 !_isreasonshow
                     ? SizedBox()
@@ -2208,6 +2368,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           SizedBox(height: 8),
                           TextFormField(
                             maxLines: 3,
+                            controller: reasonController,
                             decoration: InputDecoration(
                               hintText: 'Enter reason',
                               border: OutlineInputBorder(
@@ -2401,10 +2562,9 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                 "attendance_status": bulkAttendanceStatus,
                                 "emp_id": int.parse(empId),
                                 "reason": reasonController.text,
-                                "attendance_type":
-                                _convertAttendanceTypeToAPI(
-                                  bulkAttendanceStatus,)
-                                
+                                "attendance_type": _convertAttendanceTypeToAPI(
+                                  bulkAttendanceStatus,
+                                ),
                               };
 
                               // Add OT hours if applicable
@@ -2416,19 +2576,6 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             }
                           }
 
-                          // Get shift ID
-                          // var shiftId = '';
-                          // if (_attendanceRosterData.isNotEmpty &&
-                          //     _attendanceRosterData[0] != null) {
-                          //   shiftId =
-                          //       _attendanceRosterData[0].shiftId?.toString() ??
-                          //       '';
-                          // }
-
-                          // var supervisorid = await SPManager()
-                          //     .getsupervisorid();
-
-                          // Prepare bulk API data
                           final apiData = {
                             'site_id': attendancesiteid.toString(),
                             'to_date': selectedDates.first,
@@ -2443,8 +2590,6 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                 ? hours.toStringAsFixed(1)
                                 : '',
                           };
-
-                         
 
                           Navigator.pop(context);
 
@@ -3169,21 +3314,24 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       ),
     );
   }
-// Helper method to convert attendance status to API format
-String _convertAttendanceTypeToAPI(String? status) {
-  switch (status) {
-    case 'yes':
-      return 'P'; // Present
-    case 'no':
-      return 'A'; // Absent
-    case 'halfday':
-      return 'F'; // Half day
-    case 'leave':
-      return 'H'; // Holiday/Leave
-    default:
-      return '';
+
+  // Helper method to convert attendance status to API format
+  String _convertAttendanceTypeToAPI(String? status) {
+    switch (status) {
+      case 'yes':
+        return 'P'; // Present
+      case 'no':
+        return 'A'; // Absent
+      case 'halfday':
+        return 'F'; // Half day
+      case 'leave':
+        return 'H'; // Holiday/Leave
+      case 'Working on Holiday':
+        return 'W';
+      default:
+        return '';
+    }
   }
-}
 
   _submitAttendaceRoster(Map<String, dynamic>? apiData) async {
     try {
@@ -3201,16 +3349,18 @@ String _convertAttendanceTypeToAPI(String? status) {
       // Prepare the map according to API requirements
       var map = {
         'site_id': apiData!['site_id'] ?? '',
-        'to_date': apiData['to_date'] ?? currentDate,
-        // 'shift': apiData['shift'] ?? '',
-        'client_id':GlobalLists.clientrole == role?apiData['user_id'] ?? '': supervisorid,
-        'user_id': GlobalLists.clientrole == role?apiData['user_id'] ?? '': supervisorid,
+        'to_date': currentDate,
         'emp_id': jsonEncode(apiData['emp_id'] ?? []),
         'month': month,
         'year': year,
-        'ot_hours': apiData['ot_hours'] ?? '',
-        'roster_image': apiData['roster_image'] ?? '',
+        // 'ot_hours': apiData['ot_hours'] ?? '',
+        // 'roster_image': apiData['roster_image'] ?? '',
       };
+       if (GlobalLists.clientrole == role) {
+        map["client_id"] = apiData['user_id'];
+      } else {
+        map["user_id"] = supervisorid;
+      }
 
       log(' API Request Data: ${jsonEncode(map)}');
 
@@ -3270,7 +3420,6 @@ String _convertAttendanceTypeToAPI(String? status) {
       ShowDialogs.showToast('Exception: $e');
     }
   }
-
 
   _submitAttendaceRosterfinal(dynamic selectedShift) async {
     try {
@@ -3351,13 +3500,4 @@ String _convertAttendanceTypeToAPI(String? status) {
       ShowDialogs.showToast('Exception: $e');
     }
   }
-
-
-
-
-
-
-
-
-
 }

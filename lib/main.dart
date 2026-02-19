@@ -55,10 +55,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   if (message.notification != null) {
     await flutterLocalNotificationsPlugin.show(
-      message.hashCode,
-      message.notification?.title,
-      message.notification?.body,
-      NotificationDetails(
+     id: message.hashCode,
+     title:  message.notification?.title,
+    body:   message.notification?.body,
+   notificationDetails:    NotificationDetails(
         android: AndroidNotificationDetails(
           kCustomChannel.id,
           kCustomChannel.name,
@@ -93,7 +93,7 @@ Future<void> main() async {
   );
 
   await flutterLocalNotificationsPlugin.initialize(
-    initSettings,
+  settings:   initSettings,
     // onDidReceiveNotificationResponse handled later in app state if needed
   );
 
@@ -245,7 +245,7 @@ class _MyAppState extends State<MyApp> {
     );
 
     await flutterLocalNotificationsPlugin.initialize(
-      initSettings,
+     settings:  initSettings,
       onDidReceiveNotificationResponse: (details) {
         var payload = details.payload;
         if (payload != null) {
@@ -305,10 +305,10 @@ class _MyAppState extends State<MyApp> {
     String payload = newNote.toJsonString();
 
     await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platform,
+     id:  0,
+     title:  title,
+      body: body,
+     notificationDetails: platform,
       payload: payload,
     );
   }
@@ -354,10 +354,10 @@ class _MyAppState extends State<MyApp> {
     );
 
     await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platform,
+   id:  0,
+     title:  title,
+      body: body,
+     notificationDetails: platform,
       payload: payload,
     );
   }
