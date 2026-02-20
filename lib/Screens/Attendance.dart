@@ -12,11 +12,10 @@ import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Screens/Training.dart';
 import 'package:janpro/Screens/view_attenance_roster_new.dart';
-import 'package:janpro/Screens/view_attendance_roster.dart';
 import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
-import 'package:janpro/Utitlity/FormTextField.dart';
+
 import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/LocationService.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
@@ -352,6 +351,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   var clientId;
   var userId;
   var siteId;
+ 
+ 
   void _showRosterDialog() {
     if (!mounted || context == null || _attendanceRosterData.isEmpty) return;
     final _horizontalScrollKey = GlobalKey();
@@ -1013,6 +1014,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               ),
                             ],
                           ),
+                        
                         ],
                       ),
 
@@ -2794,6 +2796,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     SizedBox(height: 10),
                                     ElevatedButton(
                                       onPressed: () {
+                                        log('_isSelected');
+                                        log('role');
+                                          _isSelected=='OverAll'||(role=='1' &&maintag==0)?  ShowDialogs.showToast('Please select client-site'):
+                                      
                                         // _fetchAttendanceRoster();
                                         Navigator.push(
                                           context,
@@ -2801,7 +2807,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                             pageBuilder: (context, animation1,
                                                 animation2) =>
                                                 ViewAttendanceRoster(
-                                              maintag: maintag.toString(),
+                                              maintag: maintag,
                                               attendancesiteid: GlobalLists
                                                   .mainlisttab[maintag]
                                                   .siteId,
@@ -3135,6 +3141,13 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                 ?      
                                     ElevatedButton(
                                       onPressed: () {
+                                      log(_isSelected);
+                                       log('_isSelected');
+                                        log('role$role');
+                                        log('maintag$maintag');
+
+                                          _isSelected=='OverAll'||(role=='1' &&maintag==0)?  ShowDialogs.showToast('Please select client-site'):
+                                      
                                         // _fetchAttendanceRoster();
                                         Navigator.push(
                                           context,
@@ -3142,7 +3155,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                             pageBuilder: (context, animation1,
                                                 animation2) =>
                                                 ViewAttendanceRoster(
-                                              maintag: maintag.toString(),
+                                              maintag: maintag,
                                               attendancesiteid: GlobalLists
                                                   .mainlisttab[maintag]
                                                   .siteId,
@@ -3841,6 +3854,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               backgroundColor: customcolor.white,
               selected: maintag == value,
               onSelected: (selected) {
+
                 setState(() {
                   _isSelected = item.clientName;
                   maintag = value;
@@ -4043,6 +4057,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                               )
                                             : null,
                                         onTap: () {
+                                          
                                           Navigator.pop(context);
                                           final value = GlobalLists.mainlisttab
                                               .indexOf(item);

@@ -19,6 +19,7 @@ import 'package:janpro/Utitlity/internetConnection.dart';
 import 'package:janpro/model/SubmitAttendanceRooster.dart';
 import 'package:janpro/model/attendance_roster_response.dart';
 import 'package:flutter/services.dart';
+import 'package:janpro/widgets/dailogbox.dart';
 
 // Global OT Hours Storage
 class OTHoursManager {
@@ -76,7 +77,7 @@ class ViewAttendanceRoster extends StatefulWidget {
   final int attendancesiteid;
   var attendanceclientid;
   final String role;
-  var maintag;
+  int maintag;
 
   ViewAttendanceRoster({
     required this.attendanceRosterData,
@@ -98,7 +99,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   int? selectedYear;
   int? selectedMonthIndex;
   dynamic selectedShift;
-  var maintag;
+  int maintag=0;
   Set<String> selectedCells = {};
   bool multiSelectMode = false;
   bool isBulkMode = false;
@@ -149,6 +150,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   ];
 
   final List<int> availableYears = [2026, 2025];
+  
 
   Map<String, List<dynamic>> groupedByMonth = {};
   var role;
@@ -191,6 +193,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     ]);
     super.dispose();
   }
+    String _isSelected = "";
 
   bool _isLoad = false;
   bool _isLandscap = false;
@@ -453,7 +456,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     children: [
                       // Top header with title and month navigation
                       Padding(
-                        padding: EdgeInsets.all(16),
+                        padding: EdgeInsets.all(12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -541,14 +544,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                         horizontal: 10,
                                         vertical: 6,
                                       ),
-                                      // decoration: BoxDecoration(
-                                      //   color: Colors.white,
-                                      //   borderRadius: BorderRadius.circular(8),
-                                      //   border: Border.all(
-                                      //     color: Colors.white.withOpacity(0.3),
-                                      //     width: 1,
-                                      //   ),
-                                      // ),
+                                 
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -571,11 +567,20 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                     ),
                                   ),
                                 ),
+                                
+                                  SizedBox(width: 10),
+                                                  GlobalLists
+                                                          .mainlisttab
+                                                          .isNotEmpty
+                                                      ? _buildChoicemainListfortab()
+                                                      : Container(),
+                             
                               ],
                             ),
                           ],
                         ),
                       ),
+                      
                       selectedShift?.employeeList?.isEmpty
                           ? SizedBox()
                           : Padding(
@@ -674,6 +679,25 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                       style: TextStyle(color: Colors.white),
                                     ),
                                   ),
+
+                                     Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.info_outline,
+                                  color: customcolor.blue,
+                                ),
+                                tooltip: "View reasons",
+                                onPressed: () {
+                                 Dailogbox().showLegendDialog(context);
+                                },
+                              ),
+                         
+                            ],
+                          ),
+                        
+                                  
                                 ],
                               ),
                             ),
@@ -690,47 +714,50 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                     _buildStatChip(
                                       '$presentCount',
                                       'Present',
-                                      Color(0xFF22C55E),
+                                      customcolor.blue,
                                     ),
                                     SizedBox(width: 10),
                                     _buildStatChip(
                                       '$absentCount',
                                       'Absent',
-                                      Color(0xFFEF4444),
+                                      customcolor.blue,
                                     ),
-                                    // SizedBox(width: 10),
-                                    //  _buildStatChip('$absentCount', 'Holiday',Color(0xFFEF4444)),
+                            
                                     SizedBox(width: 10),
                                     _buildStatChip(
                                       '$hoildayCount',
                                       'Holiday',
-                                      Color(0xFF7DD3FC),
+                                      customcolor.blue,
                                     ),
                                     SizedBox(width: 10),
                                     _buildStatChip(
                                       '$whoildayCount',
                                       'Working Holiday',
-                                      Color(0xFF2563EB),
+                                      customcolor.blue,
                                     ),
                                     SizedBox(width: 10),
                                     _buildStatChip(
                                       '$hlfdayCount',
                                       'Halfday',
-                                      Color(0xFF4ADE80),
+                                      customcolor.blue,
                                     ),
                                     SizedBox(width: 10),
 
                                     _buildStatChip(
                                       '${otHours.toStringAsFixed(1)}',
                                       'OT Hrs',
-                                      Color(0xFF8B5CF6),
+                                      customcolor.blue,
                                     ),
                                     SizedBox(width: 10),
                                   ],
                                 ),
                               ),
                             ),
+                   
+                   
                     ],
+                
+                
                   ),
                 ),
 
@@ -842,7 +869,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                       child: ElevatedButton(
                         onPressed: () {
                        
-                      
+                      _showRosterLockDialog(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
@@ -863,8 +890,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                       ),
                     ),
                   )
-          : Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 12),
+                    : Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 12,right: 12,left: 12),
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: ElevatedButton(
@@ -1262,7 +1289,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
     return GestureDetector(
       onTap: () {
-        if (!isFuture && day != null) {
+        if (!isFuture && day != null &&!isBulkMode) {
           _showAttendanceDialog(emp, day, date);
         }
       },
@@ -1334,7 +1361,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             SizedBox(height: 4),
             GestureDetector(
               onTap: () {
-                if (!isFuture && day != null) {
+                if (!isFuture && day != null &&!isBulkMode) {
                   _showOTDialog(emp, day, date, displayOT.toDouble());
                 }
               },
@@ -1601,32 +1628,78 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     );
   }
 
-  Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
-    if (isFuture || day == null) {
-      return const Color(0xFFCBD5E1); // Grey
-    }
+Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
+
+  //  Future or null
+  if (isFuture || day == null) {
+    return const Color(0xFFCBD5E1); // Grey
+  }
+
+  // 2 Deactivated janitor
+  if (day.act_deact_janitor == false) {
+    return Colors.grey[300]!;
+  }
+
+  // 3 Prepare empty checks
+  bool isClientEmpty =
+      day.client_approval_status == null ||
+      day.client_approval_status!.isEmpty;
+
+  bool isOmEmpty =
+      day.om_oe_approval_status == null ||
+      day.om_oe_approval_status!.isEmpty;
+
+  bool isReasonEmpty =
+      day.reason == null ||
+      day.reason!.isEmpty;
+
+  // 4 If ALL are empty → use attendance_type switch
+  if (isClientEmpty && isOmEmpty && isReasonEmpty) {
 
     switch (day.attendance_type) {
+
       case 'P': // Present
-        return const Color(0xFF22C55E); // Green
+        return const Color(0xFF22C55E);
 
       case 'A': // Absent
-        return const Color(0xFFEF4444); // Red
+        return const Color(0xFFEF4444);
 
       case 'H': // Holiday
-        return const Color(0xFF7DD3FC); // Light Blue
+        return const Color(0xFF7DD3FC);
 
       case 'W': // Working on Holiday
-        return const Color(0xFF2563EB); // Dark Blue
+        return const Color(0xFF2563EB);
 
       case 'F': // Half Day
-        return const Color(0xFF4ADE80); // Semi Green
+        return const Color(0xFF4ADE80);
 
-      default: // Week Off
-        return const Color(0xFFCBD5E1); // Grey
+      default:
+        return const Color(0xFFCBD5E1);
     }
   }
 
+  //  Client approval (highest priority)
+  if (!isClientEmpty) {
+    return day.client_approval_status == 'approved'
+        ? Colors.green
+        : customcolor.red;
+  }
+
+  //  OM/OE approval
+  if (!isOmEmpty) {
+    return day.om_oe_approval_status == 'approved'
+        ? Colors.green
+        : customcolor.red;
+  }
+
+  //  Reason
+  if (!isReasonEmpty) {
+    return customcolor.pink;
+  }
+
+  //  Final fallback
+  return const Color(0xFFCBD5E1);
+}
   Color _getAttendanceTextColor(AttendanceData? day, bool isFuture) {
     if (isFuture || day == null) {
       return const Color(0xFFCBD5E1); // Grey
@@ -3500,4 +3573,290 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       ShowDialogs.showToast('Exception: $e');
     }
   }
+
+
+  Widget _buildChoicemainListfortab() {
+    final selectedItem = maintag < GlobalLists.mainlisttab.length
+        ? GlobalLists.mainlisttab[maintag]
+        : null;
+
+    return Row(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () async {
+            TextEditingController searchController = TextEditingController();
+            List filteredList = List.from(GlobalLists.mainlisttab);
+
+            await showDialog(
+              context: context,
+              builder: (_) {
+                return StatefulBuilder(
+                  builder: (context, setStateDialog) => Dialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      constraints: BoxConstraints(maxHeight: 500),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: TextField(
+                              controller: searchController,
+                              decoration: InputDecoration(
+                                hintText: "Search Client...",
+                                prefixIcon: Icon(Icons.search),
+                                suffixIcon: searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.cancel_outlined),
+                                        onPressed: () {
+                                          searchController.clear();
+                                          setStateDialog(() {
+                                            filteredList = List.from(
+                                              GlobalLists.mainlisttab,
+                                            );
+                                          });
+                                        },
+                                      )
+                                    : null,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 15,
+                                  vertical: 10,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onChanged: (query) {
+                                setStateDialog(() {
+                                  filteredList = GlobalLists.mainlisttab
+                                      .where(
+                                        (item) => item.clientName
+                                            .toLowerCase()
+                                            .contains(query.toLowerCase()),
+                                      )
+                                      .toList();
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Expanded(
+                            child: filteredList.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      "No client found.",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: filteredList.length,
+                                    itemBuilder: (context, index) {
+                                      final item = filteredList[index];
+                                      final isSelected = item == selectedItem;
+                                      final color = isSelected
+                                          ? customcolor.tabblue
+                                          : item.lowattendance == true
+                                          ? customcolor.red
+                                          : item.clientName.contains('OverAll')
+                                          ? customcolor.tabblue
+                                          : customcolor.green;
+
+                                      return ListTile(
+                                        title:item.clientName=='OverAll'?SizedBox(): Text(
+                                          item.clientName,
+                                          style: AppFonts.headerStyle(
+                                            fontSize: 14,
+                                            color: color,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                          ),
+                                        ),
+                                        trailing: isSelected
+                                            ? Icon(
+                                                Icons.check_circle,
+                                                color: customcolor.tabblue,
+                                                size: 18,
+                                              )
+                                            : null,
+                                        onTap: (){
+                                          Navigator.pop(context);
+                                          final value = GlobalLists.mainlisttab
+                                              .indexOf(item);
+                                          setState(() {
+                                            _isSelected = item.clientName;
+                                            maintag = value;
+                                            maintag = 0;
+
+                                            attendancesiteid = item.siteId
+                                                .toString();
+                                            attendanceclientid = item.clientId
+                                                .toString();
+
+                                            // if (role ==
+                                            //     GlobalLists.supervisorrole) {
+                                            //   // attendanceshiftid = "";
+                                            // } else if (item
+                                            //     .attendanceDetails
+                                            //     .isNotEmpty) {
+                                            //   attendanceshiftid = item
+                                            //       .attendanceDetails[0]
+                                            //       .id
+                                            //       .toString();
+                                            // }
+
+                                            for (
+                                              int i = 0;
+                                              i < item.attendanceDetails.length;
+                                              i++
+                                            ) {
+                                              if (item
+                                                      .attendanceDetails[i]
+                                                      .currentTime ==
+                                                  true) {
+                                                // tag = i;
+                                                attendancesiteid = item.siteId
+                                                    .toString();
+                                                attendanceclientid = item
+                                                    .clientId
+                                                    .toString();
+                                                // attendanceshiftid =
+                                                //     role ==
+                                                //         GlobalLists
+                                                //             .supervisorrole
+                                                //     ? ""
+                                                //     : item
+                                                //           .attendanceDetails[i]
+                                                //           .id
+                                                //           .toString();
+                                              }
+                                            }
+                                             _fetchAttendanceRoster();
+
+                                            // janotoragendaApi(
+                                            //   attendanceclientid,
+                                            //   attendancesiteid,
+                                            // );
+                                          });
+                                        },
+                                     
+                                     
+                                     
+                                     
+                                     
+                                     
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+          child: Align(
+            alignment: Alignment.center,
+            child: Container(
+              width: 50,
+              decoration: BoxDecoration(
+                color: customcolor.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: customcolor.white, width: 1.2),
+              ),
+              child: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: customcolor.tabblue,
+                size: 24,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+void _showRosterLockDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false, // user must tap button
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.lock_outline, color: customcolor.blue),
+            SizedBox(width: 8),
+            Text(
+              "Confirm Lock",
+              style: TextStyle(
+                fontFamily: AppFonts.semibold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          "Are you sure you want to lock the roster?\n\nOnce locked, changes cannot be modified.",
+          style: TextStyle(
+            fontFamily: AppFonts.regular,
+            fontSize: 14,
+          ),
+        ),
+        actionsPadding: EdgeInsets.only(right: 12, bottom: 10),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Cancel
+            },
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: Colors.grey,
+                fontFamily: AppFonts.semibold,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: customcolor.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+
+              // 👉 Your lock API / logic here
+              print("Roster Locked");
+
+              ShowDialogs.showToast("Roster locked successfully");
+            },
+            child: Text(
+              "Submit",
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: AppFonts.semibold,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 }
