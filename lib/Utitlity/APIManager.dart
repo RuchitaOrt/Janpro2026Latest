@@ -19,6 +19,7 @@ import 'package:janpro/model/ClientwisetrainingResponse.dart';
 import 'package:janpro/model/CommonResponse.dart';
 import 'package:janpro/model/DashboardlistResponse.dart';
 import 'package:janpro/model/DeleteAttendance.dart';
+import 'package:janpro/model/FridgeAttendanceRosterResponse.dart';
 import 'package:janpro/model/FullDetailSpecialActivityResponse.dart';
 import 'package:janpro/model/GetComplaintResponse.dart';
 import 'package:janpro/model/GetDependentResponse.dart';
@@ -117,6 +118,8 @@ enum API {
 
   deleteattendance,
   submit_client_attendance_rooster,
+  supervisor_submit_attendance_rooster,
+
   approved_rejected_om_oe_client_submit_attendance_rooster,
 
 
@@ -139,6 +142,8 @@ enum API {
 
   trends_attendance_graph,
   attendance_roster,
+  sup_attendance_roster,
+
   view_monthly_attendance_rooster_details,
 
   add_attendance_daily_count
@@ -358,6 +363,9 @@ class APIManager {
       case API.submit_client_attendance_rooster:
         apiPathString = "/api/attendancemaster/submit_client_attendance_rooster";
         break;
+      case API.supervisor_submit_attendance_rooster:
+        apiPathString = "/api/attendancemaster/supervisor-submit-attendance-rooster";
+        break;
       case API.approved_rejected_om_oe_client_submit_attendance_rooster:
         apiPathString = "/api/attendancemaster/approved_rejected_om_oe_client_submit_attendance_rooster";
         break;
@@ -399,6 +407,9 @@ class APIManager {
         break;
       case API.attendance_roster:
         apiPathString = "/api/attendancemaster/attendance-rooster";
+        break;
+      case API.sup_attendance_roster:
+        apiPathString = "/api/attendancemaster/supervisor-attendance-rooster";
         break;
       case API.view_monthly_attendance_rooster_details:
         apiPathString = "/api/attendancemaster/view_monthly_attendance_rooster_details";
@@ -462,6 +473,7 @@ class APIManager {
 
       case API.deleteattendance:
       case API.submit_client_attendance_rooster:
+      case API.supervisor_submit_attendance_rooster:
       case API.approved_rejected_om_oe_client_submit_attendance_rooster:
       case API.approved_om_oe_attendance_rooster:
       case API.rejected_om_oe_attendance_rooster:
@@ -479,6 +491,7 @@ class APIManager {
       case API.fetchcontact_janitors:
       case API.trends_attendance_graph:
       case API.attendance_roster:
+      case API.sup_attendance_roster:
       case API.view_monthly_attendance_rooster_details:
       case API.add_attendance_daily_count:
         method = HTTPMethod.POST;
@@ -625,6 +638,9 @@ class APIManager {
       case API.submit_client_attendance_rooster:
         className = "SubmitAttendanceRooster";
         break;
+      case API.supervisor_submit_attendance_rooster:
+        className = "FridgeAttendanceRosterResponse";
+        break;
       case API.approved_rejected_om_oe_client_submit_attendance_rooster:
         className = "ApproveRejectSubmit";
         break;
@@ -667,6 +683,9 @@ class APIManager {
         className = "TrendGraphResponse";
         break;
       case API.attendance_roster:
+        className = "AttendanceRosterResponse";
+        break;
+      case API.sup_attendance_roster:
         className = "AttendanceRosterResponse";
         break;
        case API.view_monthly_attendance_rooster_details:
@@ -713,6 +732,7 @@ class APIManager {
     if (className == 'AttendanceRosterResponse') {
       responseObj = AttendanceRosterResponse.fromJson(json);
     }
+
 
     if (className == 'ViewAttendaceMonthly') {
       responseObj = ViewAttendaceMonthly.fromJson(json);
@@ -831,6 +851,9 @@ class APIManager {
     }
     if (className == 'SubmitAttendanceRooster') {
       responseObj = SubmitAttendanceRooster.fromJson(json);
+    }
+     if (className == 'FridgeAttendanceRosterResponse') {
+      responseObj = FridgeAttendanceRosterResponse.fromJson(json);
     }
      if (className == 'ApproveRejectSubmit') {
       responseObj = ApproveRejectSubmit.fromJson(json);

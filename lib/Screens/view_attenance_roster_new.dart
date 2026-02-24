@@ -1,4 +1,4 @@
-// ignore_for_file: unnecessary_null_comparison, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, must_be_immutable, prefer_typing_uninitialized_variables, use_key_in_widget_constructors, library_private_types_in_public_api, curly_braces_in_flow_control_structures, prefer_conditional_assignment, unused_element
+// ignore_for_file: unnecessary_null_comparison, no_leading_underscores_for_local_identifiers, unused_local_variable, unnecessary_string_interpolations, must_be_immutable, prefer_typing_uninitialized_variables, use_key_in_widget_constructors, library_private_types_in_public_api, curly_braces_in_flow_control_structures, prefer_conditional_assignment, unused_element, strict_top_level_inference, deprecated_member_use, unused_field
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -16,6 +16,7 @@ import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
+import 'package:janpro/model/FridgeAttendanceRosterResponse.dart';
 import 'package:janpro/model/SubmitAttendanceRooster.dart';
 import 'package:janpro/model/attendance_roster_response.dart';
 import 'package:flutter/services.dart';
@@ -199,7 +200,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   bool _isLandscap = false;
 
   _fetchAttendanceRoster() async {
-    log('_fetchAttendanceRoster ');
+    log('is supervisor ${ role==GlobalLists.supervisorrole}');
     try {
       var status1 = await ConnectionDetector.checkInternetConnection();
       if (!status1) {
@@ -241,7 +242,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
       APIManager().apiRequest(
         context,
-        API.attendance_roster,
+      role==GlobalLists.supervisorrole? API.sup_attendance_roster :API.attendance_roster,
         (response) async {
           try {
             if (response == null) {
@@ -3837,12 +3838,13 @@ void _showRosterLockDialog(BuildContext context) {
               ),
             ),
             onPressed: () {
+               _fredgeAttendaceRoster();
               Navigator.pop(context);
 
-              // 👉 Your lock API / logic here
-              print("Roster Locked");
+              //  Your lock API / logic here
+              log("Roster Locked");
 
-              ShowDialogs.showToast("Roster locked successfully");
+              // ShowDialogs.showToast("Roster locked successfully");
             },
             child: Text(
               "Submit",
@@ -3857,6 +3859,86 @@ void _showRosterLockDialog(BuildContext context) {
     },
   );
 }
+
+
+ _fredgeAttendaceRoster() async {
+    try {
+      var status1 = await ConnectionDetector.checkInternetConnection();
+      if (!status1) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
+      }
+
+      String currentDate = DateTime.now().toIso8601String().split('T').first;
+      log('Current date for submission: $currentDate');
+
+      var supervisorid = await SPManager().getsupervisorid();
+          final now = DateTime.now();
+
+      if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
+        if (now.month == 1) {
+          month = "12";
+          year = (now.year - 1).toString();
+        } else {
+          month = now.month.toString().padLeft(2, '0');
+          year = now.year.toString();
+        }
+      }
+
+      int selectedMonth = int.parse(month);
+      int selectedYear = int.parse(year);
+
+      final firstDayOfMonth = DateTime(selectedYear, selectedMonth, 1);
+      final lastDayOfMonth = DateTime(selectedYear, selectedMonth + 1, 0);
+
+      // Prepare the map according to API requirements
+      var map = {
+         'site_id': attendancesiteid.toString(),
+        'from_date': DateFormat('yyyy-MM-dd').format(firstDayOfMonth),
+        'to_date': DateFormat('yyyy-MM-dd').format(lastDayOfMonth),
+        "month": "$month",
+        "year": "$year",
+      
+      };
+    
+      log(' API Request Data: ${jsonEncode(map)}');
+
+   
+
+      await APIManager().apiRequest(
+        context,
+        API.supervisor_submit_attendance_rooster,
+        (response) async {
+          // Close loading dialog
+
+          FridgeAttendanceRosterResponse resp = response;
+          // log(' API Response: ${resp.status} - ${resp.msg}');
+
+          if (resp.status == 1) {
+      
+
+            ShowDialogs.showToast('${resp.msg}');
+            //  Navigator.pop(context);
+
+          
+          } else {
+            ShowDialogs.showToast('${resp.msg}');
+          }
+        },
+        (error) {
+          Navigator.pop(context); // Close loading dialog
+          log(' Error submitting attendance: $error');
+          ShowDialogs.showToast('Error: $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log(' Exception in _submitAttendaceRoster: $e');
+      ShowDialogs.showToast('Exception: $e');
+    }
+  }
 
 
 }
