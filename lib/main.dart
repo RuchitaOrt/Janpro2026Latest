@@ -1,4 +1,4 @@
-// ignore_for_file: depend_on_referenced_packages, unrelated_type_equality_checks, avoid_print, library_private_types_in_public_api, deprecated_member_use, use_super_parameters
+// ignore_for_file: depend_on_referenced_packages, unrelated_type_equality_checks, avoid_print, library_private_types_in_public_api, deprecated_member_use, use_super_parameters, unused_import, strict_top_level_inference
 
 import 'dart:convert';
 import 'dart:developer';

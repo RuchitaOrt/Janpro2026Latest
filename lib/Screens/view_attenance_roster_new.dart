@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Attendance.dart';
@@ -116,6 +115,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   bool bulkHasOT = false;
   bool _isreasonshow = false;
   String bulkOTHours = '';
+  dynamic sup_final_submitted_v;
   final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
 
   final List<String> monthNames = [
@@ -582,7 +582,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                         ),
                       ),
                       
-                      selectedShift?.employeeList?.isEmpty
+                      selectedShift?.employeeList?.isEmpty||GlobalLists.supervisorrole != role&&!selectedShift.sup_final_submitted
                           ? SizedBox()
                           : Padding(
                               padding: const EdgeInsets.only(
@@ -654,7 +654,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                   SizedBox(width: 10),
 
                                   // Bulk mode toggle — moved here from FAB
-                                  ElevatedButton.icon(
+                               GlobalLists.supervisorrole == role&&selectedShift.sup_final_submitted?SizedBox():   ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: isBulkMode
                                           ? Colors.red
@@ -664,6 +664,15 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                       ),
                                     ),
                                     onPressed: () {
+                                      if(GlobalLists.supervisorrole == role&&selectedShift.sup_final_submitted){
+                                        log('disable ${selectedShift.employeeList.length}');
+
+                                        log('disable ${selectedShift.sup_final_submitted}');
+
+                                        return;
+                                      }
+
+
                                       setState(() {
                                         isBulkMode = !isBulkMode;
                                         if (!isBulkMode)
@@ -704,7 +713,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             ),
 
                       // Stats bar
-                      _isLandscap || selectedShift?.employeeList?.isEmpty
+                      _isLandscap || selectedShift?.employeeList?.isEmpty||GlobalLists.supervisorrole != role&&!selectedShift.sup_final_submitted
                           ? SizedBox()
                           : Container(
                               padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -844,10 +853,32 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             ],
                           ),
                         )
-                      : ListView.builder(
+                      : role!=GlobalLists.supervisorrole&&(selectedShift.sup_final_submitted==false||selectedShift.sup_final_submitted==null) ?Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.people_outline,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                "Attendance roster is not finalized yet.",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ):
+                      
+                      ListView.builder(
                           padding: EdgeInsets.only(top: 12, bottom: 80),
                           itemCount: selectedShift?.employeeList?.length ?? 0,
                           itemBuilder: (context, index) {
+                            sup_final_submitted_v=selectedShift.sup_final_submitted;
                             final emp = selectedShift.employeeList[index];
                             final isSelected = selectedEmployees.contains(
                               emp.empId.toString(),
@@ -861,7 +892,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             ),
 
             selectedShift?.employeeList.isEmpty ||
-                    selectedShift?.employeeList.length == 0
+                    selectedShift?.employeeList.length == 0||GlobalLists.supervisorrole != role&&selectedShift.sup_final_submitted==false
                 ? SizedBox()
                 :  GlobalLists.supervisorrole == role?Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 12,right: 12,left: 12),
@@ -869,6 +900,11 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                       alignment: Alignment.bottomCenter,
                       child: ElevatedButton(
                         onPressed: () {
+                          if(GlobalLists.supervisorrole == role&&selectedShift.sup_final_submitted){
+          ShowDialogs.showToast("Roster is already finalized.");
+
+                            return;
+                          }
                        
                       _showRosterLockDialog(context);
                         },
@@ -881,7 +917,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           minimumSize: Size(double.infinity, 48),
                         ),
                         child: Text(
-                          "Submit",
+                         GlobalLists.supervisorrole == role&&selectedShift.sup_final_submitted?"Roster finalize": "Submit",
                           style: TextStyle(
                             fontFamily: AppFonts.semibold,
                             fontSize: 16,
@@ -966,22 +1002,6 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         ),
       ),
 
-      // floatingActionButton: FloatingActionButton(
-      //    heroTag: 'view_attendance_roster_fab',
-      //   onPressed: () {
-      //     setState(() {
-      //       isBulkMode = !isBulkMode;
-      //       if (!isBulkMode) {
-      //         selectedEmployees.clear();
-      //       }
-      //     });
-      //   },
-      //   backgroundColor: customcolor.blue,
-      //   child: Icon(
-      //     isBulkMode ? Icons.close : Icons.people,
-      //     color: Colors.white,
-      //   ),
-      // ),
     );
   }
 
@@ -1290,6 +1310,14 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
     return GestureDetector(
       onTap: () {
+          // log('selectedShift ${sup_final_submitted_v}');
+
+
+        if(GlobalLists.supervisorrole == role&&sup_final_submitted_v){
+          log('Roster is already finalized.');
+          ShowDialogs.showToast("Roster is already finalized.");
+          return;
+        }
         if (!isFuture && day != null &&!isBulkMode) {
           _showAttendanceDialog(emp, day, date);
         }
@@ -1576,10 +1604,11 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           "date": date,
                           "attendance_status": day.attendance_type ?? '',
                           "emp_id": emp.empId,
-                          "reason": reasonController.text.trim(),
+                             "reason":role==GlobalLists.supervisorrole?'': reasonController.text,
+                                "sup_reason":role!=GlobalLists.supervisorrole?'': reasonController.text,
                           "attendance_type": day.attendance_type,
                           // ),
-                          if (hours > 0) "ot_hours": hours.toStringAsFixed(1),
+                          if (hours > 0) "ot_hours": hours,
                         };
 
                         final apiData = {
@@ -1589,7 +1618,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           'emp_id': [attendanceEntry],
                           'roster_image': '',
                           'user_id': attendanceclientid,
-                          'client_id': attendanceclientid,
+                          'client_id': role==GlobalLists.supervisorrole?GlobalLists.clientid:attendanceclientid,
                           'month': month,
                           'year': year,
                         };
@@ -2015,11 +2044,20 @@ Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
                             "date": date,
                             "attendance_status": selectedAttendance,
                             "emp_id": emp.empId,
-                            "reason": reasonController.text.trim(),
+                            // "reason":role==GlobalLists.supervisorrole?'': reasonController.text,
+                            // "sup_reason":role!=GlobalLists.supervisorrole?'': reasonController.text,
                             "attendance_type": _convertAttendanceTypeToAPI(
                               selectedAttendance,
                             ),
                           };
+                          if(role!=GlobalLists.supervisorrole){
+                            attendanceEntry['reason']=reasonController.text;
+
+                          }
+                            if(role==GlobalLists.supervisorrole){
+                            attendanceEntry['sup_reason']=reasonController.text;
+
+                          }
 
                           // Add OT hours if present
                           if (otHours != null && otHours > 0) {
@@ -2034,7 +2072,7 @@ Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
                             'emp_id': [attendanceEntry],
                             'roster_image': '',
                             'user_id': attendanceclientid,
-                            'client_id': attendanceclientid,
+                            'client_id': role==GlobalLists.supervisorrole?GlobalLists.clientid:attendanceclientid,
                             'month': month,
                             'year': year,
                             'ot_hours': otHours != null
@@ -2635,15 +2673,24 @@ Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
                                 "date": date,
                                 "attendance_status": bulkAttendanceStatus,
                                 "emp_id": int.parse(empId),
-                                "reason": reasonController.text,
+                                // "reason":role==GlobalLists.supervisorrole?'': reasonController.text,
+                                // "sup_reason":role!=GlobalLists.supervisorrole?'': reasonController.text,
                                 "attendance_type": _convertAttendanceTypeToAPI(
                                   bulkAttendanceStatus,
                                 ),
                               };
+                                 if(role!=GlobalLists.supervisorrole){
+                            entry['reason']=reasonController.text;
+
+                          }
+                            if(role==GlobalLists.supervisorrole){
+                            entry['sup_reason']=reasonController.text;
+
+                          }
 
                               // Add OT hours if applicable
                               if (bulkHasOT && hours > 0) {
-                                entry["ot_hours"] = hours.toStringAsFixed(1);
+                                entry["ot_hours"] = hours;
                               }
 
                               attendanceEntries.add(entry);
@@ -3427,11 +3474,12 @@ Color _getAttendanceColor(AttendanceData? day, bool isFuture) {
         'emp_id': jsonEncode(apiData['emp_id'] ?? []),
         'month': month,
         'year': year,
+        "client_id":apiData['user_id']
         // 'ot_hours': apiData['ot_hours'] ?? '',
         // 'roster_image': apiData['roster_image'] ?? '',
       };
        if (GlobalLists.clientrole == role) {
-        map["client_id"] = apiData['user_id'];
+        // map["client_id"] = apiData['user_id'];
       } else {
         map["user_id"] = supervisorid;
       }
@@ -3894,8 +3942,9 @@ void _showRosterLockDialog(BuildContext context) {
       // Prepare the map according to API requirements
       var map = {
          'site_id': attendancesiteid.toString(),
-        'from_date': DateFormat('yyyy-MM-dd').format(firstDayOfMonth),
-        'to_date': DateFormat('yyyy-MM-dd').format(lastDayOfMonth),
+         'client_id':GlobalLists.clientid,
+        // 'from_date': DateFormat('yyyy-MM-dd').format(firstDayOfMonth),
+        // 'to_date': DateFormat('yyyy-MM-dd').format(lastDayOfMonth),
         "month": "$month",
         "year": "$year",
       

@@ -30,6 +30,8 @@ class ShiftData {
   final List<EmployeeData> employeeList;
   final dynamic is_month_end;
   final dynamic is_final_submitted;
+  final dynamic sup_final_submitted;
+
   final bool review_updated_by_oe_om;
   final bool review_updated_by_client;
 
@@ -47,7 +49,8 @@ class ShiftData {
     required this.is_month_end,
     required this.is_final_submitted,
     required this.review_updated_by_oe_om,
-    required this.review_updated_by_client
+    required this.review_updated_by_client,
+    required this.sup_final_submitted
 
   });
 
@@ -68,7 +71,8 @@ class ShiftData {
           is_final_submitted:json['is_final_submitted'],
           is_month_end:json['is_month_end'],
         review_updated_by_oe_om:json['review_updated_by_oe_om']??false,
-        review_updated_by_client:json["review_updated_by_client"]??false
+        review_updated_by_client:json["review_updated_by_client"]??false,
+        sup_final_submitted:json['sup_final_submitted']
 
     );
   }
