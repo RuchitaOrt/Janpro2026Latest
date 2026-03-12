@@ -15,12 +15,12 @@ class Dailogbox{
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                _legendDot( Color(0xFF22C55E), "Present"),
-                _legendDot(  Color(0xFFEF4444), "Absent"),
-                _legendDot(  Color(0xFF7DD3FC), "Holiday"),
-                _legendDot(  Color(0xFF2563EB), "Working Holiday"),
-                _legendDot(  Color(0xFF4ADE80), "Halfday"),
-                _legendDot(  Color(0xFF8B5CF6), "OT Hrs"),
+                _legendDot( Color(0xFF22C55E), "Present","P"),
+                _legendDot(  Color(0xFFEF4444), "Absent","A"),
+                _legendDot(  Color(0xFF7DD3FC), "Holiday","H"),
+                _legendDot(  Color(0xFF2563EB), "Working Holiday","W"),
+                _legendDot(  Color(0xFF4ADE80), "Halfday","F"),
+                _legendDot(  Color(0xFF8B5CF6), "OT Hrs","OT"),
 
 
 
@@ -51,27 +51,40 @@ class Dailogbox{
     );
   }
 
-  Widget _legendDot(Color color, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+Widget _legendDot(Color color, String text, [String stext = '']) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
         ),
-        const SizedBox(width: 4),
+      ),
+      const SizedBox(width: 4),
+      Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.black87,
+          fontFamily: AppFonts.regular,
+        ),
+      ),
+      const SizedBox(width: 10),
+
+      if (stext.isNotEmpty)
         Text(
-          text,
+          '( $stext )',
           style: TextStyle(
             fontSize: 11,
             color: Colors.black87,
             fontFamily: AppFonts.regular,
           ),
         ),
-      ],
-    );
-  }
-  // int count
+    ],
+  );
+}
 
 }

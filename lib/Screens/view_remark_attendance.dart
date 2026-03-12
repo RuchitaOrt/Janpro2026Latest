@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_typing_uninitialized_variables, must_be_immutable, deprecated_member_use, unused_element
+// ignore_for_file: prefer_typing_uninitialized_variables, must_be_immutable, deprecated_member_use, unused_element, strict_top_level_inference, curly_braces_in_flow_control_structures
 
 import 'dart:async';
 import 'dart:convert';
@@ -745,7 +745,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                       ),
                     ),
                     Text(
-                      record.previousStatus == 'yes' ? "P" : "A",
+                      record.previousStatus.toString(),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade800,
@@ -772,7 +772,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                       ),
                     ),
                     Text(
-                      record.previousStatus == 'yes' ? "A" : "P",
+                      record.previousStatus.toString(),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade800,
@@ -794,9 +794,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                       record.omOeApprovalStatus == null
                           ? "Pending"
                           : record.omOeApprovalStatus == 'approved'
-                          ? (record.previousStatus == 'yes' ? "A" : "P")
+                          ? (record.previousStatus.toString())
                           : record.omOeApprovalStatus == 'rejected'
-                          ? (record.previousStatus == 'yes' ? "P" : "A")
+                          ? (record.previousStatus.toString())
                           : "Pending",
                       style: TextStyle(
                         fontSize: 13,
@@ -1202,6 +1202,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       map["user_id"] = "$supervisorid";
     }
 
+
+    log('view remark attendance ${map}');
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1373,6 +1376,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             "attendance_status": finalStatus,
             "attendance_id": r.id,
             "approve_status": approveStatus,
+            "attendance_type":r.attendance_type
           });
         }
       }
@@ -1433,15 +1437,16 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             // Timer(
             //   Duration(seconds: 1),
             //       () =>
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => Attendance(
-                  GlobalLists.mainlisttab[widget.manTag].clientName,
-                ),
-                transitionDuration: Duration(seconds: 0),
-              ),
-            );
+            // Navigator.push(
+            //   context,
+            //   PageRouteBuilder(
+            //     pageBuilder: (context, animation1, animation2) => Attendance(
+            //       GlobalLists.mainlisttab[widget.manTag].clientName,
+            //     ),
+            //     transitionDuration: Duration(seconds: 0),
+            //   ),
+            // );
+            Navigator.pop(context);
             // );
             ShowDialogs.showToast(resp.msg);
           } else {

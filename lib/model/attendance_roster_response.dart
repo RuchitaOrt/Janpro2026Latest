@@ -109,7 +109,7 @@ class AttendanceData {
   final String? om_oe_approval_status;
   final String? client_approval_status;
   final bool? act_deact_janitor;
-    final int? ot_hours;
+    final double? ot_hours;
   final String?attendance_type;
 
 
@@ -136,7 +136,7 @@ class AttendanceData {
       attendanceStatus: json['attendance_status'] ?? '',
       attendance_type: json['attendance_type'] ?? '',
 
-        ot_hours: json['ot_hours'] ?? 0,
+        ot_hours: json['ot_hours'] ?? 0.0,
       reason: json['reason'],
       om_oe_resson: json['om_oe_resson'],
       om_oe_approval_status: json['om_oe_approval_status'],

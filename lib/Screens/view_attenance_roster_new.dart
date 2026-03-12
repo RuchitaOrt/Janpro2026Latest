@@ -76,6 +76,7 @@ class ViewAttendanceRoster extends StatefulWidget {
   final String year;
   final int attendancesiteid;
   var attendanceclientid;
+  var attendanceshiftid;
   final String role;
   int maintag;
 
@@ -87,6 +88,7 @@ class ViewAttendanceRoster extends StatefulWidget {
     required this.attendanceclientid,
     required this.role,
     required this.maintag,
+    required this.attendanceshiftid,
   });
 
   @override
@@ -104,7 +106,9 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   bool multiSelectMode = false;
   bool isBulkMode = false;
   Set<String> selectedEmployees = {};
-
+  var attendanceshiftid;
+ var is_month_end;
+ var is_final_submit; 
   // NEW: Multi-date selection
   Set<String> selectedDates = {};
   bool isDateSelectionMode = false;
@@ -169,6 +173,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     maintag = widget.maintag;
     attendancesiteid = widget.attendancesiteid;
     attendanceclientid = widget.attendanceclientid;
+    // attendanceshiftid=widget.attendanceshiftid;
+
     getrole();
     final now = DateTime.now();
 
@@ -233,6 +239,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         "month": "$month",
         "year": "$year",
       };
+
+      log('map view ${map}');
 
       showDialog(
         context: context,
@@ -335,6 +343,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
     final Map<String, List<dynamic>> groupedByMonth = {};
     for (var shift in _attendanceRosterData) {
+      log('shift id ${shift.id}');
       final monthsInShift = <String>{};
 
       for (var emp in shift.employeeList) {
@@ -656,7 +665,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
                                   // Bulk mode toggle — moved here from FAB
                                   GlobalLists.supervisorrole == role &&
-                                          selectedShift.sup_final_submitted
+                                          selectedShift.sup_final_submitted||selectedShift?.is_month_end == 1 &&
+                                  selectedShift?.is_final_submitted == true
                                       ? SizedBox()
                                       : ElevatedButton.icon(
                                           style: ElevatedButton.styleFrom(
@@ -893,9 +903,12 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           padding: EdgeInsets.only(top: 12, bottom: 80),
                           itemCount: selectedShift?.employeeList?.length ?? 0,
                           itemBuilder: (context, index) {
+                            is_final_submit=selectedShift.is_final_submitted;
+                            is_month_end=selectedShift.is_month_end;
                             sup_final_submitted_v =
                                 selectedShift.sup_final_submitted;
                             final emp = selectedShift.employeeList[index];
+
                             final isSelected = selectedEmployees.contains(
                               emp.empId.toString(),
                             );
@@ -910,9 +923,10 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             selectedShift?.employeeList.isEmpty ||
                     selectedShift?.employeeList.length == 0 ||
                     GlobalLists.supervisorrole != role &&
-                        selectedShift.sup_final_submitted == false
+                        selectedShift.sup_final_submitted == false ||selectedEmployees.isNotEmpty
                 ? SizedBox()
-                : GlobalLists.supervisorrole == role
+                : GlobalLists.supervisorrole == role && 
+                                  !selectedShift.sup_final_submitted
                 ? Padding(
                     padding: const EdgeInsets.only(
                       top: 8,
@@ -1074,6 +1088,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
           });
         } else {
           _showBulkMarkingDialog();
+          // showTopSnackBar('Please select at least one date', Color(0xFFEF4444));
         }
       },
       style: ElevatedButton.styleFrom(
@@ -1134,6 +1149,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             } else {
               selectedEmployees.add(emp.empId.toString());
             }
+
+            log('selectedEmployees${selectedEmployees}');
           });
         }
       },
@@ -1344,36 +1361,34 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          
-        });
-            log('reason ${day?.reason}');
+        setState(() {});
+        log('reason ${day?.reason}');
         if (role == GlobalLists.clientrole) {
-         
-          log('is_final_submitted ${selectedShift?.is_final_submitted}');
+          log('is_final_submitted check ${is_month_end}');
+
+          log('is_final_submitted ${is_final_submit}');
           log('attendanceStatus ${day?.attendanceStatus}');
           log('client_approval_status ${day?.client_approval_status}');
           log('act_deact_janitor ${day?.act_deact_janitor}');
 
-
-
           canEdit =
-              
-              (selectedShift?.is_final_submitted == false||selectedShift?.is_final_submitted ==null) &&
+              (is_final_submit == false ||
+                  selectedShift?.is_final_submitted == null) &&
               day?.act_deact_janitor == true &&
               day?.attendanceStatus != '-' &&
               (day?.client_approval_status == null ||
                   day!.client_approval_status == '') &&
-              (day?.reason == null || day?.reason == ''||day?.reason == 'NA');
+              (day?.reason == null || day?.reason == '' || day?.reason == 'NA');
         }
-         log('canEdit ${canEdit}');
+        log('canEdit ${canEdit}');
 
         if (GlobalLists.supervisorrole == role && sup_final_submitted_v) {
           log('Roster is already finalized.');
           ShowDialogs.showToast("Roster is already finalized.");
           return;
         }
-        if (canEdit || (GlobalLists.supervisorrole == role && !sup_final_submitted_v)) {
+        if (canEdit ||
+            (GlobalLists.supervisorrole == role && !sup_final_submitted_v)) {
           if (!isFuture && day != null && !isBulkMode) {
             _showAttendanceDialog(emp, day, date);
           }
@@ -1447,9 +1462,17 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
             SizedBox(height: 4),
             GestureDetector(
               onTap: () {
+           
+
+
+                if(is_month_end==1&&
+                                  is_final_submit==true){
+                                    return;
+                                  }
                 if (!isFuture && day != null && !isBulkMode) {
                   _showOTDialog(emp, day, date, displayOT.toDouble());
                 }
+
               },
               child: Container(
                 height: 28,
@@ -1668,6 +1691,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                               ? ''
                               : reasonController.text,
                           "attendance_type": day.attendance_type,
+                          'attendance_id': day.attendanceId,
                           // ),
                           if (hours > 0) "ot_hours": hours,
                         };
@@ -1740,7 +1764,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     bool isOmEmpty =
         day.om_oe_approval_status == null || day.om_oe_approval_status!.isEmpty;
 
-    bool isReasonEmpty = day.reason == null || day.reason!.isEmpty ||day.reason=='NA';
+    bool isReasonEmpty =
+        day.reason == null || day.reason!.isEmpty || day.reason == 'NA';
 
     // 4 If ALL are empty → use attendance_type switch
     if (isClientEmpty && isOmEmpty && isReasonEmpty) {
@@ -2103,8 +2128,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             "date": date,
                             "attendance_status": selectedAttendance,
                             "emp_id": emp.empId,
-                            // "reason":role==GlobalLists.supervisorrole?'': reasonController.text,
-                            // "sup_reason":role!=GlobalLists.supervisorrole?'': reasonController.text,
+                             "attendance_id":day.attendanceId,
                             "attendance_type": _convertAttendanceTypeToAPI(
                               selectedAttendance,
                             ),
@@ -2139,6 +2163,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                 ? otHours.toStringAsFixed(1)
                                 : '',
                           };
+                          // In _showAttendanceDialog, just before Navigator.pop(context)
+log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: $date');
 
                           Navigator.pop(context);
 
@@ -2211,25 +2237,30 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     );
   }
 
-  void _showBulkMarkingDialog() {
+  dynamic _getAttendanceId(String empId, String date) {
+    for (var shift in _attendanceRosterData) {
+      for (var emp in shift.employeeList) {
+        if (emp.empId.toString() == empId) {
+          for (var attend in emp.attendData) {
+            if (attend.date == date) {
+              return attend.attendanceId ?? '';
+            }
+          }
+        }
+      }
+    }
+    return '';
+  }
+
+ void _showBulkMarkingDialog() {
     if (selectedEmployees.isEmpty) {
-      ScaffoldMessenger.of(context).showMaterialBanner(
-        MaterialBanner(
-          content: const Text(
-            'Please select at least one employee',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Color(0xFFEF4444),
-          actions: [
-            TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-              },
-              child: const Text('OK', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      );
+     ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text('Please select at least one employee'),
+    backgroundColor: Color(0xFFEF4444),
+  ),
+);
+      
       return;
     }
 
@@ -2722,7 +2753,12 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                           List<Map<String, dynamic>> attendanceEntries = [];
 
                           for (var empId in selectedEmployees) {
+                            log(selectedEmployees.toString());
                             for (var date in selectedDates) {
+                              final attendanceId = _getAttendanceId(
+                                empId,
+                                date,
+                              );
                               // Save OT hours to global storage
                               if (bulkHasOT && hours > 0) {
                                 OTHoursManager().setOTHours(empId, date, hours);
@@ -2731,10 +2767,11 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                               // Create entry for this employee and date
                               Map<String, dynamic> entry = {
                                 "date": date,
+                                "attendance_id": attendanceId,
                                 "attendance_status": bulkAttendanceStatus,
                                 "emp_id": int.parse(empId),
-                                // "reason":role==GlobalLists.supervisorrole?'': reasonController.text,
-                                // "sup_reason":role!=GlobalLists.supervisorrole?'': reasonController.text,
+                                
+
                                 "attendance_type": _convertAttendanceTypeToAPI(
                                   bulkAttendanceStatus,
                                 ),
@@ -2755,6 +2792,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             }
                           }
 
+                          log('attendanceEntries ${attendanceEntries}');
+
                           final apiData = {
                             'site_id': attendancesiteid.toString(),
                             'to_date': selectedDates.first,
@@ -2763,6 +2802,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                             'roster_image': '',
                             'user_id': attendanceclientid,
                             'client_id': attendanceclientid,
+
                             'month': month,
                             'year': year,
                             'ot_hours': bulkHasOT
@@ -2803,6 +2843,22 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       ),
     );
   }
+ void showTopSnackBar(String message, Color color) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message, style: TextStyle(color: Colors.white)),
+      backgroundColor: color,
+      duration: Duration(seconds: 1),
+      behavior: SnackBarBehavior.floating,
+      margin: EdgeInsets.only(
+        top: 20,
+        left: 16,
+        right: 16,
+      ),
+    ),
+  );
+}
+
 
   Widget _buildDateSelectionButton(
     String label,
@@ -3529,15 +3585,18 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       var map = {
         'site_id': apiData!['site_id'] ?? '',
         'to_date': currentDate,
+        // 'shift': apiData['shift'] ?? '',
+        'shift': _attendanceRosterData[0].id.toString(),
         'emp_id': jsonEncode(apiData['emp_id'] ?? []),
         'month': month,
         'year': year,
         "client_id": apiData['user_id'],
+        // "user_id":apiData['user_id'],
         // 'ot_hours': apiData['ot_hours'] ?? '',
         // 'roster_image': apiData['roster_image'] ?? '',
       };
       if (GlobalLists.clientrole == role) {
-        // map["client_id"] = apiData['user_id'];
+        map["user_id"] = apiData['user_id'];
       } else {
         map["user_id"] = supervisorid;
       }
@@ -3964,7 +4023,6 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       }
 
       String currentDate = DateTime.now().toIso8601String().split('T').first;
-      log('Current date for submission: $currentDate');
 
       var supervisorid = await SPManager().getsupervisorid();
       final now = DateTime.now();

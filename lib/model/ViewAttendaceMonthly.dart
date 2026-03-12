@@ -104,6 +104,7 @@ class Record {
   String? omOeResson;
   String? clientApprovalStatus;
   bool isFinalSubmitted;
+  String? attendance_type;
   String? previousStatus;
 
   Record({
@@ -130,6 +131,7 @@ class Record {
     required this.clientApprovalStatus,
     required this.isFinalSubmitted,
     required this.previousStatus,
+    required this.attendance_type,
   });
 
   factory Record.fromJson(Map<String, dynamic> json) => Record(
@@ -158,6 +160,7 @@ class Record {
         clientApprovalStatus: json["client_approval_status"],
         isFinalSubmitted: json["is_final_submitted"] ?? false,
         previousStatus: json["previous_status"],
+        attendance_type:json['attendance_type']??""
       );
 
   Map<String, dynamic> toJson() => {
@@ -185,5 +188,6 @@ class Record {
         "client_approval_status": clientApprovalStatus,
         "is_final_submitted": isFinalSubmitted,
         "previous_status": previousStatus,
+        "attendance_type":attendance_type
       };
 }

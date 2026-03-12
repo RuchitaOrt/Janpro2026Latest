@@ -2811,6 +2811,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                               attendancesiteid: GlobalLists
                                                   .mainlisttab[maintag]
                                                   .siteId,
+                                              attendanceshiftid:attendanceshiftid,
                                               attendanceRosterData: _attendanceRosterData,
                                               month: month,
                                               year: year,
@@ -3159,6 +3160,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                               attendancesiteid: GlobalLists
                                                   .mainlisttab[maintag]
                                                   .siteId,
+                                               attendanceshiftid:attendanceshiftid,
                                               attendanceRosterData: _attendanceRosterData,
                                               month: month,
                                               year: year,
@@ -3779,6 +3781,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         .attendanceDetails[value]
                         .id
                         .toString();
+
+                        log('attendanceshiftid ${attendanceshiftid}');
                   } else {
                     attendanceshiftid = "";
                   }
