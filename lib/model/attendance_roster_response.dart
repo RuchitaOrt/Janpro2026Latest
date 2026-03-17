@@ -109,7 +109,7 @@ class AttendanceData {
   final String? om_oe_approval_status;
   final String? client_approval_status;
   final bool? act_deact_janitor;
-    final double? ot_hours;
+    final dynamic? ot_hours;
   final String?attendance_type;
 
 

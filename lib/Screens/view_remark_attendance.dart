@@ -10,16 +10,20 @@ import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Attendance.dart';
 
 import 'package:janpro/Utitlity/APIManager.dart';
+import 'package:janpro/Utitlity/AppDrawer.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
+import 'package:janpro/Utitlity/appbar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
 
 import 'package:janpro/model/ApproveRejectSubmit.dart';
 import 'package:janpro/model/ViewAttendaceMonthly.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+
+import 'view_attenance_roster_new.dart';
 
 class ViewRemarkAttendance extends StatefulWidget {
   var month;
@@ -104,7 +108,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
     for (var d in attendanceData!.data) {
       for (var r in d.records) {
+        //  print(r.id);
+        //    print(r.omOeApprovalStatus);
         if (r.omOeApprovalStatus == null || r.omOeApprovalStatus!.isEmpty) {
+          print("in if");
+          print(r.id);
+           print(r.omOeApprovalStatus);
           return false;
         }
       }
@@ -130,9 +139,17 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
   /// Check if OM/OE user should be in read-only mode
   bool get _isOmOeReadOnly {
+    print("_isOmOeReadOnly");
+     print(_isOmOeApprovalCompleted);
     // If user is not a client and OM/OE approval is completed
     return GlobalLists.clientrole != role && _isOmOeApprovalCompleted;
   }
+  //  bool get _isSupervisorReadOnly {
+  //    print("_isSupervisorReadOnly");
+  //   print(_isOmOeApprovalCompleted);
+  //   // If user is not a client and OM/OE approval is completed
+  //  return GlobalLists.supervisorrole == role  && _isOmOeApprovalCompleted;
+  // }
 
   /// Initialize API rejection status
   void _initializeApiRejectionStatus() {
@@ -153,20 +170,43 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       }
     }
   }
+  final GlobalKey<ScaffoldState> _scaffoldKeyview = new GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
+    log('role == GlobalLists.clientrole ${role == GlobalLists.clientrole}');
     _fetchAttendanceRoster();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: customcolor.blue,
-        title: const Text("View Remark Attendance"),
-      ),
+        key: _scaffoldKeyview,
+
+        endDrawer: Theme(
+          data: Theme.of(context).copyWith(
+            canvasColor: customcolor.blue,
+            primaryColor: customcolor.blue,
+          ),
+          child: AppDrawerfilter(role),
+        ),
+        backgroundColor: customcolor.greybg,
+         appBar: PreferredSize(
+          preferredSize: Size.fromHeight(148),
+          child: AppbarComman(
+            setStyleStr: 'View Remark Attendance',
+            onPressedBack: () {},
+            onPressedNotify: () {},
+            onPressedSearch: () {},
+            onPressedSort: () {},
+            onPressedmenu: () {
+              _scaffoldKeyview.currentState!.openEndDrawer();
+            },
+          ),
+        ),
+
+   
       body: attendanceData?.data.length == 0 || attendanceData == null
           ? const Center(child: Text("No Record Found"))
           : Padding(
@@ -772,7 +812,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                       ),
                     ),
                     Text(
-                      record.previousStatus.toString(),
+                      role == GlobalLists.clientrole
+                          ? record.client_attendance_type.toString()
+                          : record.client_attendance_type.toString(),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade800,
@@ -793,11 +835,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                     Text(
                       record.omOeApprovalStatus == null
                           ? "Pending"
-                          : record.omOeApprovalStatus == 'approved'
-                          ? (record.previousStatus.toString())
-                          : record.omOeApprovalStatus == 'rejected'
-                          ? (record.previousStatus.toString())
-                          : "Pending",
+                          : record.om_oe_attendance_type.toString(),
+                          // record.omOeApprovalStatus == 'approved'
+                          // ? (record.previousStatus.toString())
+                          // : record.omOeApprovalStatus == 'rejected'
+                          // ? (record.previousStatus.toString())
+                          // : "Pending",
                       style: TextStyle(
                         fontSize: 13,
                         color: _getOmOeStatusColor(record.omOeApprovalStatus),
@@ -916,17 +959,18 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     bool isClient = GlobalLists.clientrole == role;
     bool hasPendingOmOe = _hasPendingOmOeApproval;
     bool isOmOeReadOnly = _isOmOeReadOnly;
+    // bool isSupervisorRole=_isSupervisorReadOnly;
 
+    // print("ISSPERVISOR ${isSupervisorRole}");
     // Determine if submit button should be enabled
     bool canSubmit;
 
     if (isOmOeReadOnly) {
       // OM/OE read-only mode: disable submit button
       canSubmit = false;
-    } else if (isClient) {
-      // Client: only enable if no pending OM/OE approval
-      canSubmit = !hasPendingOmOe;
-    } else {
+    }
+   
+     else {
       // OM/OE user who can still take action
       canSubmit = true;
     }
@@ -1019,7 +1063,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                             _allClientApproved ||
                             (GlobalLists.clientrole == role &&
                                 _hasPendingOmOeApproval) ||
-                            isOmOeReadOnly,
+                            isOmOeReadOnly ,
                       ),
                     ],
                   ),
@@ -1202,7 +1246,6 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       map["user_id"] = "$supervisorid";
     }
 
-
     log('view remark attendance ${map}');
 
     showDialog(
@@ -1287,7 +1330,6 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         // If not already approved, check user selection
         if (!isAlreadyApproved && approvalSelection[r.id] == "approve") {
           pendingApprovals++;
-      
         }
       }
     }
@@ -1376,7 +1418,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             "attendance_status": finalStatus,
             "attendance_id": r.id,
             "approve_status": approveStatus,
-            "attendance_type":r.attendance_type
+            "attendance_type": r.attendance_type,
           });
         }
       }
@@ -1437,16 +1479,24 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             // Timer(
             //   Duration(seconds: 1),
             //       () =>
-            // Navigator.push(
-            //   context,
-            //   PageRouteBuilder(
-            //     pageBuilder: (context, animation1, animation2) => Attendance(
-            //       GlobalLists.mainlisttab[widget.manTag].clientName,
-            //     ),
-            //     transitionDuration: Duration(seconds: 0),
-            //   ),
-            // );
-            Navigator.pop(context);
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) =>
+                    ViewAttendanceRoster(
+                      month: widget.month,
+                      year: widget.year,
+                      attendancesiteid: widget.attendancesiteid,
+                      attendanceclientid: widget.clientid,
+                      role: role.toString(),
+                      maintag: widget.manTag,
+                      attendanceshiftid: widget.shiftId,
+                      attendanceRosterData: [],
+                    ),
+                transitionDuration: Duration(seconds: 0),
+              ),
+            );
+            // Navigator.pop(context);
             // );
             ShowDialogs.showToast(resp.msg);
           } else {

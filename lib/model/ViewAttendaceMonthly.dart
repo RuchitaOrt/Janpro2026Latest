@@ -106,6 +106,8 @@ class Record {
   bool isFinalSubmitted;
   String? attendance_type;
   String? previousStatus;
+  String? client_attendance_type;
+  String? om_oe_attendance_type;
 
   Record({
     required this.id,
@@ -132,6 +134,8 @@ class Record {
     required this.isFinalSubmitted,
     required this.previousStatus,
     required this.attendance_type,
+    required this.client_attendance_type,
+    required this.om_oe_attendance_type,
   });
 
   factory Record.fromJson(Map<String, dynamic> json) => Record(
@@ -160,7 +164,9 @@ class Record {
         clientApprovalStatus: json["client_approval_status"],
         isFinalSubmitted: json["is_final_submitted"] ?? false,
         previousStatus: json["previous_status"],
-        attendance_type:json['attendance_type']??""
+        attendance_type:json['attendance_type']??"",
+        client_attendance_type: json['client_attendance_type']??"",
+        om_oe_attendance_type: json['om_oe_attendance_type']??"",
       );
 
   Map<String, dynamic> toJson() => {
@@ -188,6 +194,8 @@ class Record {
         "client_approval_status": clientApprovalStatus,
         "is_final_submitted": isFinalSubmitted,
         "previous_status": previousStatus,
-        "attendance_type":attendance_type
+        "attendance_type":attendance_type,
+        "client_attendance_type": client_attendance_type,
+        "om_oe_attendance_type": om_oe_attendance_type,
       };
 }

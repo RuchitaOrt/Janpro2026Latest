@@ -174,7 +174,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     attendancesiteid = widget.attendancesiteid;
     attendanceclientid = widget.attendanceclientid;
     // attendanceshiftid=widget.attendanceshiftid;
-
+print("RUCHITA  attendanceclientid ${attendanceclientid}");
     getrole();
     final now = DateTime.now();
 
@@ -215,16 +215,12 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
       }
 
       final now = DateTime.now();
+if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
+  DateTime previousMonth = DateTime(now.year, now.month - 1);
 
-      if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
-        if (now.month == 1) {
-          month = "12";
-          year = (now.year - 1).toString();
-        } else {
-          month = now.month.toString().padLeft(2, '0');
-          year = now.year.toString();
-        }
-      }
+  month = previousMonth.month.toString().padLeft(2, '0');
+  year = previousMonth.year.toString();
+}
 
       int selectedMonth = int.parse(month);
       int selectedYear = int.parse(year);
@@ -240,7 +236,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
         "year": "$year",
       };
 
-      log('map view ${map}');
+      // log('map view ${map}');
 
       showDialog(
         context: context,
@@ -316,9 +312,20 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     selectedEmployees.clear();
     selectedDates.clear();
     isDateSelectionMode = false;
+    
     _fetchAttendanceRoster();
   }
+bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
+  final now = DateTime.now();
 
+  int currentMonth = now.month; // 1 - 12
+  int currentYear = now.year;
+
+  // If your selectedMonthIndex is 0-based (Jan = 0)
+  int selectedMonth = selectedMonthIndex ;
+
+  return selectedMonth == currentMonth && selectedYear == currentYear;
+}
   @override
   Widget build(BuildContext context) {
     if (!mounted || context == null || _attendanceRosterData.isEmpty)
@@ -920,7 +927,9 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
               ],
             ),
 
-            selectedShift?.employeeList.isEmpty ||
+        isCurrentMonthYear(selectedMonthIndex!, selectedYear!)
+    ? SizedBox()
+    :    selectedShift?.employeeList.isEmpty ||
                     selectedShift?.employeeList.length == 0 ||
                     GlobalLists.supervisorrole != role &&
                         selectedShift.sup_final_submitted == false ||selectedEmployees.isNotEmpty
@@ -1000,7 +1009,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                                       month: month,
                                       year: year,
                                       attendancesiteid: attendancesiteid,
-                                      clientid: attendanceclientid,
+                                      clientid: attendanceclientid,//GlobalLists.clientid,
                                       manTag: maintag,
                                       shiftId: selectedShift?.id,
                                     ),
@@ -1998,7 +2007,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
                     Expanded(
                       child: _buildModalOptionButton(
                         '📅',
-                        'Leave',
+                        'Holiday',
                         selectedAttendance == 'leave',
                         () {
                           setDialogState(() {
@@ -2507,7 +2516,7 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
                     Expanded(
                       child: _buildModalOptionButton(
                         '📅',
-                        'Leave',
+                        'Holiday',
                         bulkAttendanceStatus == 'leave',
                         () {
                           setDialogState(() {
@@ -3561,7 +3570,7 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
         return 'F'; // Half day
       case 'leave':
         return 'H'; // Holiday/Leave
-      case 'Working on Holiday':
+      case 'working on holiday':
         return 'W';
       default:
         return '';
