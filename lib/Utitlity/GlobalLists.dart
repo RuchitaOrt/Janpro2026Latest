@@ -49,7 +49,7 @@ static ValueNotifier<bool> isAddEditJanitor = ValueNotifier<bool>(false);
 static ValueNotifier<bool> isActiveLoader = ValueNotifier<bool>(false);
 static  int isShiftActive = 1;
 
-
+static String downloadRosterLink="";
   static List<unitatt.Datum> mainlisttab = [];
   static List<Janitorcheckbox> dropdownList = [];
   static late att.Data attendancedata;
@@ -135,8 +135,8 @@ static  int isShiftActive = 1;
   //     static String operationrole = "5";
   static String supervisorrole = "1";
   static String unitrole = "2";
-  static String operationmanagerrole = "3"; //same
-  static String operationrole = "4"; //same
+  static String operationmanagerrole = "3"; //same //operational Executive
+  static String operationrole = "4"; //same // operational manager
   static String headrole = "5";
   static String reginalmanagerrole = "6";
   static String clientrole = "7";

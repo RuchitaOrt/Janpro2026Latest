@@ -20,6 +20,7 @@ import 'package:janpro/Utitlity/custom_color.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
 
 import 'package:janpro/model/ApproveRejectSubmit.dart';
+import 'package:janpro/model/CommonResponse.dart';
 import 'package:janpro/model/ViewAttendaceMonthly.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -121,6 +122,24 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     return true;
   }
 
+   bool get _isnotificationCompleted {
+    if (attendanceData == null) return false;
+
+    for (var d in attendanceData!.data) {
+      for (var r in d.records) {
+        //  print(r.id);
+        //    print(r.omOeApprovalStatus);
+        if (r.notification_sent == true ) {
+          print("in if");
+          print(r.id);
+           print(r.omOeApprovalStatus);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   /// Check if client can take action on any record
   bool get _canClientTakeAction {
     if (GlobalLists.clientrole != role)
@@ -143,6 +162,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
      print(_isOmOeApprovalCompleted);
     // If user is not a client and OM/OE approval is completed
     return GlobalLists.clientrole != role && _isOmOeApprovalCompleted;
+  }
+    bool get _isClientReadOnly {
+    print("_isOmOeReadOnly");
+     print(_isOmOeApprovalCompleted);
+    // If user is not a client and OM/OE approval is completed
+    return GlobalLists.clientrole == role && !_isOmOeApprovalCompleted;
   }
   //  bool get _isSupervisorReadOnly {
   //    print("_isSupervisorReadOnly");
@@ -969,7 +994,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       // OM/OE read-only mode: disable submit button
       canSubmit = false;
     }
-   
+   else if(_isClientReadOnly)
+   {
+     canSubmit = false;
+   }
      else {
       // OM/OE user who can still take action
       canSubmit = true;
@@ -1074,12 +1102,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             child: ElevatedButton(
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(
-                  _allClientApproved || !canSubmit || isOmOeReadOnly
+              (!canSubmit && !_isnotificationCompleted)? Colors.grey.shade500:    !canSubmit?customcolor.blue:  _allClientApproved || !canSubmit || isOmOeReadOnly
                       ? Colors.grey.shade300
                       : customcolor.blue,
                 ),
                 foregroundColor: MaterialStateProperty.all(
-                  _allClientApproved || !canSubmit || isOmOeReadOnly
+                 !canSubmit?customcolor.white:    _allClientApproved || !canSubmit || isOmOeReadOnly
                       ? Colors.grey.shade500
                       : Colors.white,
                 ),
@@ -1092,7 +1120,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                   ),
                 ),
               ),
-              onPressed: _allClientApproved || !canSubmit || isOmOeReadOnly
+              onPressed: 
+              
+              
+      (!canSubmit && !_isnotificationCompleted)? null:     !canSubmit?  _submittedByClientRoster: _allClientApproved || !canSubmit || isOmOeReadOnly
                   ? null
                   : _submitAttendaceRoster,
               child: Text(
@@ -1100,8 +1131,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                     ? "Already Approved"
                     : isOmOeReadOnly && role != GlobalLists.clientrole
                     ? "OPs Approval Completed"
-                    : !canSubmit
-                    ? "Pending OPs Approval"
+                    :(!canSubmit && !_isnotificationCompleted)?
+                    "Pending OPs Approval": !canSubmit
+                    ? "Submit" 
                     : "Submit",
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
@@ -1515,7 +1547,131 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       ShowDialogs.showToast("Something went wrong");
     }
   }
+
+  _submittedByClientRoster() async {
+    
+
+    List<Record> allRecords = [];
+    for (var d in attendanceData!.data) {
+      allRecords.addAll(d.records);
+    }
+
+    
+    /// ======== FIXED: Check only for NEW rejections ========
+    bool hasNewReject = false;
+
+    for (var record in allRecords) {
+      final userSelection = approvalSelection[record.id];
+
+      // Only count it as a new rejection if:
+      // 1. User selected "reject" AND
+      // 2. It wasn't already rejected from API
+      if (userSelection == "reject" &&
+          !alreadyRejectedFromApi.contains(record.id)) {
+        hasNewReject = true;
+        break; // No need to check further
+      }
+    }
+
+    if (hasNewReject) {
+      universalRejectReason = await _rejectReasonDialog();
+      if (universalRejectReason == null) return;
+    }
+
+    try {
+      if (!await ConnectionDetector.checkInternetConnection()) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
+      }
+
+    
+
+      /// ---------------- BUILD attendance_id_list ----------------
+
+      List<Map<String, dynamic>> attendanceIdList = [];
+
+      for (var d in attendanceData!.data) {
+        for (var r in d.records) {
+          final status = approvalSelection[r.id];
+
+          // Use the appropriate status based on whether it's a new rejection or existing
+          String finalStatus;
+          String approveStatus;
+
+          if (alreadyRejectedFromApi.contains(r.id) && status == "reject") {
+            // Keep existing API rejection status
+            finalStatus = r.previousStatus == 'yes'
+                ? "no"
+                : "yes"; // Opposite of original
+            approveStatus = "rejected";
+          } else {
+            // Use user's new selection
+            finalStatus = status == "approve" ? "yes" : "no";
+            approveStatus = status == "approve" ? "approved" : "rejected";
+          }
+
+          attendanceIdList.add({
+            "date": DateFormat('yyyy-MM-dd').format(r.date),
+             "attendance_id": r.id,
+            "attendance_status": finalStatus,
+          
+           "attendance_type": r.attendance_type,
+         "reason":r.reason,
+           "client_id":widget.clientid,"site_id":r.siteId.toString(),
+            "notification_sent":true
+            
+          });
+        }
+      }
+
+      
+      var map = {
+        
+        "attendance_data": jsonEncode(attendanceIdList),
+        
+      };
+
+     
+      log('check this $map');
+
+      /// ---------------- API CALL ----------------
+
+      await APIManager().apiRequest(
+        context,
+        API.client_final_submit_attendance_rooster,
+        (response) {
+          CommonResponse resp = response;
+
+          if (resp.status == 1) {
+            
+            ShowDialogs.showToast(resp.msg);
+          } else {
+            ShowDialogs.showToast(resp.msg);
+          }
+        },
+        (error) {
+          ShowDialogs.showToast("Error: $error");
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } catch (e) {
+      log("Submit error => $e");
+      ShowDialogs.showToast("Something went wrong");
+    }
+  }
+
 }
+//submitted by Client
+
+
+
+
+
+
+
+
 
 // Extension for capitalizing first letter
 extension StringExtension on String {

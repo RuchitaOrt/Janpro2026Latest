@@ -9,23 +9,28 @@ class FridgeAttendanceRosterResponse {
     int status;
     String msg;
     Data data;
+    String monthly_roster_report;
 
     FridgeAttendanceRosterResponse({
         required this.status,
         required this.msg,
         required this.data,
+        required this.monthly_roster_report
     });
 
     factory FridgeAttendanceRosterResponse.fromJson(Map<String, dynamic> json) => FridgeAttendanceRosterResponse(
         status: json["status"],
         msg: json["msg"],
-        data: Data.fromJson(json["data"]),
+        data: Data.fromJson(json["data"],
+        ),
+        monthly_roster_report:json['monthly_roster_report']
     );
 
     Map<String, dynamic> toJson() => {
         "status": status,
         "msg": msg,
         "data": data.toJson(),
+        "monthly_roster_report":monthly_roster_report
     };
 }
 

@@ -146,7 +146,8 @@ enum API {
 
   view_monthly_attendance_rooster_details,
 
-  add_attendance_daily_count
+  add_attendance_daily_count,
+  client_final_submit_attendance_rooster
 }
 
 enum HTTPMethod { GET, POST, PUT, DELETE }
@@ -419,6 +420,11 @@ class APIManager {
         apiPathString = "/api/siteconfigurator/Update_staff_count_for_attendance";
 
         break;
+case API.client_final_submit_attendance_rooster:
+        // apiPathString = "/api/siteconfigurator/add_attendance_daily_count";
+        apiPathString = "/api/attendancemaster/client_final_submit_attendance_rooster";
+
+        break;
 
         
       default:
@@ -494,6 +500,7 @@ class APIManager {
       case API.sup_attendance_roster:
       case API.view_monthly_attendance_rooster_details:
       case API.add_attendance_daily_count:
+      case API.client_final_submit_attendance_rooster:
         method = HTTPMethod.POST;
         break;
 
@@ -694,6 +701,10 @@ class APIManager {
         case API.add_attendance_daily_count:
          className = "AddDailyCountResponse";
         break;
+      case API.client_final_submit_attendance_rooster:
+      className = "CommonResponse";
+        break;
+
       default:
         className = 'CommonResponse';
     }
@@ -898,6 +909,9 @@ class APIManager {
 
     if (className == 'AddDailyCountResponse') {
       responseObj = AddDailyCountResponse.fromJson(json);
+    }
+      if (className == 'CommonResponse') {
+      responseObj = CommonResponse.fromJson(json);
     }
 
     return responseObj;

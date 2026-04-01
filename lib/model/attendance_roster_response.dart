@@ -2,11 +2,13 @@ class AttendanceRosterResponse {
   final String status;
   final String msg;
   final List<ShiftData> data;
+  final String monthly_roster_report;
 
   AttendanceRosterResponse({
     required this.status,
     required this.msg,
     required this.data,
+    required this.monthly_roster_report
   });
 
   factory AttendanceRosterResponse.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class AttendanceRosterResponse {
               ?.map((e) => ShiftData.fromJson(e))
               .toList() ??
           [],
+          monthly_roster_report:json['monthly_roster_report']?? ""
     );
   }
 }
@@ -82,11 +85,13 @@ class EmployeeData {
   final String empName;
   final dynamic empId;
   final List<AttendanceData> attendData;
+  final List<ClientReason> clientReasonList; 
 
   EmployeeData({
     required this.empName,
     required this.empId,
     required this.attendData,
+    required this.clientReasonList,
   });
 
   factory EmployeeData.fromJson(Map<String, dynamic> json) {
@@ -97,6 +102,10 @@ class EmployeeData {
               ?.map((e) => AttendanceData.fromJson(e))
               .toList() ??
           [],
+          clientReasonList: (json['client_reason_list'] as List<dynamic>?)
+              ?.map((e) => ClientReason.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }
@@ -105,6 +114,7 @@ class AttendanceData {
   final String date;
   final String attendanceStatus;
   final String? reason;
+  final String? sup_reason;
   final String? om_oe_resson;
   final String? om_oe_approval_status;
   final String? client_approval_status;
@@ -120,6 +130,7 @@ class AttendanceData {
     required this.date,
     required this.attendanceStatus,
     this.reason,
+    this.sup_reason,
     this.om_oe_resson,
     this.om_oe_approval_status,
     this.client_approval_status,
@@ -135,6 +146,7 @@ class AttendanceData {
       date: json['date'] ?? '',
       attendanceStatus: json['attendance_status'] ?? '',
       attendance_type: json['attendance_type'] ?? '',
+      sup_reason:json['sup_reason']??"",
 
         ot_hours: json['ot_hours'] ?? 0.0,
       reason: json['reason'],
@@ -144,6 +156,25 @@ class AttendanceData {
       statusPresentAbsent: json['status_present_absent'],
       attendanceId: json['attendance_id'],
       act_deact_janitor: json['act_deact_janitor']??false,
+    );
+  }
+}
+class ClientReason {
+  final String date;
+  final String supReason;
+  final String clientReason;
+
+  ClientReason({
+    required this.date,
+    required this.supReason,
+    required this.clientReason,
+  });
+
+  factory ClientReason.fromJson(Map<String, dynamic> json) {
+    return ClientReason(
+      date: json['date'] ?? '',
+      supReason: json['sup_reason'] ?? '',
+      clientReason: json['client_reason'] ?? '',
     );
   }
 }

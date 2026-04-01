@@ -21,14 +21,15 @@ class Dailogbox{
                 _legendDot(  Color(0xFF2563EB), "Working Holiday","W"),
                 _legendDot(  Color(0xFF4ADE80), "Halfday","F"),
                 _legendDot(  Color(0xFF8B5CF6), "OT Hrs","OT"),
-
+                _legendDot(customcolor.gradientgrey, "Week Off"),
+             //   _legendDot(customcolor.lightgreen, ""),
 
 
 
 
                 _legendDot(customcolor.pink, "Client Reason"),
                 _legendDot(customcolor.red, "OM/OE rejected"),
-                _legendDot(customcolor.lightgreen, "Present/Absent"),
+                
               ],
             ),
           ),

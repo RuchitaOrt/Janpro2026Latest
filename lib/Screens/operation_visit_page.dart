@@ -460,9 +460,14 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
   Widget visitTypeDropdown(StateSetter setStateDialog) {
     // Static values for visit type
     final List<String> visitTypes = [
-      "Training Visit",
-      "Operational Visit",
-      "Regular Visit",
+      // "Training Visit",
+      // "Operational Visit",
+      // "Regular Visit",
+      "Training",
+"Process",
+"Workflow",
+"Chemical",
+"Consumables"
     ];
 
     return Container(

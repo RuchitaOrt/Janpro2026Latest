@@ -239,6 +239,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             }
 
             if (rosterResponse.status == "success") {
+              GlobalLists.downloadRosterLink=rosterResponse.monthly_roster_report;
               setState(() {
                 _attendanceRosterData = rosterResponse.data;
                 print(

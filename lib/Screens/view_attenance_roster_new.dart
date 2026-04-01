@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Attendance.dart';
@@ -14,12 +16,16 @@ import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/ShowDialog.dart';
 import 'package:janpro/Utitlity/appbar.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
+import 'package:janpro/Utitlity/downloadRoster.dart';
 import 'package:janpro/Utitlity/internetConnection.dart';
 import 'package:janpro/model/FridgeAttendanceRosterResponse.dart';
 import 'package:janpro/model/SubmitAttendanceRooster.dart';
 import 'package:janpro/model/attendance_roster_response.dart';
 import 'package:flutter/services.dart';
 import 'package:janpro/widgets/dailogbox.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 // Global OT Hours Storage
 class OTHoursManager {
@@ -107,8 +113,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   bool isBulkMode = false;
   Set<String> selectedEmployees = {};
   var attendanceshiftid;
- var is_month_end;
- var is_final_submit; 
+  var is_month_end;
+  var is_final_submit;
   // NEW: Multi-date selection
   Set<String> selectedDates = {};
   bool isDateSelectionMode = false;
@@ -121,7 +127,8 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   String bulkOTHours = '';
   dynamic sup_final_submitted_v;
   final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
-
+bool isDownloading = false;
+String? downloadedFilePath;
   final List<String> monthNames = [
     '',
     'January',
@@ -174,7 +181,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
     attendancesiteid = widget.attendancesiteid;
     attendanceclientid = widget.attendanceclientid;
     // attendanceshiftid=widget.attendanceshiftid;
-print("RUCHITA  attendanceclientid ${attendanceclientid}");
+    print("RUCHITA  attendanceclientid ${attendanceclientid}");
     getrole();
     final now = DateTime.now();
 
@@ -215,12 +222,12 @@ print("RUCHITA  attendanceclientid ${attendanceclientid}");
       }
 
       final now = DateTime.now();
-if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
-  DateTime previousMonth = DateTime(now.year, now.month - 1);
+      if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
+        DateTime previousMonth = DateTime(now.year, now.month - 1);
 
-  month = previousMonth.month.toString().padLeft(2, '0');
-  year = previousMonth.year.toString();
-}
+        month = previousMonth.month.toString().padLeft(2, '0');
+        year = previousMonth.year.toString();
+      }
 
       int selectedMonth = int.parse(month);
       int selectedYear = int.parse(year);
@@ -270,6 +277,7 @@ if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
             }
 
             if (rosterResponse.status == "success") {
+                GlobalLists.downloadRosterLink=rosterResponse.monthly_roster_report;
               setState(() {
                 _isLoad = true;
                 _attendanceRosterData = rosterResponse.data;
@@ -312,20 +320,22 @@ if ((month == null || month.isEmpty) && (year == null || year.isEmpty)) {
     selectedEmployees.clear();
     selectedDates.clear();
     isDateSelectionMode = false;
-    
+
     _fetchAttendanceRoster();
   }
-bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
-  final now = DateTime.now();
 
-  int currentMonth = now.month; // 1 - 12
-  int currentYear = now.year;
+  bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
+    final now = DateTime.now();
 
-  // If your selectedMonthIndex is 0-based (Jan = 0)
-  int selectedMonth = selectedMonthIndex ;
+    int currentMonth = now.month; // 1 - 12
+    int currentYear = now.year;
 
-  return selectedMonth == currentMonth && selectedYear == currentYear;
-}
+    // If your selectedMonthIndex is 0-based (Jan = 0)
+    int selectedMonth = selectedMonthIndex;
+
+    return selectedMonth == currentMonth && selectedYear == currentYear;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!mounted || context == null || _attendanceRosterData.isEmpty)
@@ -412,7 +422,97 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
 
     double otHours = 0;
     int pendingCount = 0;
+  bool _isDownloading = false;
+  bool _downloaded = false;
+  String? _filePath;
+Future<void> _downloadRoster(String shiftId) async {
+  setState(() {
+    isDownloading = true;
+  });
 
+  try {
+    Directory baseDir = await getApplicationDocumentsDirectory();
+    String filePath = "${baseDir.path}/roster_$shiftId.pdf";
+
+    Dio dio = Dio();
+
+    print("🚀 Download Start");
+    print("👉 URL: ${GlobalLists.downloadRosterLink}");
+    print("👉 PATH: $filePath");
+
+    await dio.download(
+      GlobalLists.downloadRosterLink,
+      filePath,
+      onReceiveProgress: (received, total) {
+        if (total != -1) {
+          print("📥 Progress: ${(received / total * 100).toStringAsFixed(0)}%");
+        } else {
+          print("📥 Downloading... $received bytes");
+        }
+      },
+    );
+
+    setState(() {
+      isDownloading = false;
+      downloadedFilePath = filePath;
+    });
+
+    print("✅ Download Complete: $filePath");
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Download completed")),
+    );
+
+    /// 🔥 Open file
+    // await OpenFilex.open(filePath);
+
+  } catch (e) {
+    setState(() {
+      isDownloading = false;
+      downloadedFilePath = null;
+    });
+
+    print("💥 Download Error: $e");
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Download failed: $e")),
+    );
+  }
+}
+// Future<void> _downloadRoster(String shiftId) async {
+//   setState(() {
+//     isDownloading = true;
+//   });
+
+//   try {
+//     Directory baseDir = await getApplicationDocumentsDirectory();
+//     String filePath = "${baseDir.path}/roster_$shiftId.pdf";
+
+//     Dio dio = Dio();
+//     await dio.download(GlobalLists.downloadRosterLink, filePath,
+//         onReceiveProgress: (received, total) {
+//       print("Downloading $received / $total");
+//          print("Downloading $filePath");
+//     });
+
+//     setState(() {
+//       isDownloading = false;
+//       downloadedFilePath = filePath;
+//     });
+
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("Download completed")),
+//     );
+//   } catch (e) {
+//     setState(() {
+//       isDownloading = false;
+//       downloadedFilePath = null;
+//     });
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("Download failed: $e")),
+//     );
+//   }
+// }
     if (selectedShift != null) {
       for (var emp in selectedShift.employeeList ?? []) {
         for (var att in emp.attendData ?? []) {
@@ -672,8 +772,12 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
 
                                   // Bulk mode toggle — moved here from FAB
                                   GlobalLists.supervisorrole == role &&
-                                          selectedShift.sup_final_submitted||selectedShift?.is_month_end == 1 &&
-                                  selectedShift?.is_final_submitted == true
+                                              selectedShift
+                                                  .sup_final_submitted ||
+                                          selectedShift?.is_month_end == 1 &&
+                                              selectedShift
+                                                      ?.is_final_submitted ==
+                                                  true
                                       ? SizedBox()
                                       : ElevatedButton.icon(
                                           style: ElevatedButton.styleFrom(
@@ -910,8 +1014,8 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                           padding: EdgeInsets.only(top: 12, bottom: 80),
                           itemCount: selectedShift?.employeeList?.length ?? 0,
                           itemBuilder: (context, index) {
-                            is_final_submit=selectedShift.is_final_submitted;
-                            is_month_end=selectedShift.is_month_end;
+                            is_final_submit = selectedShift.is_final_submitted;
+                            is_month_end = selectedShift.is_month_end;
                             sup_final_submitted_v =
                                 selectedShift.sup_final_submitted;
                             final emp = selectedShift.employeeList[index];
@@ -927,15 +1031,21 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
               ],
             ),
 
-        isCurrentMonthYear(selectedMonthIndex!, selectedYear!)
-    ? SizedBox()
-    :    selectedShift?.employeeList.isEmpty ||
-                    selectedShift?.employeeList.length == 0 ||
-                    GlobalLists.supervisorrole != role &&
-                        selectedShift.sup_final_submitted == false ||selectedEmployees.isNotEmpty
+            ((role == GlobalLists.operationmanagerrole ||
+                        role == GlobalLists.operationrole) &&
+                    selectedShift?.is_final_submitted == false &&
+                    selectedShift.review_updated_by_client == false)
                 ? SizedBox()
-                : GlobalLists.supervisorrole == role && 
-                                  !selectedShift.sup_final_submitted
+                : isCurrentMonthYear(selectedMonthIndex!, selectedYear!)
+                ? SizedBox()
+                : selectedShift?.employeeList.isEmpty ||
+                      selectedShift?.employeeList.length == 0 ||
+                      GlobalLists.supervisorrole != role &&
+                          selectedShift.sup_final_submitted == false ||
+                      selectedEmployees.isNotEmpty
+                ? SizedBox()
+                : GlobalLists.supervisorrole == role &&
+                      !selectedShift.sup_final_submitted
                 ? Padding(
                     padding: const EdgeInsets.only(
                       top: 8,
@@ -979,87 +1089,768 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                       ),
                     ),
                   )
-                : Padding(
-                    padding: const EdgeInsets.only(
-                      top: 8,
-                      bottom: 12,
-                      right: 12,
-                      left: 12,
-                    ),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          selectedShift?.is_month_end == 1 &&
-                                  selectedShift?.is_final_submitted == false &&
-                                  selectedCells.isEmpty &&
-                                  !multiSelectMode &&
-                                  role == GlobalLists.clientrole &&
-                                  selectedShift.review_updated_by_oe_om ==
-                                      false &&
-                                  selectedShift.review_updated_by_client ==
-                                      false
-                              ? _submitAttendaceRosterfinal(
-                                  selectedShift.id.toString(),
-                                )
-                              : Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ViewRemarkAttendance(
-                                      month: month,
-                                      year: year,
-                                      attendancesiteid: attendancesiteid,
-                                      clientid: attendanceclientid,//GlobalLists.clientid,
-                                      manTag: maintag,
-                                      shiftId: selectedShift?.id,
-                                    ),
-                                  ),
-                                );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: role == GlobalLists.supervisorrole
-                              ? customcolor.blue
-                              : selectedShift?.is_month_end == 1 &&
-                                    selectedShift?.is_final_submitted == true
-                              ? Colors.grey
-                              : customcolor.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          minimumSize: Size(double.infinity, 48),
-                        ),
-                        child: Text(
-                          selectedShift?.is_month_end == 1 &&
-                                  selectedShift?.is_final_submitted == true
-                              ? "View Finalize Roster"
-                              : selectedCells.isNotEmpty && multiSelectMode
-                              ? "Report Discrepancy"
-                              : role == GlobalLists.clientrole &&
-                                    selectedShift?.review_updated_by_oe_om ==
-                                        false &&
-                                    selectedShift.review_updated_by_client ==
-                                        false
-                              ? "Approve Roster"
-                              : role == GlobalLists.clientrole &&
-                                    selectedShift?.review_updated_by_oe_om ==
-                                        true
-                              ? "Review Updates"
-                              : "Review Discrepancy",
-                          style: TextStyle(
-                            fontFamily: AppFonts.semibold,
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
+                : 
+                Padding(
+  padding: const EdgeInsets.only(
+    top: 8,
+    bottom: 12,
+    right: 12,
+    left: 12,
+  ),
+  child: Align(
+    alignment: Alignment.bottomCenter,
+    child: ElevatedButton(
+      onPressed: () async {
+        // --- If file already downloaded, open it ---
+        if (downloadedFilePath != null) {
+          if(Platform.isAndroid)
+          {await OpenFilex.open(downloadedFilePath!);
+
+          }else{
+            _openFileOptions(downloadedFilePath!);
+          }
+          
+          return;
+        }
+
+        // --- Supervisor / Operation roles ---
+        if ((GlobalLists.supervisorrole == role ||
+                GlobalLists.operationmanagerrole == role ||
+                GlobalLists.operationrole == role) &&
+            selectedShift.sup_final_submitted &&
+            selectedShift.is_final_submitted == false &&
+            selectedShift.review_updated_by_client) {
+          if (selectedShift?.is_month_end == 1 &&
+              selectedShift?.is_final_submitted == false &&
+              selectedCells.isEmpty &&
+              !multiSelectMode &&
+              role == GlobalLists.clientrole &&
+              selectedShift.review_updated_by_oe_om == false &&
+              selectedShift.review_updated_by_client == false) {
+            _submitAttendaceRosterfinal(selectedShift.id.toString());
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ViewRemarkAttendance(
+                  month: month,
+                  year: year,
+                  attendancesiteid: attendancesiteid,
+                  clientid: attendanceclientid,
+                  manTag: maintag,
+                  shiftId: selectedShift?.id,
+                ),
+              ),
+            );
+          }
+          return;
+        }
+
+        // --- Supervisor downloading finalized roster ---
+        if (GlobalLists.supervisorrole == role &&
+            selectedShift.sup_final_submitted &&
+            selectedShift.is_final_submitted) {
+          await _downloadRoster(selectedShift.id.toString());
+          return;
+        }
+
+        // --- Month-end download for finalized roster ---
+        if (selectedShift?.is_month_end == 1 &&
+            selectedShift?.is_final_submitted == true) {
+          await _downloadRoster(selectedShift.id.toString());
+          return;
+        }
+
+        // --- Client approval conditions ---
+        if (role == GlobalLists.clientrole &&
+            selectedShift?.review_updated_by_oe_om == false &&
+            selectedShift.review_updated_by_client == false) {
+          if (selectedShift?.is_month_end == 1 &&
+              selectedShift?.is_final_submitted == false &&
+              selectedCells.isEmpty &&
+              !multiSelectMode &&
+              role == GlobalLists.clientrole &&
+              selectedShift.review_updated_by_oe_om == false &&
+              selectedShift.review_updated_by_client == false) {
+            _submitAttendaceRosterfinal(selectedShift.id.toString());
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ViewRemarkAttendance(
+                  month: month,
+                  year: year,
+                  attendancesiteid: attendancesiteid,
+                  clientid: attendanceclientid,
+                  manTag: maintag,
+                  shiftId: selectedShift?.id,
+                ),
+              ),
+            );
+          }
+          return;
+        }
+
+        // --- Client reviewing discrepancies ---
+        if (role == GlobalLists.clientrole &&
+            selectedShift.review_updated_by_client) {
+          if (selectedShift?.is_month_end == 1 &&
+              selectedShift?.is_final_submitted == false &&
+              selectedCells.isEmpty &&
+              !multiSelectMode &&
+              role == GlobalLists.clientrole &&
+              selectedShift.review_updated_by_oe_om == false &&
+              selectedShift.review_updated_by_client == false) {
+            _submitAttendaceRosterfinal(selectedShift.id.toString());
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ViewRemarkAttendance(
+                  month: month,
+                  year: year,
+                  attendancesiteid: attendancesiteid,
+                  clientid: attendanceclientid,
+                  manTag: maintag,
+                  shiftId: selectedShift?.id,
+                ),
+              ),
+            );
+          }
+          return;
+        }
+
+        // --- Supervisor submitted but no action ---
+        if (GlobalLists.supervisorrole == role &&
+            selectedShift.sup_final_submitted) {
+          return;
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: (downloadedFilePath != null)
+            ? customcolor.blue
+            : (GlobalLists.supervisorrole == role &&
+                    selectedShift.sup_final_submitted &&
+                    selectedShift.is_final_submitted)
+                ? customcolor.blue
+                : (selectedShift?.is_month_end == 1 &&
+                        selectedShift?.is_final_submitted == true)
+                    ? customcolor.blue
+                    : (GlobalLists.supervisorrole == role &&
+                            selectedShift.sup_final_submitted)
+                        ? Colors.grey
+                        : customcolor.blue,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        minimumSize: Size(double.infinity, 40),
+      ),
+      child: isDownloading
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
                   ),
+                ),
+                SizedBox(width: 12),
+                Text("Downloading...",
+                    style: TextStyle(
+                        fontFamily: AppFonts.semibold,
+                        fontSize: 16,
+                        color: Colors.white)),
+              ],
+            )
+          : Text(
+              (downloadedFilePath != null)
+                  ? "View Download"
+                  : (GlobalLists.supervisorrole == role &&
+                          selectedShift.sup_final_submitted &&
+                          selectedShift.is_final_submitted)
+                      ? "Download Roster ${selectedShift.sup_final_submitted} ${selectedShift.is_final_submitted}"
+                      : (GlobalLists.supervisorrole == role &&
+                              selectedShift.sup_final_submitted &&
+                              selectedShift.is_final_submitted == false &&
+                              selectedShift.review_updated_by_client)
+                          ? "Review Discrepancy"
+                          : (GlobalLists.supervisorrole == role &&
+                                  selectedShift.sup_final_submitted)
+                              ? "Submitted to Client"
+                              : (role == GlobalLists.clientrole &&
+                                      selectedShift.review_updated_by_client &&
+                                      selectedShift.is_final_submitted)
+                                  ?"Finalized Roster"
+                                  : (role == GlobalLists.clientrole &&
+                                          selectedShift?.review_updated_by_oe_om ==
+                                              true &&
+                                          selectedShift.is_final_submitted ==
+                                              false)
+                                      ? "Review Updates"
+                                      : (role == GlobalLists.clientrole &&
+                                              selectedShift.review_updated_by_client)
+                                          ? "Review Discrepancy"
+                                          : selectedShift?.is_month_end == 1 &&
+                                                  selectedShift?.is_final_submitted ==
+                                                      true
+                                              ? "Download Roster"
+                                              : selectedCells.isNotEmpty &&
+                                                      multiSelectMode
+                                                  ? "Review Discrepancy"
+                                                  : role ==
+                                                              GlobalLists
+                                                                  .clientrole &&
+                                                          selectedShift
+                                                                  ?.review_updated_by_oe_om ==
+                                                              false &&
+                                                          selectedShift.review_updated_by_client ==
+                                                              false
+                                                      ? "Approve Roster"
+                                                      : "Review Discrepancy",
+              style: TextStyle(
+                fontFamily: AppFonts.semibold,
+                fontSize: 16,
+                color: Colors.white,
+              ),
+            ),
+    ),
+  ),
+),
+
+// --- Add this helper function in your StatefulWidget ---
+
+//                 Padding(
+//   padding: const EdgeInsets.only(
+//     top: 8,
+//     bottom: 12,
+//     right: 12,
+//     left: 12,
+//   ),
+//   child: Align(
+//     alignment: Alignment.bottomCenter,
+//     child: ElevatedButton(
+//       onPressed:
+//           ((GlobalLists.supervisorrole == role ||
+//                   GlobalLists.operationmanagerrole == role ||
+//                   GlobalLists.operationrole == role) &&
+//               selectedShift.sup_final_submitted &&
+//               selectedShift.is_final_submitted == false &&
+//               selectedShift.review_updated_by_client)
+//               ? () {
+//                   selectedShift?.is_month_end == 1 &&
+//                           selectedShift?.is_final_submitted == false &&
+//                           selectedCells.isEmpty &&
+//                           !multiSelectMode &&
+//                           role == GlobalLists.clientrole &&
+//                           selectedShift.review_updated_by_oe_om == false &&
+//                           selectedShift.review_updated_by_client == false
+//                       ? _submitAttendaceRosterfinal(
+//                           selectedShift.id.toString(),
+//                         )
+//                       : Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (context) => ViewRemarkAttendance(
+//                               month: month,
+//                               year: year,
+//                               attendancesiteid: attendancesiteid,
+//                               clientid: attendanceclientid,
+//                               manTag: maintag,
+//                               shiftId: selectedShift?.id,
+//                             ),
+//                           ),
+//                         );
+//                 }
+//               : (GlobalLists.supervisorrole == role &&
+//                       selectedShift.sup_final_submitted &&
+//                       selectedShift?.is_final_submitted)
+//                   ? () async {
+//                       // --- Download with loader ---
+//                       setState(() {
+//                         isDownloading = true;
+//                       });
+//                       try {
+//                         Directory baseDir =
+//                             await getApplicationDocumentsDirectory();
+//                         String filePath =
+//                             "${baseDir.path}/roster_${selectedShift.id}.pdf";
+
+//                         Dio dio = Dio();
+//                         await dio.download(
+//                             GlobalLists.downloadRosterLink, filePath,
+//                             onReceiveProgress: (received, total) {
+//                           print("Downloading $received / $total");
+//                         });
+
+//                         setState(() {
+//                           isDownloading = false;
+//                           downloadedFilePath = filePath;
+//                         });
+
+//                         ScaffoldMessenger.of(context).showSnackBar(
+//                           SnackBar(content: Text("Download completed")),
+//                         );
+//                       } catch (e) {
+//                         setState(() {
+//                           isDownloading = false;
+//                         });
+//                         ScaffoldMessenger.of(context).showSnackBar(
+//                           SnackBar(content: Text("Download failed: $e")),
+//                         );
+//                       }
+//                     }
+//                   : (selectedShift?.is_month_end == 1 &&
+//                           selectedShift?.is_final_submitted == true)
+//                       ? () async {
+//                           // --- Download with loader ---
+//                           setState(() {
+//                             isDownloading = true;
+//                           });
+//                           try {
+//                             Directory baseDir =
+//                                 await getApplicationDocumentsDirectory();
+//                             String filePath =
+//                                 "${baseDir.path}/roster_${selectedShift.id}.pdf";
+
+//                             Dio dio = Dio();
+//                             await dio.download(
+//                                 GlobalLists.downloadRosterLink, filePath,
+//                                 onReceiveProgress: (received, total) {
+//                               print("Downloading $received / $total");
+//                             });
+
+//                             setState(() {
+//                               isDownloading = false;
+//                               downloadedFilePath = filePath;
+//                             });
+
+//                             ScaffoldMessenger.of(context).showSnackBar(
+//                               SnackBar(content: Text("Download completed")),
+//                             );
+//                           } catch (e) {
+//                             setState(() {
+//                               isDownloading = false;
+//                             });
+//                             ScaffoldMessenger.of(context).showSnackBar(
+//                               SnackBar(content: Text("Download failed: $e")),
+//                             );
+//                           }
+//                         }
+//                       // --- Keep all other conditions intact ---
+//                       : (role == GlobalLists.clientrole &&
+//                               selectedShift?.review_updated_by_oe_om == false &&
+//                               selectedShift.review_updated_by_client == false)
+//                           ? () {
+//                               selectedShift?.is_month_end == 1 &&
+//                                       selectedShift?.is_final_submitted ==
+//                                           false &&
+//                                       selectedCells.isEmpty &&
+//                                       !multiSelectMode &&
+//                                       role == GlobalLists.clientrole &&
+//                                       selectedShift.review_updated_by_oe_om ==
+//                                           false &&
+//                                       selectedShift
+//                                               .review_updated_by_client ==
+//                                           false
+//                                   ? _submitAttendaceRosterfinal(
+//                                       selectedShift.id.toString(),
+//                                     )
+//                                   : Navigator.push(
+//                                       context,
+//                                       MaterialPageRoute(
+//                                         builder: (context) =>
+//                                             ViewRemarkAttendance(
+//                                           month: month,
+//                                           year: year,
+//                                           attendancesiteid: attendancesiteid,
+//                                           clientid: attendanceclientid,
+//                                           manTag: maintag,
+//                                           shiftId: selectedShift?.id,
+//                                         ),
+//                                       ),
+//                                     );
+//                             }
+//                           : (GlobalLists.supervisorrole == role &&
+//                                   selectedShift.sup_final_submitted)
+//                               ? () {}
+//                               : (role == GlobalLists.clientrole &&
+//                                       selectedShift.review_updated_by_client)
+//                                   ? () {
+//                                       selectedShift?.is_month_end == 1 &&
+//                                               selectedShift?.is_final_submitted ==
+//                                                   false &&
+//                                               selectedCells.isEmpty &&
+//                                               !multiSelectMode &&
+//                                               role == GlobalLists.clientrole &&
+//                                               selectedShift
+//                                                       .review_updated_by_oe_om ==
+//                                                   false &&
+//                                               selectedShift
+//                                                       .review_updated_by_client ==
+//                                                   false
+//                                           ? _submitAttendaceRosterfinal(
+//                                               selectedShift.id.toString(),
+//                                             )
+//                                           : Navigator.push(
+//                                               context,
+//                                               MaterialPageRoute(
+//                                                 builder: (context) =>
+//                                                     ViewRemarkAttendance(
+//                                                   month: month,
+//                                                   year: year,
+//                                                   attendancesiteid:
+//                                                       attendancesiteid,
+//                                                   clientid:
+//                                                       attendanceclientid,
+//                                                   manTag: maintag,
+//                                                   shiftId: selectedShift?.id,
+//                                                 ),
+//                                               ),
+//                                             );
+//                                     }
+//                                   : (downloadedFilePath != null)
+//                                       ? () async {
+//                                           await OpenFilex.open(downloadedFilePath!);
+//                                         }
+//                                       : null,
+//       style: ElevatedButton.styleFrom(
+//         backgroundColor:
+//             (GlobalLists.supervisorrole == role &&
+//                     selectedShift.sup_final_submitted &&
+//                     selectedShift?.is_final_submitted)
+//                 ? customcolor.blue
+//                 : (selectedShift?.is_month_end == 1 &&
+//                         selectedShift?.is_final_submitted == true)
+//                     ? customcolor.blue
+//                     : (GlobalLists.supervisorrole == role &&
+//                             selectedShift.sup_final_submitted)
+//                         ? Colors.grey
+//                         : role == GlobalLists.supervisorrole
+//                             ? customcolor.blue
+//                             : customcolor.blue,
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(8),
+//         ),
+//         minimumSize: Size(double.infinity, 40),
+//       ),
+//       child: isDownloading
+//           ? Row(
+//               mainAxisAlignment: MainAxisAlignment.center,
+//               children: [
+//                 SizedBox(
+//                     height: 20,
+//                     width: 20,
+//                     child: CircularProgressIndicator(
+//                       color: Colors.white,
+//                       strokeWidth: 2,
+//                     )),
+//                 SizedBox(width: 12),
+//                 Text("Downloading...",
+//                     style: TextStyle(
+//                         fontFamily: AppFonts.semibold,
+//                         fontSize: 16,
+//                         color: Colors.white)),
+//               ],
+//             )
+//           : Text(
+//               (downloadedFilePath != null)
+//                   ? "View Download"
+//                   : (GlobalLists.supervisorrole == role &&
+//                           selectedShift.sup_final_submitted &&
+//                           selectedShift?.is_final_submitted)
+//                       ? "Download Roster"
+//                       : (GlobalLists.supervisorrole == role &&
+//                               selectedShift.sup_final_submitted &&
+//                               selectedShift.is_final_submitted == false &&
+//                               selectedShift.review_updated_by_client)
+//                           ? "Review Discrepancy"
+//                           : (GlobalLists.supervisorrole == role &&
+//                                   selectedShift.sup_final_submitted)
+//                               ? "Submitted to Client"
+//                               : (role == GlobalLists.clientrole &&
+//                                       selectedShift.review_updated_by_client &&
+//                                       selectedShift.is_final_submitted)
+//                                   ? "Finalized Roster"
+//                                   : (role == GlobalLists.clientrole &&
+//                                           selectedShift?.review_updated_by_oe_om ==
+//                                               true &&
+//                                           selectedShift.is_final_submitted ==
+//                                               false)
+//                                       ? "Review Updates"
+//                                       : (role == GlobalLists.clientrole &&
+//                                               selectedShift.review_updated_by_client)
+//                                           ? "Review Discrepancy"
+//                                           : selectedShift?.is_month_end == 1 &&
+//                                                   selectedShift?.is_final_submitted ==
+//                                                       true
+//                                               ? "Download Roster"
+//                                               : selectedCells.isNotEmpty &&
+//                                                       multiSelectMode
+//                                                   ? "Review Discrepancy"
+//                                                   : role ==
+//                                                               GlobalLists
+//                                                                   .clientrole &&
+//                                                           selectedShift
+//                                                                   ?.review_updated_by_oe_om ==
+//                                                               false &&
+//                                                           selectedShift.review_updated_by_client ==
+//                                                               false
+//                                                       ? "Approve Roster"
+//                                                       : "Review Discrepancy",
+//               style: TextStyle(
+//                 fontFamily: AppFonts.semibold,
+//                 fontSize: 16,
+//                 color: Colors.white,
+//               ),
+//             ),
+//     ),
+//   ),
+// ),
+//                 Padding(
+//                     padding: const EdgeInsets.only(
+//                       top: 8,
+//                       bottom: 12,
+//                       right: 12,
+//                       left: 12,
+//                     ),
+//                     child: Align(
+//                       alignment: Alignment.bottomCenter,
+//                       child: ElevatedButton(
+//                         onPressed:
+//                             ((GlobalLists.supervisorrole == role ||
+//                                     GlobalLists.operationmanagerrole == role ||
+//                                     GlobalLists.operationrole == role) &&
+//                                 selectedShift.sup_final_submitted &&
+//                                 selectedShift.is_final_submitted == false &&
+//                                 selectedShift.review_updated_by_client)
+//                             ? () {
+//                                 selectedShift?.is_month_end == 1 &&
+//                                         selectedShift?.is_final_submitted ==
+//                                             false &&
+//                                         selectedCells.isEmpty &&
+//                                         !multiSelectMode &&
+//                                         role == GlobalLists.clientrole &&
+//                                         selectedShift.review_updated_by_oe_om ==
+//                                             false &&
+//                                         selectedShift
+//                                                 .review_updated_by_client ==
+//                                             false
+//                                     ? _submitAttendaceRosterfinal(
+//                                         selectedShift.id.toString(),
+//                                       )
+//                                     : Navigator.push(
+//                                         context,
+//                                         MaterialPageRoute(
+//                                           builder: (context) =>
+//                                               ViewRemarkAttendance(
+//                                                 month: month,
+//                                                 year: year,
+//                                                 attendancesiteid:
+//                                                     attendancesiteid,
+//                                                 clientid:
+//                                                     attendanceclientid, //GlobalLists.clientid,
+//                                                 manTag: maintag,
+//                                                 shiftId: selectedShift?.id,
+//                                               ),
+//                                         ),
+//                                       );
+//                               }
+//                             : (GlobalLists.supervisorrole == role &&
+//                                   selectedShift.sup_final_submitted &&
+//                                   selectedShift?.is_final_submitted)
+//                             ? () {
+
+//                                 print("Downloading Supervisor ${GlobalLists.downloadRosterLink}");
+//                                 downloadRoster(
+//   GlobalLists.downloadRosterLink,
+//   selectedShift.id.toString(),
+// );
+//                               }
+//                             : (selectedShift?.is_month_end == 1 &&
+//                                   selectedShift?.is_final_submitted == true)
+//                             ? () {
+//                                print("Downloading ${GlobalLists.downloadRosterLink}");
+//                                downloadRoster(
+//   GlobalLists.downloadRosterLink,
+//   selectedShift.id.toString(),
+// );
+//                               }
+//                             :(role == GlobalLists.clientrole &&
+//                                     selectedShift?.review_updated_by_oe_om ==
+//                                         false &&
+//                                     selectedShift.review_updated_by_client ==
+//                                         false)?() {
+//                                 selectedShift?.is_month_end == 1 &&
+//                                         selectedShift?.is_final_submitted ==
+//                                             false &&
+//                                         selectedCells.isEmpty &&
+//                                         !multiSelectMode &&
+//                                         role == GlobalLists.clientrole &&
+//                                         selectedShift.review_updated_by_oe_om ==
+//                                             false &&
+//                                         selectedShift
+//                                                 .review_updated_by_client ==
+//                                             false
+//                                     ? _submitAttendaceRosterfinal(
+//                                         selectedShift.id.toString(),
+//                                       )
+//                                     : Navigator.push(
+//                                         context,
+//                                         MaterialPageRoute(
+//                                           builder: (context) =>
+//                                               ViewRemarkAttendance(
+//                                                 month: month,
+//                                                 year: year,
+//                                                 attendancesiteid:
+//                                                     attendancesiteid,
+//                                                 clientid:
+//                                                     attendanceclientid, //GlobalLists.clientid,
+//                                                 manTag: maintag,
+//                                                 shiftId: selectedShift?.id,
+//                                               ),
+//                                         ),
+//                                       );
+//                               }: (GlobalLists.supervisorrole == role &&
+//                                   selectedShift.sup_final_submitted)
+//                             ? ()
+//                             {
+
+//                             }
+//                             : (role == GlobalLists.clientrole &&
+//                                   selectedShift.review_updated_by_client)
+//                             ? () {
+//                                 selectedShift?.is_month_end == 1 &&
+//                                         selectedShift?.is_final_submitted ==
+//                                             false &&
+//                                         selectedCells.isEmpty &&
+//                                         !multiSelectMode &&
+//                                         role == GlobalLists.clientrole &&
+//                                         selectedShift.review_updated_by_oe_om ==
+//                                             false &&
+//                                         selectedShift
+//                                                 .review_updated_by_client ==
+//                                             false
+//                                     ? _submitAttendaceRosterfinal(
+//                                         selectedShift.id.toString(),
+//                                       )
+//                                     : Navigator.push(
+//                                         context,
+//                                         MaterialPageRoute(
+//                                           builder: (context) =>
+//                                               ViewRemarkAttendance(
+//                                                 month: month,
+//                                                 year: year,
+//                                                 attendancesiteid:
+//                                                     attendancesiteid,
+//                                                 clientid:
+//                                                     attendanceclientid, //GlobalLists.clientid,
+//                                                 manTag: maintag,
+//                                                 shiftId: selectedShift?.id,
+//                                               ),
+//                                         ),
+//                                       );
+//                               }
+//                             : null,
+//                         style: ElevatedButton.styleFrom(
+//                           backgroundColor:
+//                            (GlobalLists.supervisorrole == role &&
+//                                   selectedShift.sup_final_submitted &&
+//                                   selectedShift?.is_final_submitted)?customcolor.blue:
+//                                   ( selectedShift?.is_month_end == 1 &&
+                                   
+//                                     selectedShift?.is_final_submitted == true)?customcolor.blue:
+//                           (GlobalLists.supervisorrole == role &&
+//                                     selectedShift.sup_final_submitted)?Colors.grey: role == GlobalLists.supervisorrole
+//                               ? customcolor.blue
+//                               // :
+//                               //  selectedShift?.is_month_end == 1 &&
+//                               //       selectedShift?.is_final_submitted == true
+//                               // ? Colors.grey
+//                               : customcolor.blue,
+//                           shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(8),
+//                           ),
+//                           minimumSize: Size(double.infinity, 40),
+//                         ),
+//                         child: Text(
+//                           (GlobalLists.supervisorrole == role &&
+//                                   selectedShift.sup_final_submitted &&
+//                                   selectedShift?.is_final_submitted)
+//                               ?"Download Roster"
+//                               : (GlobalLists.supervisorrole == role &&
+//                                     selectedShift.sup_final_submitted &&
+//                                     selectedShift.is_final_submitted == false &&
+//                                     selectedShift.review_updated_by_client)
+//                               ? "Review Discrepancy"
+//                               : (GlobalLists.supervisorrole == role &&
+//                                     selectedShift.sup_final_submitted)
+//                               ? "Submitted to Client"
+//                               : (role == GlobalLists.clientrole &&
+//                                     selectedShift.review_updated_by_client &&
+//                                     selectedShift.is_final_submitted)
+//                               ? "Finalized Roster"
+//                               : (role == GlobalLists.clientrole &&
+//                                     selectedShift?.review_updated_by_oe_om ==
+//                                         true &&  selectedShift.is_final_submitted==false)
+//                               ? "Review Updates"
+//                               :  (role == GlobalLists.clientrole &&
+//                                     selectedShift.review_updated_by_client)
+//                               ? "Review Discrepancy"//Report
+//                               :
+//                                 //is_month_end -1 check to
+//                                 selectedShift?.is_month_end == 1 &&
+//                                     //is_final_submitted client submited or not
+//                                     selectedShift?.is_final_submitted == true
+//                               ?  "Download Roster" //"View Finalize Roster"
+//                               : selectedCells.isNotEmpty && multiSelectMode
+//                               ? "Review Discrepancy"//Report
+//                               : role == GlobalLists.clientrole &&
+//                                     selectedShift?.review_updated_by_oe_om ==
+//                                         false &&
+//                                     selectedShift.review_updated_by_client ==
+//                                         false
+//                               ? "Approve Roster"
+//                               :"Review Discrepancy",
+//                           style: TextStyle(
+//                             fontFamily: AppFonts.semibold,
+//                             fontSize: 16,
+//                             color: Colors.white,
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   ),
           ],
         ),
       ),
     );
   }
-
+void _openFileOptions(String filePath) {
+  showModalBottomSheet(
+    context: context,
+    builder: (context) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.open_in_new),
+              title: Text("Open File"),
+              onTap: () async {
+                Navigator.pop(context);
+                await OpenFilex.open(filePath);
+              },
+            ),
+            
+          ],
+        ),
+      );
+    },
+  );
+}
   Widget _buildStatChip(String value, String label, Color color) {
     return Card(
       color: color,
@@ -1114,6 +1905,7 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
       ),
     );
   }
+
 
   Widget _buildEmployeeCard(dynamic emp, bool isSelected) {
     final allDates = <String>[];
@@ -1200,109 +1992,99 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
               child: Stack(
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Employee Info
-                      Flexible(
-                        child: Column(
-                          // mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              emp.empName,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              emp.empId.toString(),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 12),
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    /// LEFT (Employee Info)
+    Expanded(
+      flex: 3,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            emp.empName,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0F172A),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: 2),
+          Text(
+            emp.empId.toString(),
+            style: TextStyle(
+              fontSize: 11,
+              color: Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
+    ),
 
-                      // Summary Stats
-                      Flexible(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildSummaryItem(
-                              presentCount.toString(),
-                              'P',
-                              Color(0xFF22C55E),
-                            ),
-                            SizedBox(width: 12),
-                            _buildSummaryItem(
-                              absentCount.toString(),
-                              'A',
-                              Color(0xFFEF4444),
-                            ),
-                            SizedBox(width: 12),
+    SizedBox(width: 8),
 
-                            _buildSummaryItem(
-                              hoildayCount.toString(),
-                              'H',
-                              Color(0xFF7DD3FC),
-                            ),
-                            SizedBox(width: 12),
-                            _buildSummaryItem(
-                              whoildayCount.toString(),
-                              'W',
-                              Color(0xFF2563EB),
-                            ),
-                            SizedBox(width: 12),
-                            _buildSummaryItem(
-                              hlfdayCount.toString(),
-                              'F',
-                              Color(0xFF4ADE80),
-                            ),
-                            SizedBox(width: 12),
-                            _buildSummaryItem(
-                              otHours.toStringAsFixed(1),
-                              'OT',
-                              customcolor.blue,
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isBulkMode) SizedBox(width: 12),
-                    ],
-                  ),
+    /// CENTER (Stats)
+    Expanded(
+      flex: 3,
+      child: SingleChildScrollView( // ✅ prevents overflow
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildSummaryItem(presentCount.toString(), 'P', Color(0xFF22C55E)),
+            SizedBox(width: 10),
+            _buildSummaryItem(absentCount.toString(), 'A', Color(0xFFEF4444)),
+            SizedBox(width: 10),
+            _buildSummaryItem(hoildayCount.toString(), 'H', Color(0xFF7DD3FC)),
+            SizedBox(width: 10),
+            _buildSummaryItem(whoildayCount.toString(), 'W', Color(0xFF2563EB)),
+            SizedBox(width: 10),
+            _buildSummaryItem(hlfdayCount.toString(), 'F', Color(0xFF4ADE80)),
+            SizedBox(width: 10),
+            _buildSummaryItem(otHours.toStringAsFixed(1), 'OT', customcolor.blue),
+          ],
+        ),
+      ),
+    ),
 
-                  // Selection Checkbox (top-right)
-                  if (isBulkMode)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: isSelected ? customcolor.blue : Colors.white,
-                          border: Border.all(
-                            color: isSelected
-                                ? customcolor.blue
-                                : Color(0xFFE2E8F0),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: isSelected
-                            ? Icon(Icons.check, color: Colors.white, size: 16)
-                            : null,
-                      ),
-                    ),
+    SizedBox(width: 2),
+
+    /// RIGHT (Eye Icon)
+  
+   GestureDetector(
+ onTap: () {
+  //  final List<AttendanceData> list =
+  //       (emp.attendData ?? []).cast<AttendanceData>();
+
+    // if (list.isEmpty) return;
+
+    // final att = list.first; // 👈 latest item
+
+    // final reason = (att.sup_reason?.isNotEmpty == true)
+    //     ? att.sup_reason!
+    //     : (att.reason?.isNotEmpty == true)
+    //         ? att.reason!
+    //         : (att.om_oe_resson ?? "No reason");
+_showReasonDialog(
+  context,
+  attendData: emp.attendData,
+  clientReasonList: emp.clientReasonList,
+);
+    // _showReasonDialog(
+    //   context,
+    //   date: att.date,
+    //   reason: reason,
+    // );
+},
+  child: Icon(
+                                          Icons.info_outline,
+                                          color: customcolor.blue,
+                                        ),
+)
+  ],
+)
+                 
                 ],
               ),
             ),
@@ -1325,7 +2107,294 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
       ),
     );
   }
+  void _showReasonDialog(
+  BuildContext context, {
+  required List<AttendanceData> attendData,
+  List<ClientReason>? clientReasonList, // nullable
+}) {
+  final clientList = clientReasonList ?? [];
 
+  // Filter attendData to only include entries with a reason
+  final filteredAttendData = attendData.where((att) {
+    final clientReason = clientList.firstWhere(
+      (cr) => cr.date == att.date,
+      orElse: () => ClientReason(date: att.date, supReason: '', clientReason: ''),
+    );
+    // Only include if supervisor or client reason is not empty
+    return (att.sup_reason?.isNotEmpty == true) || (clientReason.clientReason.isNotEmpty);
+  }).toList();
+
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (_) => Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Details",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+
+              // Show message if no filtered reasons
+              if (filteredAttendData.isEmpty)
+                const Text("No reasons available")
+              else
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: filteredAttendData.length,
+                    itemBuilder: (context, index) {
+                      final att = filteredAttendData[index];
+
+                      // Find client reason for same date
+                      final clientReason = clientList.firstWhere(
+                        (cr) => cr.date == att.date,
+                        orElse: () => ClientReason(date: att.date, supReason: '', clientReason: ''),
+                      );
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Date: ${att.date}", style: const TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            if (att.sup_reason?.isNotEmpty == true)
+                              Text("Supervisor Reason: ${att.sup_reason}"),
+                            if (clientReason.clientReason.isNotEmpty)
+                              Text("Client Reason: ${clientReason.clientReason}"),
+                            const Divider(),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: customcolor.blue,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("OK", style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+// void _showReasonDialog(
+//   BuildContext context, {
+//   required List<AttendanceData> attendData,
+//   List<ClientReason>? clientReasonList, // nullable
+// }) {
+//   final clientList = clientReasonList ?? []; // default to empty list
+
+//   showDialog(
+//     context: context,
+//     barrierDismissible: true,
+//     builder: (_) => Dialog(
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.circular(16),
+//       ),
+//       child: Padding(
+//         padding: const EdgeInsets.all(16),
+//         child: ConstrainedBox(
+//           // Limit max height of dialog to 80% of screen
+//           constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               const Text(
+//                 "Details",
+//                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+//               ),
+//               const SizedBox(height: 12),
+
+//               // Use Flexible for scrollable content
+//               if (attendData.isEmpty && clientList.isEmpty)
+//                 const Text("No reasons available")
+//               else
+//                 Flexible(
+//                   child: ListView.builder(
+//                     shrinkWrap: true,
+//                     itemCount: attendData.length,
+//                     itemBuilder: (context, index) {
+//                       final att = attendData[index];
+
+//                       // Find client reason for same date
+//                       final clientReason = clientList.firstWhere(
+//                         (cr) => cr.date == att.date,
+//                         orElse: () => ClientReason(date: att.date, supReason: '', clientReason: ''),
+//                       );
+
+//                       return Padding(
+//                         padding: const EdgeInsets.symmetric(vertical: 6),
+//                         child: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Text("Date: ${att.date}", style: const TextStyle(fontWeight: FontWeight.w600)),
+//                             const SizedBox(height: 4),
+//                             Text("Supervisor Reason: ${att.sup_reason?.isNotEmpty == true ? att.sup_reason : 'No reason'}"),
+//                             const SizedBox(height: 2),
+//                             Text("Client Reason: ${clientReason.clientReason.isNotEmpty ? clientReason.clientReason : 'No reason'}"),
+//                             const Divider(),
+//                           ],
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                 ),
+
+//               const SizedBox(height: 12),
+
+//               SizedBox(
+//                 width: double.infinity,
+//                 height: 45,
+//                 child: ElevatedButton(
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: customcolor.blue,
+//                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                   ),
+//                   onPressed: () {
+//                     Navigator.pop(context);
+//                   },
+//                   child: const Text("OK", style: TextStyle(color: Colors.white)),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     ),
+//   );
+// }
+// void _showReasonDialog(BuildContext context,
+//     {required String date, required String reason}) {
+//   showDialog(
+//     context: context,
+//     barrierDismissible: true,
+//     builder: (_) => Dialog(
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.circular(16),
+//       ),
+//       child: Padding(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+            
+//             /// TITLE
+//             const Text(
+//               "Details",
+//               style: TextStyle(
+//                 fontSize: 16,
+//                 fontWeight: FontWeight.bold,
+//               ),
+//             ),
+
+//             const SizedBox(height: 12),
+
+//             /// DATE
+//             Row(
+//               children: [
+//                 const Text(
+//                   "Date: ",
+//                   style: TextStyle(fontWeight: FontWeight.w600),
+//                 ),
+//                 Expanded(
+//                   child: Text(
+//                     date.isNotEmpty ? date : "-",
+//                     style: TextStyle(color: Colors.grey[700]),
+//                   ),
+//                 ),
+//               ],
+//             ),
+
+//             const SizedBox(height: 12),
+
+//             /// REASON FIELD (READ ONLY)
+//             Column(
+//               mainAxisAlignment: MainAxisAlignment.start,
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 const Text(
+//                   "Supervisor Reason",
+//                   style: TextStyle(fontWeight: FontWeight.w600),
+//                 ),
+//                 const SizedBox(height: 6),
+
+//             TextField(
+//               controller: TextEditingController(text: reason),
+//               readOnly: true,
+//               maxLines: 3,
+//               decoration: InputDecoration(
+//                 hintText: "No reason available",
+//                 filled: true,
+//                 fillColor: Colors.grey.shade100,
+//                 contentPadding: const EdgeInsets.all(10),
+//                 border: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(10),
+//                 ),
+//               ),
+//             ),
+
+//             const SizedBox(height: 20),
+//               ],
+//             ),
+            
+
+            
+
+//             /// BUTTON
+//             SizedBox(
+//               width: double.infinity,
+//               height: 45,
+//               child: ElevatedButton(
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: customcolor.blue,
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                 ),
+//                 onPressed: () {
+//                   Navigator.pop(context);
+//                 },
+//                 child: const Text(
+//                   "OK",
+//                   style: TextStyle(color: Colors.white),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     ),
+//   );
+// }
   Widget _buildSummaryItem(String value, String label, Color color) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1370,15 +2439,16 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
 
     return GestureDetector(
       onTap: () {
+        print("Clicked SAVE HERE @");
         setState(() {});
-        log('reason ${day?.reason}');
+        print('reason ${day?.reason}');
         if (role == GlobalLists.clientrole) {
-          log('is_final_submitted check ${is_month_end}');
+          print('is_final_submitted check ${is_month_end}');
 
-          log('is_final_submitted ${is_final_submit}');
-          log('attendanceStatus ${day?.attendanceStatus}');
-          log('client_approval_status ${day?.client_approval_status}');
-          log('act_deact_janitor ${day?.act_deact_janitor}');
+          print('is_final_submitted ${is_final_submit}');
+          print('attendanceStatus ${day?.attendanceStatus}');
+          print('client_approval_status ${day?.client_approval_status}');
+          print('act_deact_janitor ${day?.act_deact_janitor}');
 
           canEdit =
               (is_final_submit == false ||
@@ -1389,10 +2459,10 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                   day!.client_approval_status == '') &&
               (day?.reason == null || day?.reason == '' || day?.reason == 'NA');
         }
-        log('canEdit ${canEdit}');
+        print('canEdit ${canEdit}');
 
         if (GlobalLists.supervisorrole == role && sup_final_submitted_v) {
-          log('Roster is already finalized.');
+          print('Roster is already finalized.');
           ShowDialogs.showToast("Roster is already finalized.");
           return;
         }
@@ -1471,17 +2541,13 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
             SizedBox(height: 4),
             GestureDetector(
               onTap: () {
-           
-
-
-                if(is_month_end==1&&
-                                  is_final_submit==true){
-                                    return;
-                                  }
+                  print("Clicked SAVE HERE");
+                if (is_month_end == 1 && is_final_submit == true) {
+                  return;
+                }
                 if (!isFuture && day != null && !isBulkMode) {
                   _showOTDialog(emp, day, date, displayOT.toDouble());
                 }
-
               },
               child: Container(
                 height: 28,
@@ -1671,6 +2737,7 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
+                       
                         final otText = otController.text.trim();
                         double hours = 0.0;
 
@@ -1687,8 +2754,8 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                             date,
                           );
                         }
-
-                        // Prepare attendance entry with current day's attendance status
+                      
+// Prepare attendance entry with current day's attendance status
                         final attendanceEntry = {
                           "date": date,
                           "attendance_status": day.attendance_type ?? '',
@@ -1725,6 +2792,8 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                         await _submitAttendaceRoster(apiData).then((v) async {
                           await _fetchAttendanceRoster();
                         });
+                       
+                        
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: customcolor.blue,
@@ -1778,6 +2847,7 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
 
     // 4 If ALL are empty → use attendance_type switch
     if (isClientEmpty && isOmEmpty && isReasonEmpty) {
+     
       switch (day.attendance_type) {
         case 'P': // Present
           return const Color(0xFF22C55E);
@@ -1793,6 +2863,8 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
 
         case 'F': // Half Day
           return const Color(0xFF4ADE80);
+          //  case 'O': // Half Day
+          // return const Color(0xFFCBD5E1);
 
         default:
           return const Color(0xFFCBD5E1);
@@ -1862,6 +2934,8 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
         return 'W';
       case 'F': // Half Day
         return 'F';
+      case 'O': // Half Day
+        return '';
       case '': // Half Day
         return '-';
       default: // Week Off
@@ -2114,6 +3188,8 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
+
+                          print("Clicked HERE");
                           if (selectedAttendance == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -2131,13 +3207,16 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                             emp.empId.toString(),
                             date,
                           );
-
+ if(role==GlobalLists.clientrole && reasonController.text.trim()=="")
+                       {
+                         ShowDialogs.showToast("Please enter reason");
+                       }else{
                           // Prepare API data for single attendance
                           final attendanceEntry = {
                             "date": date,
                             "attendance_status": selectedAttendance,
                             "emp_id": emp.empId,
-                             "attendance_id":day.attendanceId,
+                            "attendance_id": day.attendanceId,
                             "attendance_type": _convertAttendanceTypeToAPI(
                               selectedAttendance,
                             ),
@@ -2173,12 +3252,15 @@ bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
                                 : '',
                           };
                           // In _showAttendanceDialog, just before Navigator.pop(context)
-log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: $date');
+                          log(
+                            'Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: $date',
+                          );
 
                           Navigator.pop(context);
 
                           // Submit to API
                           await _submitAttendaceRoster(apiData);
+                       }
                         },
 
                         style: ElevatedButton.styleFrom(
@@ -2261,15 +3343,15 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
     return '';
   }
 
- void _showBulkMarkingDialog() {
+  void _showBulkMarkingDialog() {
     if (selectedEmployees.isEmpty) {
-     ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(
-    content: Text('Please select at least one employee'),
-    backgroundColor: Color(0xFFEF4444),
-  ),
-);
-      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select at least one employee'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+
       return;
     }
 
@@ -2779,7 +3861,6 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
                                 "attendance_id": attendanceId,
                                 "attendance_status": bulkAttendanceStatus,
                                 "emp_id": int.parse(empId),
-                                
 
                                 "attendance_type": _convertAttendanceTypeToAPI(
                                   bulkAttendanceStatus,
@@ -2852,22 +3933,18 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
       ),
     );
   }
- void showTopSnackBar(String message, Color color) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message, style: TextStyle(color: Colors.white)),
-      backgroundColor: color,
-      duration: Duration(seconds: 1),
-      behavior: SnackBarBehavior.floating,
-      margin: EdgeInsets.only(
-        top: 20,
-        left: 16,
-        right: 16,
-      ),
-    ),
-  );
-}
 
+  void showTopSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: Colors.white)),
+        backgroundColor: color,
+        duration: Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(top: 20, left: 16, right: 16),
+      ),
+    );
+  }
 
   Widget _buildDateSelectionButton(
     String label,
@@ -3572,6 +4649,8 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
         return 'H'; // Holiday/Leave
       case 'working on holiday':
         return 'W';
+      case 'week off':
+        return 'O';
       default:
         return '';
     }
@@ -3626,7 +4705,7 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
 
           SubmitAttendanceRooster resp = response;
           log(' API Response: ${resp.status} - ${resp.msg}');
-
+          log("client_attendance_type ${resp.data}");
           if (resp.status == 1) {
             // Clear OT data after successful submission
             if (apiData['emp_id'] is List) {
@@ -4096,3 +5175,4 @@ log('Submitting attendanceId: ${day.attendanceId} for empId: ${emp.empId} date: 
     }
   }
 }
+

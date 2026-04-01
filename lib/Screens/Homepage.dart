@@ -9,6 +9,7 @@ import 'package:another_flushbar/flushbar.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:janpro/Screens/client_visit_view.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
+import 'package:janpro/widgets/SupervisorRankingSection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
@@ -1110,6 +1111,8 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                 //
                               ),
                             ),
+                          //  (role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
+                          //           role == GlobalLists.operationmanagerrole) ?SupervisorRankingSection():Container(),
                             (role == GlobalLists.headrole ||
                                     role == GlobalLists.reginalmanagerrole ||
                                     role == GlobalLists.clientrole ||

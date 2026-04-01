@@ -106,6 +106,7 @@ class Record {
   bool isFinalSubmitted;
   String? attendance_type;
   String? previousStatus;
+  bool? notification_sent;
   String? client_attendance_type;
   String? om_oe_attendance_type;
 
@@ -134,6 +135,7 @@ class Record {
     required this.isFinalSubmitted,
     required this.previousStatus,
     required this.attendance_type,
+    required this.notification_sent,
     required this.client_attendance_type,
     required this.om_oe_attendance_type,
   });
@@ -165,6 +167,7 @@ class Record {
         isFinalSubmitted: json["is_final_submitted"] ?? false,
         previousStatus: json["previous_status"],
         attendance_type:json['attendance_type']??"",
+        notification_sent:json['notification_sent'] ?? false,
         client_attendance_type: json['client_attendance_type']??"",
         om_oe_attendance_type: json['om_oe_attendance_type']??"",
       );
@@ -195,6 +198,7 @@ class Record {
         "is_final_submitted": isFinalSubmitted,
         "previous_status": previousStatus,
         "attendance_type":attendance_type,
+        "notification_sent":notification_sent,
         "client_attendance_type": client_attendance_type,
         "om_oe_attendance_type": om_oe_attendance_type,
       };
