@@ -53,7 +53,8 @@ class ShiftData {
     required this.is_final_submitted,
     required this.review_updated_by_oe_om,
     required this.review_updated_by_client,
-    required this.sup_final_submitted
+    required this.sup_final_submitted,
+   
 
   });
 
@@ -75,7 +76,8 @@ class ShiftData {
           is_month_end:json['is_month_end'],
         review_updated_by_oe_om:json['review_updated_by_oe_om']??false,
         review_updated_by_client:json["review_updated_by_client"]??false,
-        sup_final_submitted:json['sup_final_submitted']
+        sup_final_submitted:json['sup_final_submitted'],
+       
 
     );
   }
@@ -120,9 +122,9 @@ class AttendanceData {
   final String? client_approval_status;
   final bool? act_deact_janitor;
     final dynamic? ot_hours;
-  final String?attendance_type;
+  final String? attendance_type;
 
-
+final dynamic national_holiday;
   final String? statusPresentAbsent;
   final int? attendanceId;
 
@@ -136,6 +138,7 @@ class AttendanceData {
     this.client_approval_status,
     this.statusPresentAbsent,
     this.attendanceId,
+      this.national_holiday,
      this.act_deact_janitor,
      this.ot_hours,
      this.attendance_type,
@@ -156,6 +159,7 @@ class AttendanceData {
       statusPresentAbsent: json['status_present_absent'],
       attendanceId: json['attendance_id'],
       act_deact_janitor: json['act_deact_janitor']??false,
+       national_holiday:json["national_holiday"] ?? ""
     );
   }
 }

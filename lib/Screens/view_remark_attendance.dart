@@ -1618,7 +1618,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
            "attendance_type": r.attendance_type,
          "reason":r.reason,
            "client_id":widget.clientid,"site_id":r.siteId.toString(),
-            "notification_sent":true
+            "notification_sent":false
             
           });
         }
@@ -1643,7 +1643,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
           CommonResponse resp = response;
 
           if (resp.status == 1) {
-            
+            setState(() {
+              _fetchAttendanceRoster();
+              // _isnotificationCompleted=true;
+            });
             ShowDialogs.showToast(resp.msg);
           } else {
             ShowDialogs.showToast(resp.msg);

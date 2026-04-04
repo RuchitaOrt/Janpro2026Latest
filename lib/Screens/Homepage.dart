@@ -1111,8 +1111,8 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                 //
                               ),
                             ),
-                          //  (role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
-                          //           role == GlobalLists.operationmanagerrole) ?SupervisorRankingSection():Container(),
+                           (role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
+                                    role == GlobalLists.operationmanagerrole) ?SupervisorRankingSection():Container(),
                             (role == GlobalLists.headrole ||
                                     role == GlobalLists.reginalmanagerrole ||
                                     role == GlobalLists.clientrole ||

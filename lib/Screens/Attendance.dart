@@ -3304,17 +3304,17 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                 animation: true,
                                                                 percent:
                                                                     GlobalLists
-                                                                            .attendancedata
+                                                                            .attendancedata!
                                                                             .percentage >
                                                                         100.0
                                                                     ? 0.0
                                                                     : GlobalLists
-                                                                              .attendancedata
+                                                                              .attendancedata!
                                                                               .percentage /
                                                                           100,
 
                                                                 center: new Text(
-                                                                  "${GlobalLists.attendancedata.count}/${GlobalLists.attendancedata.noOfStaff}",
+                                                                  "${GlobalLists.attendancedata!.count}/${GlobalLists.attendancedata!.noOfStaff}",
                                                                   style: AppFonts.headerStyle(
                                                                     fontSize:
                                                                         24,
@@ -3344,10 +3344,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                             .shiftid,
                                                                         context,
                                                                         GlobalLists
-                                                                            .attendancedata
+                                                                            .attendancedata!
                                                                             .noOfStaff,
                                                                         GlobalLists
-                                                                            .attendancedata
+                                                                            .attendancedata!
                                                                             .count,
                                                                       );
                                                                     },
@@ -3420,7 +3420,12 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       namecontroller.text = "";
                                       mobilecontroller.text = "";
                                       isexpandedclient = false;
+
                                       isexpandedjanitor = false;
+
+
+
+                                      selectedJanitorIds.clear();
                                       addaddtendance(context);
                                       // Add your action for the center button here
                                     },
@@ -4552,6 +4557,36 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               "Please select at least one janitor",
                             );
                           } else {
+                            print("COMING MARK");
+                            // print(GlobalLists
+                            //                           .mainlisttab[maintag]
+                            //                           .attendanceDetails[tag]
+                            //                           .count);
+
+                           
+                             int count = int.tryParse(GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .count.toString() ?? "0") ?? 0;
+  int total = int.tryParse(GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .noOfStaff.toString() ?? "0") ?? 0;
+
+  int remaining = total - count;
+
+  if (remaining <= 0) {
+    ShowDialogs.showToast("All janitors already marked");
+    return;
+  }
+
+  if (selectedJanitorIds.length > remaining) {
+    ShowDialogs.showToast(
+      "You can only select $remaining janitor(s)",
+    );
+    return;
+  }
+
                             addattendanceApi();
                           }
                         },
@@ -4669,7 +4704,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           // Update global list & UI
           setState(() {
             GlobalLists.attendanceemployeelist = resp.data.employeeList;
-            GlobalLists.attendancedata.employeeList = resp.data.employeeList;
+            GlobalLists.attendancedata!.employeeList = resp.data.employeeList;
           });
 
           Timer(
@@ -5862,7 +5897,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       if (!exists) {
         // setState(() {
         GlobalLists.attendanceemployeelist.add(newEmployee);
-        GlobalLists.attendancedata.employeeList.add(newEmployee);
+        GlobalLists.attendancedata!.employeeList.add(newEmployee);
         // });
 
         //  Update SharedPreferences cache

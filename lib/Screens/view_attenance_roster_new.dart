@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -210,6 +211,7 @@ String? downloadedFilePath;
   String _isSelected = "";
 
   bool _isLoad = false;
+  bool isAttendanceLoaded = false;
   bool _isLandscap = false;
 
   _fetchAttendanceRoster() async {
@@ -245,12 +247,15 @@ String? downloadedFilePath;
 
       // log('map view ${map}');
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(child: CircularProgressIndicator()),
-      );
-
+      // showDialog(
+      //   context: context,
+      //   barrierDismissible: false,
+      //   builder: (context) => Center(child: CircularProgressIndicator()),
+      // );
+setState(() {
+  isAttendanceLoaded=true;
+  _isLoad = true;
+});
       APIManager().apiRequest(
         context,
         role == GlobalLists.supervisorrole
@@ -281,13 +286,17 @@ String? downloadedFilePath;
               setState(() {
                 _isLoad = true;
                 _attendanceRosterData = rosterResponse.data;
+                isAttendanceLoaded=false;
               });
-              Navigator.pop(context);
+              // Navigator.pop(context);
             } else {
               ShowDialogs.showToast(rosterResponse.msg);
             }
           } catch (e) {
-            _isLoad = false;
+            setState(() {
+  _isLoad = false;
+  isAttendanceLoaded=false;
+});
             log('Error parsing response: $e');
             ShowDialogs.showToast('Error processing data: ${e.toString()}');
           }
@@ -295,17 +304,24 @@ String? downloadedFilePath;
         (error) {
           log('Error: ${error.toString()}');
           ShowDialogs.showToast('Error: ${error.toString()}');
-          _isLoad = false;
+      setState(() {
+  _isLoad = false;
+  isAttendanceLoaded=false;
+});
         },
         false,
         "",
         jsonval: map,
       );
     } catch (e) {
+      setState(() {
+  _isLoad = false;
+  isAttendanceLoaded=false;
+});
       ShowDialogs.showToast('An error occurred');
     }
   }
-
+TextEditingController hoursController = TextEditingController();
   var shiftId;
   var clientId;
   var userId;
@@ -323,6 +339,13 @@ String? downloadedFilePath;
 
     _fetchAttendanceRoster();
   }
+  Future<void> refreshData() async {
+    // Simulating an API request or data refresh
+    setState(() {
+      print("APICall");
+      getrole();
+    });
+  }
 
   bool isCurrentMonthYear(int selectedMonthIndex, int selectedYear) {
     final now = DateTime.now();
@@ -335,11 +358,77 @@ String? downloadedFilePath;
 
     return selectedMonth == currentMonth && selectedYear == currentYear;
   }
+Future<void> _downloadRoster(String shiftId) async {
+  setState(() {
+    isDownloading = true;
+  });
 
+  try {
+    Directory baseDir = await getApplicationDocumentsDirectory();
+    String filePath = "${baseDir.path}/roster_$shiftId.pdf";
+
+    Dio dio = Dio();
+
+    print("🚀 Download Start");
+    print("👉 URL: ${GlobalLists.downloadRosterLink}");
+    print("👉 PATH: $filePath");
+
+    await dio.download(
+      GlobalLists.downloadRosterLink,
+      filePath,
+      onReceiveProgress: (received, total) {
+        if (total != -1) {
+          print("📥 Progress: ${(received / total * 100).toStringAsFixed(0)}%");
+        } else {
+          print("📥 Downloading... $received bytes");
+        }
+      },
+    );
+
+    setState(() {
+      isDownloading = false;
+      downloadedFilePath = filePath;
+    });
+
+    print("✅ Download Complete: $filePath");
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Download completed")),
+    );
+
+    /// 🔥 Open file
+    // await OpenFilex.open(filePath);
+
+  } catch (e) {
+    setState(() {
+      isDownloading = false;
+      downloadedFilePath = null;
+    });
+
+    print("💥 Download Error: $e");
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Download failed: $e")),
+    );
+  }
+}
+GlobalKey<RefreshIndicatorState> refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
   @override
   Widget build(BuildContext context) {
-    if (!mounted || context == null || _attendanceRosterData.isEmpty)
-      return Scaffold(backgroundColor: Color(0xFFFAFBFC));
+    // if (!mounted || context == null || _attendanceRosterData.isEmpty)
+    //   return Scaffold(backgroundColor: Color(0xFFFAFBFC));
+// if (!_isLoad) {
+//   return Scaffold(
+//     backgroundColor: Color(0xFFFAFBFC),
+//     body: Center(
+//       child: CircularProgressIndicator(
+//         color: customcolor.blue,
+//       ),
+//     ),
+//   );
+// }
+
 
     String getMonthYear(String date) {
       final parts = date.split('-');
@@ -355,8 +444,12 @@ String? downloadedFilePath;
       return DateTime(year, monthIndex);
     }
 
-    int currentMonth = int.parse(month);
-    int currentYear = int.parse(year);
+    //  final firstDayOfMonth = DateTime(selectedYear, selectedMonth, 1);
+    //   final lastDayOfMonth = DateTime(selectedYear, selectedMonth + 1, 0);
+int currentMonth = int.tryParse(month) ?? DateTime.now().month -1;
+int currentYear = int.tryParse(year) ?? DateTime.now().year;
+    // int currentMonth = int.parse(month);
+    // int currentYear = int.parse(year);
 
     final Map<String, List<dynamic>> groupedByMonth = {};
     for (var shift in _attendanceRosterData) {
@@ -425,94 +518,8 @@ String? downloadedFilePath;
   bool _isDownloading = false;
   bool _downloaded = false;
   String? _filePath;
-Future<void> _downloadRoster(String shiftId) async {
-  setState(() {
-    isDownloading = true;
-  });
 
-  try {
-    Directory baseDir = await getApplicationDocumentsDirectory();
-    String filePath = "${baseDir.path}/roster_$shiftId.pdf";
 
-    Dio dio = Dio();
-
-    print("🚀 Download Start");
-    print("👉 URL: ${GlobalLists.downloadRosterLink}");
-    print("👉 PATH: $filePath");
-
-    await dio.download(
-      GlobalLists.downloadRosterLink,
-      filePath,
-      onReceiveProgress: (received, total) {
-        if (total != -1) {
-          print("📥 Progress: ${(received / total * 100).toStringAsFixed(0)}%");
-        } else {
-          print("📥 Downloading... $received bytes");
-        }
-      },
-    );
-
-    setState(() {
-      isDownloading = false;
-      downloadedFilePath = filePath;
-    });
-
-    print("✅ Download Complete: $filePath");
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Download completed")),
-    );
-
-    /// 🔥 Open file
-    // await OpenFilex.open(filePath);
-
-  } catch (e) {
-    setState(() {
-      isDownloading = false;
-      downloadedFilePath = null;
-    });
-
-    print("💥 Download Error: $e");
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Download failed: $e")),
-    );
-  }
-}
-// Future<void> _downloadRoster(String shiftId) async {
-//   setState(() {
-//     isDownloading = true;
-//   });
-
-//   try {
-//     Directory baseDir = await getApplicationDocumentsDirectory();
-//     String filePath = "${baseDir.path}/roster_$shiftId.pdf";
-
-//     Dio dio = Dio();
-//     await dio.download(GlobalLists.downloadRosterLink, filePath,
-//         onReceiveProgress: (received, total) {
-//       print("Downloading $received / $total");
-//          print("Downloading $filePath");
-//     });
-
-//     setState(() {
-//       isDownloading = false;
-//       downloadedFilePath = filePath;
-//     });
-
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text("Download completed")),
-//     );
-//   } catch (e) {
-//     setState(() {
-//       isDownloading = false;
-//       downloadedFilePath = null;
-//     });
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text("Download failed: $e")),
-//     );
-//   }
-// }
     if (selectedShift != null) {
       for (var emp in selectedShift.employeeList ?? []) {
         for (var att in emp.attendData ?? []) {
@@ -536,1297 +543,1348 @@ Future<void> _downloadRoster(String shiftId) async {
       }
     }
 
-    return Scaffold(
-      backgroundColor: Color(0xFFFAFBFC),
-      key: _scaffoldKey1,
-      endDrawer: Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: customcolor.blue,
-          primaryColor: customcolor.blue,
-        ),
-        child: AppDrawerfilter(role),
-      ),
-      resizeToAvoidBottomInset: false,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(148),
-        child: AppbarComman(
-          setStyleStr: 'View Attendance Roster',
-          onPressedBack: () {},
-          onPressedNotify: () {},
-          onPressedSearch: () {},
-          onPressedSort: () {},
-          onPressedmenu: () {
-            _scaffoldKey1.currentState!.openEndDrawer();
-          },
-        ),
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                // Header with dark background
-                Container(
-                  decoration: BoxDecoration(
-                    // color: customcolor.blue,
+    
+        return Scaffold(
+          backgroundColor: Color(0xFFFAFBFC),
+          key: _scaffoldKey1,
+          endDrawer: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: customcolor.blue,
+              primaryColor: customcolor.blue,
+            ),
+            child: AppDrawerfilter(role),
+          ),
+          resizeToAvoidBottomInset: false,
+          appBar: PreferredSize(
+            preferredSize: Size.fromHeight(148),
+            child: AppbarComman(
+              setStyleStr: 'View Attendance Roster',
+              onPressedBack: () {},
+              onPressedNotify: () {},
+              onPressedSearch: () {},
+              onPressedSort: () {},
+              onPressedmenu: () {
+                _scaffoldKey1.currentState!.openEndDrawer();
+              },
+            ),
+          ),
+          body: CustomRefreshIndicator(
+               key: refreshIndicatorKey,
+      builder: (
+        BuildContext context,
+        Widget child,
+        IndicatorController controller,
+      ) {
+        return Stack(
+          alignment: Alignment.topCenter,
+          children: <Widget>[
+            if (!controller.isIdle)
+              Positioned(
+                top: 35.0 * controller.value,
+                child: SizedBox(
+                  height: 30,
+                  width: 30,
+                  child: CircularProgressIndicator(
+                    value: !controller.isLoading
+                        ? controller.value.clamp(0.0, 1.0)
+                        : null,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              ),
+            Transform.translate(
+              offset: Offset(0, 100.0 * controller.value),
+              child: child,
+            ),
+          ],
+        );
+      },
+      onRefresh: refreshData,
+            child: SafeArea(
+              child:  (isAttendanceLoaded)?Center(child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: customcolor.blue,),
+                  SizedBox(height: 15),
+                      Text("Loading, please wait...",
+                          style: TextStyle(
+                              color:   Colors.black))
+                ],
+              )): _attendanceRosterData.isEmpty
+                ? Center(
+                    child: Text(
+                      "No data available",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                :  Stack(
+                children: [
+                Column(
                     children: [
-                      // Top header with title and month navigation
-                      Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.arrow_back,
-                                    color: Colors.black,
-                                  ),
-                                  onPressed: () => Navigator.pop(context),
-                                  padding: EdgeInsets.zero,
-                                  constraints: BoxConstraints(),
-                                ),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Team Roster',
-                                  style: AppFonts.headerStyle(
-                                    fontSize: ResponsiveFlutter.of(
-                                      context,
-                                    ).fontSize(2.3),
-                                    // color: customcolor.white,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            Row(
-                              children: [
-                                // Month Dropdown
-                                GestureDetector(
-                                  onTap: () => _showMonthPicker(
-                                    context,
-                                    selectedMonthIndex ?? int.parse(month),
-                                  ),
-                                  child: Card(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-
-                                    elevation: 1,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            monthNamesShort[selectedMonthIndex ??
-                                                int.parse(month)],
-                                            style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          SizedBox(width: 4),
-                                          Icon(
-                                            Icons.arrow_drop_down,
-                                            color: customcolor.blue,
-                                            size: 18,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                // Year Dropdown
-                                GestureDetector(
-                                  onTap: () => _showYearPicker(
-                                    context,
-                                    selectedYear ?? int.parse(year),
-                                  ),
-                                  child: Card(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            '${selectedYear ?? int.parse(year)}',
-                                            style: TextStyle(
-                                              // color: Colors.white,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          SizedBox(width: 4),
-                                          Icon(
-                                            Icons.arrow_drop_down,
-                                            color: customcolor.blue,
-                                            size: 18,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                SizedBox(width: 10),
-                                GlobalLists.mainlisttab.isNotEmpty
-                                    ? _buildChoicemainListfortab()
-                                    : Container(),
-                              ],
-                            ),
-                          ],
+                      // Header with dark background
+                      Container(
+                        decoration: BoxDecoration(
+                          // color: customcolor.blue,
                         ),
-                      ),
-
-                      selectedShift?.employeeList?.isEmpty ||
-                              GlobalLists.supervisorrole != role &&
-                                  !selectedShift.sup_final_submitted
-                          ? SizedBox()
-                          : Padding(
-                              padding: const EdgeInsets.only(
-                                left: 10,
-                                right: 10,
-                                bottom: 8,
-                              ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Top header with title and month navigation
+                            Padding(
+                              padding: EdgeInsets.all(12),
                               child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  // Landscape / Portrait toggle
-                                  !_isLandscap
-                                      ? ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: customcolor.blue,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            setState(() => _isLandscap = true);
-                                            SystemChrome.setPreferredOrientations(
-                                              [
-                                                DeviceOrientation.landscapeLeft,
-                                                DeviceOrientation
-                                                    .landscapeRight,
-                                              ],
-                                            );
-                                          },
-                                          icon: Icon(
-                                            Icons.screen_rotation,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          label: Text(
-                                            'Landscape',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        )
-                                      : ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: customcolor.blue,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            setState(() => _isLandscap = false);
-                                            SystemChrome.setPreferredOrientations(
-                                              [DeviceOrientation.portraitUp],
-                                            );
-                                          },
-                                          icon: Icon(
-                                            Icons.stay_current_portrait,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          label: Text(
-                                            'Portrait',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-
-                                  SizedBox(width: 10),
-
-                                  // Bulk mode toggle — moved here from FAB
-                                  GlobalLists.supervisorrole == role &&
-                                              selectedShift
-                                                  .sup_final_submitted ||
-                                          selectedShift?.is_month_end == 1 &&
-                                              selectedShift
-                                                      ?.is_final_submitted ==
-                                                  true
-                                      ? SizedBox()
-                                      : ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: isBulkMode
-                                                ? Colors.red
-                                                : customcolor.blue,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            if (GlobalLists.supervisorrole ==
-                                                    role &&
-                                                selectedShift
-                                                    .sup_final_submitted) {
-                                              log(
-                                                'disable ${selectedShift.employeeList.length}',
-                                              );
-
-                                              log(
-                                                'disable ${selectedShift.sup_final_submitted}',
-                                              );
-
-                                              return;
-                                            }
-
-                                            setState(() {
-                                              isBulkMode = !isBulkMode;
-                                              if (!isBulkMode)
-                                                selectedEmployees.clear();
-                                            });
-                                          },
-                                          icon: Icon(
-                                            isBulkMode
-                                                ? Icons.close
-                                                : Icons.people,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                          label: Text(
-                                            isBulkMode
-                                                ? 'Cancel Bulk'
-                                                : 'Bulk Mark',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-
                                   Row(
-                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
                                         icon: Icon(
-                                          Icons.info_outline,
-                                          color: customcolor.blue,
+                                          Icons.arrow_back,
+                                          color: Colors.black,
                                         ),
-                                        tooltip: "View reasons",
-                                        onPressed: () {
-                                          Dailogbox().showLegendDialog(context);
-                                        },
+                                        onPressed: () => Navigator.pop(context),
+                                        padding: EdgeInsets.zero,
+                                        constraints: BoxConstraints(),
                                       ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        'Team Roster',
+                                        style: AppFonts.headerStyle(
+                                          fontSize: ResponsiveFlutter.of(
+                                            context,
+                                          ).fontSize(2.3),
+                                          // color: customcolor.white,
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                    
+                                  Row(
+                                    children: [
+                                      // Month Dropdown
+                                      GestureDetector(
+                                        onTap: () => _showMonthPicker(
+                                          context,
+                                          selectedMonthIndex ?? int.parse(month),
+                                        ),
+                                        child: Card(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                    
+                                          elevation: 1,
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 6,
+                                            ),
+                    
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  monthNamesShort[selectedMonthIndex ??
+                                                      int.parse(month)],
+                                                  style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                SizedBox(width: 4),
+                                                Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: customcolor.blue,
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      // Year Dropdown
+                                      GestureDetector(
+                                        onTap: () => _showYearPicker(
+                                          context,
+                                          selectedYear ?? int.parse(year),
+                                        ),
+                                        child: Card(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 6,
+                                            ),
+                    
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  '${selectedYear ?? int.parse(year)}',
+                                                  style: TextStyle(
+                                                    // color: Colors.white,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                SizedBox(width: 4),
+                                                Icon(
+                                                  Icons.arrow_drop_down,
+                                                  color: customcolor.blue,
+                                                  size: 18,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                    
+                                      SizedBox(width: 10),
+                                      GlobalLists.mainlisttab.isNotEmpty
+                                          ? _buildChoicemainListfortab()
+                                          : Container(),
                                     ],
                                   ),
                                 ],
                               ),
                             ),
-
-                      // Stats bar
-                      _isLandscap ||
-                              selectedShift?.employeeList?.isEmpty ||
-                              GlobalLists.supervisorrole != role &&
-                                  !selectedShift.sup_final_submitted
-                          ? SizedBox()
-                          : Container(
-                              padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
+                    
+                            selectedShift?.employeeList?.isEmpty ||
+                                    GlobalLists.supervisorrole != role &&
+                                        !selectedShift.sup_final_submitted
+                                ? SizedBox()
+                                : Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 10,
+                                      right: 10,
+                                      bottom: 8,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        // Landscape / Portrait toggle
+                                        !_isLandscap
+                                            ? ElevatedButton.icon(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: customcolor.blue,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() => _isLandscap = true);
+                                                  SystemChrome.setPreferredOrientations(
+                                                    [
+                                                      DeviceOrientation.landscapeLeft,
+                                                      DeviceOrientation
+                                                          .landscapeRight,
+                                                    ],
+                                                  );
+                                                },
+                                                icon: Icon(
+                                                  Icons.screen_rotation,
+                                                  color: Colors.white,
+                                                  size: 16,
+                                                ),
+                                                label: Text(
+                                                  'Landscape',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              )
+                                            : ElevatedButton.icon(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: customcolor.blue,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() => _isLandscap = false);
+                                                  SystemChrome.setPreferredOrientations(
+                                                    [DeviceOrientation.portraitUp],
+                                                  );
+                                                },
+                                                icon: Icon(
+                                                  Icons.stay_current_portrait,
+                                                  color: Colors.white,
+                                                  size: 16,
+                                                ),
+                                                label: Text(
+                                                  'Portrait',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                    
+                                        SizedBox(width: 10),
+                    
+                                        // Bulk mode toggle — moved here from FAB
+                                        GlobalLists.supervisorrole == role &&
+                                                    selectedShift
+                                                        .sup_final_submitted ||
+                                                selectedShift?.is_month_end == 1 &&
+                                                    selectedShift
+                                                            ?.is_final_submitted ==
+                                                        true
+                                            ? SizedBox()
+                                            : ElevatedButton.icon(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: isBulkMode
+                                                      ? Colors.red
+                                                      : customcolor.blue,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  if (GlobalLists.supervisorrole ==
+                                                          role &&
+                                                      selectedShift
+                                                          .sup_final_submitted) {
+                                                    log(
+                                                      'disable ${selectedShift.employeeList.length}',
+                                                    );
+                    
+                                                    log(
+                                                      'disable ${selectedShift.sup_final_submitted}',
+                                                    );
+                    
+                                                    return;
+                                                  }
+                    
+                                                  setState(() {
+                                                    isBulkMode = !isBulkMode;
+                                                    if (!isBulkMode)
+                                                      selectedEmployees.clear();
+                                                  });
+                                                },
+                                                icon: Icon(
+                                                  isBulkMode
+                                                      ? Icons.close
+                                                      : Icons.people,
+                                                  color: Colors.white,
+                                                  size: 16,
+                                                ),
+                                                label: Text(
+                                                  isBulkMode
+                                                      ? 'Cancel Bulk'
+                                                      : 'Bulk Mark',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                    
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.info_outline,
+                                                color: customcolor.blue,
+                                              ),
+                                              tooltip: "View reasons",
+                                              onPressed: () {
+                                                Dailogbox().showLegendDialog(context);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                    
+                            // Stats bar
+                            _isLandscap ||
+                                    selectedShift?.employeeList?.isEmpty ||
+                                    GlobalLists.supervisorrole != role &&
+                                        !selectedShift.sup_final_submitted
+                                ? SizedBox()
+                                : Container(
+                                    padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: [
+                                          _buildStatChip(
+                                            '$presentCount',
+                                            'Present',
+                                            customcolor.blue,
+                                          ),
+                                          SizedBox(width: 10),
+                                          _buildStatChip(
+                                            '$absentCount',
+                                            'Absent',
+                                            customcolor.blue,
+                                          ),
+                    
+                                          SizedBox(width: 10),
+                                          _buildStatChip(
+                                            '$hoildayCount',
+                                            'Holiday',
+                                            customcolor.blue,
+                                          ),
+                                          SizedBox(width: 10),
+                                          _buildStatChip(
+                                            '$whoildayCount',
+                                            'Working Holiday',
+                                            customcolor.blue,
+                                          ),
+                                          SizedBox(width: 10),
+                                          _buildStatChip(
+                                            '$hlfdayCount',
+                                            'Halfday',
+                                            customcolor.blue,
+                                          ),
+                                          SizedBox(width: 10),
+                    
+                                          _buildStatChip(
+                                            '${otHours.toStringAsFixed(1)}',
+                                            'OT Hrs',
+                                            customcolor.blue,
+                                          ),
+                                          SizedBox(width: 10),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                    
+                      // Bulk Mode Banner
+                      if (isBulkMode)
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [customcolor.blue, Color(0xFFA855F7)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: customcolor.blue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '✓',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '${selectedEmployees.length} employee${selectedEmployees.length != 1 ? 's' : ''}',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  _buildBulkButton('Cancel', false),
+                                  SizedBox(width: 8),
+                                  _buildBulkButton('Mark', true),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                    
+                      // Employee Cards
+                      Expanded(
+                        child: selectedShift?.employeeList?.isEmpty ?? true
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    _buildStatChip(
-                                      '$presentCount',
-                                      'Present',
-                                      customcolor.blue,
+                                    Icon(
+                                      Icons.people_outline,
+                                      size: 64,
+                                      color: Colors.grey[400],
                                     ),
-                                    SizedBox(width: 10),
-                                    _buildStatChip(
-                                      '$absentCount',
-                                      'Absent',
-                                      customcolor.blue,
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "No janitor assigned",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[600],
+                                      ),
                                     ),
-
-                                    SizedBox(width: 10),
-                                    _buildStatChip(
-                                      '$hoildayCount',
-                                      'Holiday',
-                                      customcolor.blue,
-                                    ),
-                                    SizedBox(width: 10),
-                                    _buildStatChip(
-                                      '$whoildayCount',
-                                      'Working Holiday',
-                                      customcolor.blue,
-                                    ),
-                                    SizedBox(width: 10),
-                                    _buildStatChip(
-                                      '$hlfdayCount',
-                                      'Halfday',
-                                      customcolor.blue,
-                                    ),
-                                    SizedBox(width: 10),
-
-                                    _buildStatChip(
-                                      '${otHours.toStringAsFixed(1)}',
-                                      'OT Hrs',
-                                      customcolor.blue,
-                                    ),
-                                    SizedBox(width: 10),
                                   ],
                                 ),
+                              )
+                            : role != GlobalLists.supervisorrole &&
+                                  (selectedShift.sup_final_submitted == false ||
+                                      selectedShift.sup_final_submitted == null)
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.people_outline,
+                                      size: 64,
+                                      color: Colors.grey[400],
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Attendance roster is not finalized yet.",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: EdgeInsets.only(top: 12, bottom: 80),
+                                itemCount: selectedShift?.employeeList?.length ?? 0,
+                                itemBuilder: (context, index) {
+                                  is_final_submit = selectedShift.is_final_submitted;
+                                  is_month_end = selectedShift.is_month_end;
+                                  sup_final_submitted_v =
+                                      selectedShift.sup_final_submitted;
+                                  final emp = selectedShift.employeeList[index];
+                    
+                                  final isSelected = selectedEmployees.contains(
+                                    emp.empId.toString(),
+                                  );
+                    
+                                  return _buildEmployeeCard(emp, isSelected);
+                                },
                               ),
-                            ),
+                      ),
                     ],
                   ),
-                ),
-
-                // Bulk Mode Banner
-                if (isBulkMode)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [customcolor.blue, Color(0xFFA855F7)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: customcolor.blue.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              '✓',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
+                    
+                  ((role == GlobalLists.unitrole ||role == GlobalLists.operationmanagerrole ||
+                              role == GlobalLists.operationrole) &&
+                          selectedShift?.is_final_submitted == false &&
+                          selectedShift.review_updated_by_client == false)
+                      ? SizedBox()
+                      : isCurrentMonthYear(selectedMonthIndex!, selectedYear!)
+                      ? SizedBox()
+                      : selectedShift?.employeeList.isEmpty ||
+                            selectedShift?.employeeList.length == 0 ||
+                            GlobalLists.supervisorrole != role &&
+                                selectedShift.sup_final_submitted == false ||
+                            selectedEmployees.isNotEmpty
+                      ? SizedBox()
+                      : GlobalLists.supervisorrole == role &&
+                            !selectedShift.sup_final_submitted
+                      ? Padding(
+                          padding: const EdgeInsets.only(
+                            top: 8,
+                            bottom: 12,
+                            right: 12,
+                            left: 12,
+                          ),
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (GlobalLists.supervisorrole == role &&
+                                    selectedShift.sup_final_submitted) {
+                                  ShowDialogs.showToast(
+                                    "Roster is already finalized.",
+                                  );
+                    
+                                  return;
+                                }
+                    
+                                _showRosterLockDialog(context);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: customcolor.blue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                minimumSize: Size(double.infinity, 48),
                               ),
                               child: Text(
-                                '${selectedEmployees.length} employee${selectedEmployees.length != 1 ? 's' : ''}',
+                                GlobalLists.supervisorrole == role &&
+                                        selectedShift.sup_final_submitted
+                                    ? "Roster finalize"
+                                    : "Submit",
                                 style: TextStyle(
+                                  fontFamily: AppFonts.semibold,
+                                  fontSize: 16,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            _buildBulkButton('Cancel', false),
-                            SizedBox(width: 8),
-                            _buildBulkButton('Mark', true),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Employee Cards
-                Expanded(
-                  child: selectedShift?.employeeList?.isEmpty ?? true
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.people_outline,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                "No janitor assigned",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
                           ),
                         )
-                      : role != GlobalLists.supervisorrole &&
-                            (selectedShift.sup_final_submitted == false ||
-                                selectedShift.sup_final_submitted == null)
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.people_outline,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                "Attendance roster is not finalized yet.",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: EdgeInsets.only(top: 12, bottom: 80),
-                          itemCount: selectedShift?.employeeList?.length ?? 0,
-                          itemBuilder: (context, index) {
-                            is_final_submit = selectedShift.is_final_submitted;
-                            is_month_end = selectedShift.is_month_end;
-                            sup_final_submitted_v =
-                                selectedShift.sup_final_submitted;
-                            final emp = selectedShift.employeeList[index];
-
-                            final isSelected = selectedEmployees.contains(
-                              emp.empId.toString(),
-                            );
-
-                            return _buildEmployeeCard(emp, isSelected);
-                          },
-                        ),
-                ),
-              ],
+                      : 
+                      Padding(
+            padding: const EdgeInsets.only(
+                    top: 8,
+                    bottom: 12,
+                    right: 12,
+                    left: 12,
             ),
-
-            ((role == GlobalLists.operationmanagerrole ||
-                        role == GlobalLists.operationrole) &&
+            child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ElevatedButton(
+            onPressed: () async {
+              // --- If file already downloaded, open it ---
+              if (downloadedFilePath != null) {
+                if(Platform.isAndroid)
+                {await OpenFilex.open(downloadedFilePath!);
+                    
+                }else{
+                  _openFileOptions(downloadedFilePath!);
+                }
+                
+                return;
+              }
+                    
+              // --- Supervisor / Operation roles ---
+              if ((role == GlobalLists.unitrole || GlobalLists.supervisorrole == role ||
+                      GlobalLists.operationmanagerrole == role ||
+                      GlobalLists.operationrole == role) &&
+                  selectedShift.sup_final_submitted &&
+                  selectedShift.is_final_submitted == false &&
+                  selectedShift.review_updated_by_client) {
+                if (selectedShift?.is_month_end == 1 &&
                     selectedShift?.is_final_submitted == false &&
-                    selectedShift.review_updated_by_client == false)
-                ? SizedBox()
-                : isCurrentMonthYear(selectedMonthIndex!, selectedYear!)
-                ? SizedBox()
-                : selectedShift?.employeeList.isEmpty ||
-                      selectedShift?.employeeList.length == 0 ||
-                      GlobalLists.supervisorrole != role &&
-                          selectedShift.sup_final_submitted == false ||
-                      selectedEmployees.isNotEmpty
-                ? SizedBox()
-                : GlobalLists.supervisorrole == role &&
-                      !selectedShift.sup_final_submitted
-                ? Padding(
-                    padding: const EdgeInsets.only(
-                      top: 8,
-                      bottom: 12,
-                      right: 12,
-                      left: 12,
-                    ),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (GlobalLists.supervisorrole == role &&
-                              selectedShift.sup_final_submitted) {
-                            ShowDialogs.showToast(
-                              "Roster is already finalized.",
-                            );
-
-                            return;
-                          }
-
-                          _showRosterLockDialog(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: customcolor.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          minimumSize: Size(double.infinity, 48),
-                        ),
-                        child: Text(
-                          GlobalLists.supervisorrole == role &&
-                                  selectedShift.sup_final_submitted
-                              ? "Roster finalize"
-                              : "Submit",
-                          style: TextStyle(
-                            fontFamily: AppFonts.semibold,
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
+                    selectedCells.isEmpty &&
+                    !multiSelectMode &&
+                    role == GlobalLists.clientrole &&
+                    selectedShift.review_updated_by_oe_om == false &&
+                    selectedShift.review_updated_by_client == false) {
+                  _submitAttendaceRosterfinal(selectedShift.id.toString());
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewRemarkAttendance(
+                        month: month,
+                        year: year,
+                        attendancesiteid: attendancesiteid,
+                        clientid: attendanceclientid,
+                        manTag: maintag,
+                        shiftId: selectedShift?.id,
                       ),
                     ),
-                  )
-                : 
-                Padding(
-  padding: const EdgeInsets.only(
-    top: 8,
-    bottom: 12,
-    right: 12,
-    left: 12,
-  ),
-  child: Align(
-    alignment: Alignment.bottomCenter,
-    child: ElevatedButton(
-      onPressed: () async {
-        // --- If file already downloaded, open it ---
-        if (downloadedFilePath != null) {
-          if(Platform.isAndroid)
-          {await OpenFilex.open(downloadedFilePath!);
-
-          }else{
-            _openFileOptions(downloadedFilePath!);
-          }
-          
-          return;
-        }
-
-        // --- Supervisor / Operation roles ---
-        if ((GlobalLists.supervisorrole == role ||
-                GlobalLists.operationmanagerrole == role ||
-                GlobalLists.operationrole == role) &&
-            selectedShift.sup_final_submitted &&
-            selectedShift.is_final_submitted == false &&
-            selectedShift.review_updated_by_client) {
-          if (selectedShift?.is_month_end == 1 &&
-              selectedShift?.is_final_submitted == false &&
-              selectedCells.isEmpty &&
-              !multiSelectMode &&
-              role == GlobalLists.clientrole &&
-              selectedShift.review_updated_by_oe_om == false &&
-              selectedShift.review_updated_by_client == false) {
-            _submitAttendaceRosterfinal(selectedShift.id.toString());
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ViewRemarkAttendance(
-                  month: month,
-                  year: year,
-                  attendancesiteid: attendancesiteid,
-                  clientid: attendanceclientid,
-                  manTag: maintag,
-                  shiftId: selectedShift?.id,
-                ),
-              ),
-            );
-          }
-          return;
-        }
-
-        // --- Supervisor downloading finalized roster ---
-        if (GlobalLists.supervisorrole == role &&
-            selectedShift.sup_final_submitted &&
-            selectedShift.is_final_submitted) {
-          await _downloadRoster(selectedShift.id.toString());
-          return;
-        }
-
-        // --- Month-end download for finalized roster ---
-        if (selectedShift?.is_month_end == 1 &&
-            selectedShift?.is_final_submitted == true) {
-          await _downloadRoster(selectedShift.id.toString());
-          return;
-        }
-
-        // --- Client approval conditions ---
-        if (role == GlobalLists.clientrole &&
-            selectedShift?.review_updated_by_oe_om == false &&
-            selectedShift.review_updated_by_client == false) {
-          if (selectedShift?.is_month_end == 1 &&
-              selectedShift?.is_final_submitted == false &&
-              selectedCells.isEmpty &&
-              !multiSelectMode &&
-              role == GlobalLists.clientrole &&
-              selectedShift.review_updated_by_oe_om == false &&
-              selectedShift.review_updated_by_client == false) {
-            _submitAttendaceRosterfinal(selectedShift.id.toString());
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ViewRemarkAttendance(
-                  month: month,
-                  year: year,
-                  attendancesiteid: attendancesiteid,
-                  clientid: attendanceclientid,
-                  manTag: maintag,
-                  shiftId: selectedShift?.id,
-                ),
-              ),
-            );
-          }
-          return;
-        }
-
-        // --- Client reviewing discrepancies ---
-        if (role == GlobalLists.clientrole &&
-            selectedShift.review_updated_by_client) {
-          if (selectedShift?.is_month_end == 1 &&
-              selectedShift?.is_final_submitted == false &&
-              selectedCells.isEmpty &&
-              !multiSelectMode &&
-              role == GlobalLists.clientrole &&
-              selectedShift.review_updated_by_oe_om == false &&
-              selectedShift.review_updated_by_client == false) {
-            _submitAttendaceRosterfinal(selectedShift.id.toString());
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ViewRemarkAttendance(
-                  month: month,
-                  year: year,
-                  attendancesiteid: attendancesiteid,
-                  clientid: attendanceclientid,
-                  manTag: maintag,
-                  shiftId: selectedShift?.id,
-                ),
-              ),
-            );
-          }
-          return;
-        }
-
-        // --- Supervisor submitted but no action ---
-        if (GlobalLists.supervisorrole == role &&
-            selectedShift.sup_final_submitted) {
-          return;
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: (downloadedFilePath != null)
-            ? customcolor.blue
-            : (GlobalLists.supervisorrole == role &&
-                    selectedShift.sup_final_submitted &&
-                    selectedShift.is_final_submitted)
-                ? customcolor.blue
-                : (selectedShift?.is_month_end == 1 &&
-                        selectedShift?.is_final_submitted == true)
-                    ? customcolor.blue
-                    : (GlobalLists.supervisorrole == role &&
-                            selectedShift.sup_final_submitted)
-                        ? Colors.grey
-                        : customcolor.blue,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        minimumSize: Size(double.infinity, 40),
-      ),
-      child: isDownloading
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text("Downloading...",
-                    style: TextStyle(
-                        fontFamily: AppFonts.semibold,
-                        fontSize: 16,
-                        color: Colors.white)),
-              ],
-            )
-          : Text(
-              (downloadedFilePath != null)
-                  ? "View Download"
+                  );
+                }
+                return;
+              }
+                    
+              // --- Supervisor downloading finalized roster ---
+              if (GlobalLists.supervisorrole == role &&
+                  selectedShift.sup_final_submitted &&
+                  selectedShift.is_final_submitted) {
+                await _downloadRoster(selectedShift.id.toString());
+                return;
+              }
+                    
+              // --- Month-end download for finalized roster ---
+              if (selectedShift?.is_month_end == 1 &&
+                  selectedShift?.is_final_submitted == true) {
+                await _downloadRoster(selectedShift.id.toString());
+                return;
+              }
+                    
+              // --- Client approval conditions ---
+              if (role == GlobalLists.clientrole &&
+                  selectedShift?.review_updated_by_oe_om == false &&
+                  selectedShift.review_updated_by_client == false) {
+                if (selectedShift?.is_month_end == 1 &&
+                    selectedShift?.is_final_submitted == false &&
+                    selectedCells.isEmpty &&
+                    !multiSelectMode &&
+                    role == GlobalLists.clientrole &&
+                    selectedShift.review_updated_by_oe_om == false &&
+                    selectedShift.review_updated_by_client == false) {
+                  _submitAttendaceRosterfinal(selectedShift.id.toString());
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewRemarkAttendance(
+                        month: month,
+                        year: year,
+                        attendancesiteid: attendancesiteid,
+                        clientid: attendanceclientid,
+                        manTag: maintag,
+                        shiftId: selectedShift?.id,
+                      ),
+                    ),
+                  );
+                }
+                return;
+              }
+                    
+              // --- Client reviewing discrepancies ---
+              if (role == GlobalLists.clientrole &&
+                  selectedShift.review_updated_by_client) {
+                if (selectedShift?.is_month_end == 1 &&
+                    selectedShift?.is_final_submitted == false &&
+                    selectedCells.isEmpty &&
+                    !multiSelectMode &&
+                    role == GlobalLists.clientrole &&
+                    selectedShift.review_updated_by_oe_om == false &&
+                    selectedShift.review_updated_by_client == false) {
+                  _submitAttendaceRosterfinal(selectedShift.id.toString());
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewRemarkAttendance(
+                        month: month,
+                        year: year,
+                        attendancesiteid: attendancesiteid,
+                        clientid: attendanceclientid,
+                        manTag: maintag,
+                        shiftId: selectedShift?.id,
+                      ),
+                    ),
+                  );
+                }
+                return;
+              }
+                    
+              // --- Supervisor submitted but no action ---
+              if (GlobalLists.supervisorrole == role &&
+                  selectedShift.sup_final_submitted) {
+                return;
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: (downloadedFilePath != null)
+                  ? customcolor.blue
                   : (GlobalLists.supervisorrole == role &&
                           selectedShift.sup_final_submitted &&
                           selectedShift.is_final_submitted)
-                      ? "Download Roster ${selectedShift.sup_final_submitted} ${selectedShift.is_final_submitted}"
-                      : (GlobalLists.supervisorrole == role &&
-                              selectedShift.sup_final_submitted &&
-                              selectedShift.is_final_submitted == false &&
-                              selectedShift.review_updated_by_client)
-                          ? "Review Discrepancy"
+                      ? customcolor.blue
+                      : (selectedShift?.is_month_end == 1 &&
+                              selectedShift?.is_final_submitted == true)
+                          ? customcolor.blue
                           : (GlobalLists.supervisorrole == role &&
                                   selectedShift.sup_final_submitted)
-                              ? "Submitted to Client"
-                              : (role == GlobalLists.clientrole &&
-                                      selectedShift.review_updated_by_client &&
-                                      selectedShift.is_final_submitted)
-                                  ?"Finalized Roster"
-                                  : (role == GlobalLists.clientrole &&
-                                          selectedShift?.review_updated_by_oe_om ==
-                                              true &&
-                                          selectedShift.is_final_submitted ==
-                                              false)
-                                      ? "Review Updates"
-                                      : (role == GlobalLists.clientrole &&
-                                              selectedShift.review_updated_by_client)
-                                          ? "Review Discrepancy"
-                                          : selectedShift?.is_month_end == 1 &&
-                                                  selectedShift?.is_final_submitted ==
-                                                      true
-                                              ? "Download Roster"
-                                              : selectedCells.isNotEmpty &&
-                                                      multiSelectMode
-                                                  ? "Review Discrepancy"
-                                                  : role ==
-                                                              GlobalLists
-                                                                  .clientrole &&
-                                                          selectedShift
-                                                                  ?.review_updated_by_oe_om ==
-                                                              false &&
-                                                          selectedShift.review_updated_by_client ==
-                                                              false
-                                                      ? "Approve Roster"
-                                                      : "Review Discrepancy",
-              style: TextStyle(
-                fontFamily: AppFonts.semibold,
-                fontSize: 16,
-                color: Colors.white,
+                              ? Colors.grey
+                              : customcolor.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              minimumSize: Size(double.infinity, 40),
+            ),
+            child: isDownloading
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text("Downloading...",
+                          style: TextStyle(
+                              fontFamily: AppFonts.semibold,
+                              fontSize: 16,
+                              color: Colors.white)),
+                    ],
+                  )
+                : Text(
+                    (downloadedFilePath != null)
+                        ? "View Download"
+                        : (GlobalLists.supervisorrole == role &&
+                                selectedShift.sup_final_submitted &&
+                                selectedShift.is_final_submitted)
+                            ? "Download Roster ${selectedShift.sup_final_submitted} ${selectedShift.is_final_submitted}"
+                            : (GlobalLists.supervisorrole == role &&
+                                    selectedShift.sup_final_submitted &&
+                                    selectedShift.is_final_submitted == false &&
+                                    selectedShift.review_updated_by_client)
+                                ? "Review Discrepancy"
+                                : (GlobalLists.supervisorrole == role &&
+                                        selectedShift.sup_final_submitted)
+                                    ? "Submitted to Client"
+                                    : (role == GlobalLists.clientrole &&
+                                            selectedShift.review_updated_by_client &&
+                                            selectedShift.is_final_submitted)
+                                        ?"Finalized Roster"
+                                        : (role == GlobalLists.clientrole &&
+                                                selectedShift?.review_updated_by_oe_om ==
+                                                    true &&
+                                                selectedShift.is_final_submitted ==
+                                                    false)
+                                            ? "Review Updates"
+                                            : (role == GlobalLists.clientrole &&
+                                                    selectedShift.review_updated_by_client)
+                                                ? "Review Discrepancy"
+                                                : selectedShift?.is_month_end == 1 &&
+                                                        selectedShift?.is_final_submitted ==
+                                                            true
+                                                    ? "Download Roster"
+                                                    : selectedCells.isNotEmpty &&
+                                                            multiSelectMode
+                                                        ? "Review Discrepancy"
+                                                        : role ==
+                                                                    GlobalLists
+                                                                        .clientrole &&
+                                                                selectedShift
+                                                                        ?.review_updated_by_oe_om ==
+                                                                    false &&
+                                                                selectedShift.review_updated_by_client ==
+                                                                    false
+                                                            ? "Approve Roster"
+                                                            : "Review Discrepancy",
+                    style: TextStyle(
+                      fontFamily: AppFonts.semibold,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                    ),
+            ),
+                    ),
+                    
+                    // --- Add this helper function in your StatefulWidget ---
+                    
+                    //                 Padding(
+                    //   padding: const EdgeInsets.only(
+                    //     top: 8,
+                    //     bottom: 12,
+                    //     right: 12,
+                    //     left: 12,
+                    //   ),
+                    //   child: Align(
+                    //     alignment: Alignment.bottomCenter,
+                    //     child: ElevatedButton(
+                    //       onPressed:
+                    //           ((GlobalLists.supervisorrole == role ||
+                    //                   GlobalLists.operationmanagerrole == role ||
+                    //                   GlobalLists.operationrole == role) &&
+                    //               selectedShift.sup_final_submitted &&
+                    //               selectedShift.is_final_submitted == false &&
+                    //               selectedShift.review_updated_by_client)
+                    //               ? () {
+                    //                   selectedShift?.is_month_end == 1 &&
+                    //                           selectedShift?.is_final_submitted == false &&
+                    //                           selectedCells.isEmpty &&
+                    //                           !multiSelectMode &&
+                    //                           role == GlobalLists.clientrole &&
+                    //                           selectedShift.review_updated_by_oe_om == false &&
+                    //                           selectedShift.review_updated_by_client == false
+                    //                       ? _submitAttendaceRosterfinal(
+                    //                           selectedShift.id.toString(),
+                    //                         )
+                    //                       : Navigator.push(
+                    //                           context,
+                    //                           MaterialPageRoute(
+                    //                             builder: (context) => ViewRemarkAttendance(
+                    //                               month: month,
+                    //                               year: year,
+                    //                               attendancesiteid: attendancesiteid,
+                    //                               clientid: attendanceclientid,
+                    //                               manTag: maintag,
+                    //                               shiftId: selectedShift?.id,
+                    //                             ),
+                    //                           ),
+                    //                         );
+                    //                 }
+                    //               : (GlobalLists.supervisorrole == role &&
+                    //                       selectedShift.sup_final_submitted &&
+                    //                       selectedShift?.is_final_submitted)
+                    //                   ? () async {
+                    //                       // --- Download with loader ---
+                    //                       setState(() {
+                    //                         isDownloading = true;
+                    //                       });
+                    //                       try {
+                    //                         Directory baseDir =
+                    //                             await getApplicationDocumentsDirectory();
+                    //                         String filePath =
+                    //                             "${baseDir.path}/roster_${selectedShift.id}.pdf";
+                    
+                    //                         Dio dio = Dio();
+                    //                         await dio.download(
+                    //                             GlobalLists.downloadRosterLink, filePath,
+                    //                             onReceiveProgress: (received, total) {
+                    //                           print("Downloading $received / $total");
+                    //                         });
+                    
+                    //                         setState(() {
+                    //                           isDownloading = false;
+                    //                           downloadedFilePath = filePath;
+                    //                         });
+                    
+                    //                         ScaffoldMessenger.of(context).showSnackBar(
+                    //                           SnackBar(content: Text("Download completed")),
+                    //                         );
+                    //                       } catch (e) {
+                    //                         setState(() {
+                    //                           isDownloading = false;
+                    //                         });
+                    //                         ScaffoldMessenger.of(context).showSnackBar(
+                    //                           SnackBar(content: Text("Download failed: $e")),
+                    //                         );
+                    //                       }
+                    //                     }
+                    //                   : (selectedShift?.is_month_end == 1 &&
+                    //                           selectedShift?.is_final_submitted == true)
+                    //                       ? () async {
+                    //                           // --- Download with loader ---
+                    //                           setState(() {
+                    //                             isDownloading = true;
+                    //                           });
+                    //                           try {
+                    //                             Directory baseDir =
+                    //                                 await getApplicationDocumentsDirectory();
+                    //                             String filePath =
+                    //                                 "${baseDir.path}/roster_${selectedShift.id}.pdf";
+                    
+                    //                             Dio dio = Dio();
+                    //                             await dio.download(
+                    //                                 GlobalLists.downloadRosterLink, filePath,
+                    //                                 onReceiveProgress: (received, total) {
+                    //                               print("Downloading $received / $total");
+                    //                             });
+                    
+                    //                             setState(() {
+                    //                               isDownloading = false;
+                    //                               downloadedFilePath = filePath;
+                    //                             });
+                    
+                    //                             ScaffoldMessenger.of(context).showSnackBar(
+                    //                               SnackBar(content: Text("Download completed")),
+                    //                             );
+                    //                           } catch (e) {
+                    //                             setState(() {
+                    //                               isDownloading = false;
+                    //                             });
+                    //                             ScaffoldMessenger.of(context).showSnackBar(
+                    //                               SnackBar(content: Text("Download failed: $e")),
+                    //                             );
+                    //                           }
+                    //                         }
+                    //                       // --- Keep all other conditions intact ---
+                    //                       : (role == GlobalLists.clientrole &&
+                    //                               selectedShift?.review_updated_by_oe_om == false &&
+                    //                               selectedShift.review_updated_by_client == false)
+                    //                           ? () {
+                    //                               selectedShift?.is_month_end == 1 &&
+                    //                                       selectedShift?.is_final_submitted ==
+                    //                                           false &&
+                    //                                       selectedCells.isEmpty &&
+                    //                                       !multiSelectMode &&
+                    //                                       role == GlobalLists.clientrole &&
+                    //                                       selectedShift.review_updated_by_oe_om ==
+                    //                                           false &&
+                    //                                       selectedShift
+                    //                                               .review_updated_by_client ==
+                    //                                           false
+                    //                                   ? _submitAttendaceRosterfinal(
+                    //                                       selectedShift.id.toString(),
+                    //                                     )
+                    //                                   : Navigator.push(
+                    //                                       context,
+                    //                                       MaterialPageRoute(
+                    //                                         builder: (context) =>
+                    //                                             ViewRemarkAttendance(
+                    //                                           month: month,
+                    //                                           year: year,
+                    //                                           attendancesiteid: attendancesiteid,
+                    //                                           clientid: attendanceclientid,
+                    //                                           manTag: maintag,
+                    //                                           shiftId: selectedShift?.id,
+                    //                                         ),
+                    //                                       ),
+                    //                                     );
+                    //                             }
+                    //                           : (GlobalLists.supervisorrole == role &&
+                    //                                   selectedShift.sup_final_submitted)
+                    //                               ? () {}
+                    //                               : (role == GlobalLists.clientrole &&
+                    //                                       selectedShift.review_updated_by_client)
+                    //                                   ? () {
+                    //                                       selectedShift?.is_month_end == 1 &&
+                    //                                               selectedShift?.is_final_submitted ==
+                    //                                                   false &&
+                    //                                               selectedCells.isEmpty &&
+                    //                                               !multiSelectMode &&
+                    //                                               role == GlobalLists.clientrole &&
+                    //                                               selectedShift
+                    //                                                       .review_updated_by_oe_om ==
+                    //                                                   false &&
+                    //                                               selectedShift
+                    //                                                       .review_updated_by_client ==
+                    //                                                   false
+                    //                                           ? _submitAttendaceRosterfinal(
+                    //                                               selectedShift.id.toString(),
+                    //                                             )
+                    //                                           : Navigator.push(
+                    //                                               context,
+                    //                                               MaterialPageRoute(
+                    //                                                 builder: (context) =>
+                    //                                                     ViewRemarkAttendance(
+                    //                                                   month: month,
+                    //                                                   year: year,
+                    //                                                   attendancesiteid:
+                    //                                                       attendancesiteid,
+                    //                                                   clientid:
+                    //                                                       attendanceclientid,
+                    //                                                   manTag: maintag,
+                    //                                                   shiftId: selectedShift?.id,
+                    //                                                 ),
+                    //                                               ),
+                    //                                             );
+                    //                                     }
+                    //                                   : (downloadedFilePath != null)
+                    //                                       ? () async {
+                    //                                           await OpenFilex.open(downloadedFilePath!);
+                    //                                         }
+                    //                                       : null,
+                    //       style: ElevatedButton.styleFrom(
+                    //         backgroundColor:
+                    //             (GlobalLists.supervisorrole == role &&
+                    //                     selectedShift.sup_final_submitted &&
+                    //                     selectedShift?.is_final_submitted)
+                    //                 ? customcolor.blue
+                    //                 : (selectedShift?.is_month_end == 1 &&
+                    //                         selectedShift?.is_final_submitted == true)
+                    //                     ? customcolor.blue
+                    //                     : (GlobalLists.supervisorrole == role &&
+                    //                             selectedShift.sup_final_submitted)
+                    //                         ? Colors.grey
+                    //                         : role == GlobalLists.supervisorrole
+                    //                             ? customcolor.blue
+                    //                             : customcolor.blue,
+                    //         shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(8),
+                    //         ),
+                    //         minimumSize: Size(double.infinity, 40),
+                    //       ),
+                    //       child: isDownloading
+                    //           ? Row(
+                    //               mainAxisAlignment: MainAxisAlignment.center,
+                    //               children: [
+                    //                 SizedBox(
+                    //                     height: 20,
+                    //                     width: 20,
+                    //                     child: CircularProgressIndicator(
+                    //                       color: Colors.white,
+                    //                       strokeWidth: 2,
+                    //                     )),
+                    //                 SizedBox(width: 12),
+                    //                 Text("Downloading...",
+                    //                     style: TextStyle(
+                    //                         fontFamily: AppFonts.semibold,
+                    //                         fontSize: 16,
+                    //                         color: Colors.white)),
+                    //               ],
+                    //             )
+                    //           : Text(
+                    //               (downloadedFilePath != null)
+                    //                   ? "View Download"
+                    //                   : (GlobalLists.supervisorrole == role &&
+                    //                           selectedShift.sup_final_submitted &&
+                    //                           selectedShift?.is_final_submitted)
+                    //                       ? "Download Roster"
+                    //                       : (GlobalLists.supervisorrole == role &&
+                    //                               selectedShift.sup_final_submitted &&
+                    //                               selectedShift.is_final_submitted == false &&
+                    //                               selectedShift.review_updated_by_client)
+                    //                           ? "Review Discrepancy"
+                    //                           : (GlobalLists.supervisorrole == role &&
+                    //                                   selectedShift.sup_final_submitted)
+                    //                               ? "Submitted to Client"
+                    //                               : (role == GlobalLists.clientrole &&
+                    //                                       selectedShift.review_updated_by_client &&
+                    //                                       selectedShift.is_final_submitted)
+                    //                                   ? "Finalized Roster"
+                    //                                   : (role == GlobalLists.clientrole &&
+                    //                                           selectedShift?.review_updated_by_oe_om ==
+                    //                                               true &&
+                    //                                           selectedShift.is_final_submitted ==
+                    //                                               false)
+                    //                                       ? "Review Updates"
+                    //                                       : (role == GlobalLists.clientrole &&
+                    //                                               selectedShift.review_updated_by_client)
+                    //                                           ? "Review Discrepancy"
+                    //                                           : selectedShift?.is_month_end == 1 &&
+                    //                                                   selectedShift?.is_final_submitted ==
+                    //                                                       true
+                    //                                               ? "Download Roster"
+                    //                                               : selectedCells.isNotEmpty &&
+                    //                                                       multiSelectMode
+                    //                                                   ? "Review Discrepancy"
+                    //                                                   : role ==
+                    //                                                               GlobalLists
+                    //                                                                   .clientrole &&
+                    //                                                           selectedShift
+                    //                                                                   ?.review_updated_by_oe_om ==
+                    //                                                               false &&
+                    //                                                           selectedShift.review_updated_by_client ==
+                    //                                                               false
+                    //                                                       ? "Approve Roster"
+                    //                                                       : "Review Discrepancy",
+                    //               style: TextStyle(
+                    //                 fontFamily: AppFonts.semibold,
+                    //                 fontSize: 16,
+                    //                 color: Colors.white,
+                    //               ),
+                    //             ),
+                    //     ),
+                    //   ),
+                    // ),
+                    //                 Padding(
+                    //                     padding: const EdgeInsets.only(
+                    //                       top: 8,
+                    //                       bottom: 12,
+                    //                       right: 12,
+                    //                       left: 12,
+                    //                     ),
+                    //                     child: Align(
+                    //                       alignment: Alignment.bottomCenter,
+                    //                       child: ElevatedButton(
+                    //                         onPressed:
+                    //                             ((GlobalLists.supervisorrole == role ||
+                    //                                     GlobalLists.operationmanagerrole == role ||
+                    //                                     GlobalLists.operationrole == role) &&
+                    //                                 selectedShift.sup_final_submitted &&
+                    //                                 selectedShift.is_final_submitted == false &&
+                    //                                 selectedShift.review_updated_by_client)
+                    //                             ? () {
+                    //                                 selectedShift?.is_month_end == 1 &&
+                    //                                         selectedShift?.is_final_submitted ==
+                    //                                             false &&
+                    //                                         selectedCells.isEmpty &&
+                    //                                         !multiSelectMode &&
+                    //                                         role == GlobalLists.clientrole &&
+                    //                                         selectedShift.review_updated_by_oe_om ==
+                    //                                             false &&
+                    //                                         selectedShift
+                    //                                                 .review_updated_by_client ==
+                    //                                             false
+                    //                                     ? _submitAttendaceRosterfinal(
+                    //                                         selectedShift.id.toString(),
+                    //                                       )
+                    //                                     : Navigator.push(
+                    //                                         context,
+                    //                                         MaterialPageRoute(
+                    //                                           builder: (context) =>
+                    //                                               ViewRemarkAttendance(
+                    //                                                 month: month,
+                    //                                                 year: year,
+                    //                                                 attendancesiteid:
+                    //                                                     attendancesiteid,
+                    //                                                 clientid:
+                    //                                                     attendanceclientid, //GlobalLists.clientid,
+                    //                                                 manTag: maintag,
+                    //                                                 shiftId: selectedShift?.id,
+                    //                                               ),
+                    //                                         ),
+                    //                                       );
+                    //                               }
+                    //                             : (GlobalLists.supervisorrole == role &&
+                    //                                   selectedShift.sup_final_submitted &&
+                    //                                   selectedShift?.is_final_submitted)
+                    //                             ? () {
+                    
+                    //                                 print("Downloading Supervisor ${GlobalLists.downloadRosterLink}");
+                    //                                 downloadRoster(
+                    //   GlobalLists.downloadRosterLink,
+                    //   selectedShift.id.toString(),
+                    // );
+                    //                               }
+                    //                             : (selectedShift?.is_month_end == 1 &&
+                    //                                   selectedShift?.is_final_submitted == true)
+                    //                             ? () {
+                    //                                print("Downloading ${GlobalLists.downloadRosterLink}");
+                    //                                downloadRoster(
+                    //   GlobalLists.downloadRosterLink,
+                    //   selectedShift.id.toString(),
+                    // );
+                    //                               }
+                    //                             :(role == GlobalLists.clientrole &&
+                    //                                     selectedShift?.review_updated_by_oe_om ==
+                    //                                         false &&
+                    //                                     selectedShift.review_updated_by_client ==
+                    //                                         false)?() {
+                    //                                 selectedShift?.is_month_end == 1 &&
+                    //                                         selectedShift?.is_final_submitted ==
+                    //                                             false &&
+                    //                                         selectedCells.isEmpty &&
+                    //                                         !multiSelectMode &&
+                    //                                         role == GlobalLists.clientrole &&
+                    //                                         selectedShift.review_updated_by_oe_om ==
+                    //                                             false &&
+                    //                                         selectedShift
+                    //                                                 .review_updated_by_client ==
+                    //                                             false
+                    //                                     ? _submitAttendaceRosterfinal(
+                    //                                         selectedShift.id.toString(),
+                    //                                       )
+                    //                                     : Navigator.push(
+                    //                                         context,
+                    //                                         MaterialPageRoute(
+                    //                                           builder: (context) =>
+                    //                                               ViewRemarkAttendance(
+                    //                                                 month: month,
+                    //                                                 year: year,
+                    //                                                 attendancesiteid:
+                    //                                                     attendancesiteid,
+                    //                                                 clientid:
+                    //                                                     attendanceclientid, //GlobalLists.clientid,
+                    //                                                 manTag: maintag,
+                    //                                                 shiftId: selectedShift?.id,
+                    //                                               ),
+                    //                                         ),
+                    //                                       );
+                    //                               }: (GlobalLists.supervisorrole == role &&
+                    //                                   selectedShift.sup_final_submitted)
+                    //                             ? ()
+                    //                             {
+                    
+                    //                             }
+                    //                             : (role == GlobalLists.clientrole &&
+                    //                                   selectedShift.review_updated_by_client)
+                    //                             ? () {
+                    //                                 selectedShift?.is_month_end == 1 &&
+                    //                                         selectedShift?.is_final_submitted ==
+                    //                                             false &&
+                    //                                         selectedCells.isEmpty &&
+                    //                                         !multiSelectMode &&
+                    //                                         role == GlobalLists.clientrole &&
+                    //                                         selectedShift.review_updated_by_oe_om ==
+                    //                                             false &&
+                    //                                         selectedShift
+                    //                                                 .review_updated_by_client ==
+                    //                                             false
+                    //                                     ? _submitAttendaceRosterfinal(
+                    //                                         selectedShift.id.toString(),
+                    //                                       )
+                    //                                     : Navigator.push(
+                    //                                         context,
+                    //                                         MaterialPageRoute(
+                    //                                           builder: (context) =>
+                    //                                               ViewRemarkAttendance(
+                    //                                                 month: month,
+                    //                                                 year: year,
+                    //                                                 attendancesiteid:
+                    //                                                     attendancesiteid,
+                    //                                                 clientid:
+                    //                                                     attendanceclientid, //GlobalLists.clientid,
+                    //                                                 manTag: maintag,
+                    //                                                 shiftId: selectedShift?.id,
+                    //                                               ),
+                    //                                         ),
+                    //                                       );
+                    //                               }
+                    //                             : null,
+                    //                         style: ElevatedButton.styleFrom(
+                    //                           backgroundColor:
+                    //                            (GlobalLists.supervisorrole == role &&
+                    //                                   selectedShift.sup_final_submitted &&
+                    //                                   selectedShift?.is_final_submitted)?customcolor.blue:
+                    //                                   ( selectedShift?.is_month_end == 1 &&
+                                         
+                    //                                     selectedShift?.is_final_submitted == true)?customcolor.blue:
+                    //                           (GlobalLists.supervisorrole == role &&
+                    //                                     selectedShift.sup_final_submitted)?Colors.grey: role == GlobalLists.supervisorrole
+                    //                               ? customcolor.blue
+                    //                               // :
+                    //                               //  selectedShift?.is_month_end == 1 &&
+                    //                               //       selectedShift?.is_final_submitted == true
+                    //                               // ? Colors.grey
+                    //                               : customcolor.blue,
+                    //                           shape: RoundedRectangleBorder(
+                    //                             borderRadius: BorderRadius.circular(8),
+                    //                           ),
+                    //                           minimumSize: Size(double.infinity, 40),
+                    //                         ),
+                    //                         child: Text(
+                    //                           (GlobalLists.supervisorrole == role &&
+                    //                                   selectedShift.sup_final_submitted &&
+                    //                                   selectedShift?.is_final_submitted)
+                    //                               ?"Download Roster"
+                    //                               : (GlobalLists.supervisorrole == role &&
+                    //                                     selectedShift.sup_final_submitted &&
+                    //                                     selectedShift.is_final_submitted == false &&
+                    //                                     selectedShift.review_updated_by_client)
+                    //                               ? "Review Discrepancy"
+                    //                               : (GlobalLists.supervisorrole == role &&
+                    //                                     selectedShift.sup_final_submitted)
+                    //                               ? "Submitted to Client"
+                    //                               : (role == GlobalLists.clientrole &&
+                    //                                     selectedShift.review_updated_by_client &&
+                    //                                     selectedShift.is_final_submitted)
+                    //                               ? "Finalized Roster"
+                    //                               : (role == GlobalLists.clientrole &&
+                    //                                     selectedShift?.review_updated_by_oe_om ==
+                    //                                         true &&  selectedShift.is_final_submitted==false)
+                    //                               ? "Review Updates"
+                    //                               :  (role == GlobalLists.clientrole &&
+                    //                                     selectedShift.review_updated_by_client)
+                    //                               ? "Review Discrepancy"//Report
+                    //                               :
+                    //                                 //is_month_end -1 check to
+                    //                                 selectedShift?.is_month_end == 1 &&
+                    //                                     //is_final_submitted client submited or not
+                    //                                     selectedShift?.is_final_submitted == true
+                    //                               ?  "Download Roster" //"View Finalize Roster"
+                    //                               : selectedCells.isNotEmpty && multiSelectMode
+                    //                               ? "Review Discrepancy"//Report
+                    //                               : role == GlobalLists.clientrole &&
+                    //                                     selectedShift?.review_updated_by_oe_om ==
+                    //                                         false &&
+                    //                                     selectedShift.review_updated_by_client ==
+                    //                                         false
+                    //                               ? "Approve Roster"
+                    //                               :"Review Discrepancy",
+                    //                           style: TextStyle(
+                    //                             fontFamily: AppFonts.semibold,
+                    //                             fontSize: 16,
+                    //                             color: Colors.white,
+                    //                           ),
+                    //                         ),
+                    //                       ),
+                    //                     ),
+                    //                   ),
+                ],
               ),
             ),
-    ),
-  ),
-),
-
-// --- Add this helper function in your StatefulWidget ---
-
-//                 Padding(
-//   padding: const EdgeInsets.only(
-//     top: 8,
-//     bottom: 12,
-//     right: 12,
-//     left: 12,
-//   ),
-//   child: Align(
-//     alignment: Alignment.bottomCenter,
-//     child: ElevatedButton(
-//       onPressed:
-//           ((GlobalLists.supervisorrole == role ||
-//                   GlobalLists.operationmanagerrole == role ||
-//                   GlobalLists.operationrole == role) &&
-//               selectedShift.sup_final_submitted &&
-//               selectedShift.is_final_submitted == false &&
-//               selectedShift.review_updated_by_client)
-//               ? () {
-//                   selectedShift?.is_month_end == 1 &&
-//                           selectedShift?.is_final_submitted == false &&
-//                           selectedCells.isEmpty &&
-//                           !multiSelectMode &&
-//                           role == GlobalLists.clientrole &&
-//                           selectedShift.review_updated_by_oe_om == false &&
-//                           selectedShift.review_updated_by_client == false
-//                       ? _submitAttendaceRosterfinal(
-//                           selectedShift.id.toString(),
-//                         )
-//                       : Navigator.push(
-//                           context,
-//                           MaterialPageRoute(
-//                             builder: (context) => ViewRemarkAttendance(
-//                               month: month,
-//                               year: year,
-//                               attendancesiteid: attendancesiteid,
-//                               clientid: attendanceclientid,
-//                               manTag: maintag,
-//                               shiftId: selectedShift?.id,
-//                             ),
-//                           ),
-//                         );
-//                 }
-//               : (GlobalLists.supervisorrole == role &&
-//                       selectedShift.sup_final_submitted &&
-//                       selectedShift?.is_final_submitted)
-//                   ? () async {
-//                       // --- Download with loader ---
-//                       setState(() {
-//                         isDownloading = true;
-//                       });
-//                       try {
-//                         Directory baseDir =
-//                             await getApplicationDocumentsDirectory();
-//                         String filePath =
-//                             "${baseDir.path}/roster_${selectedShift.id}.pdf";
-
-//                         Dio dio = Dio();
-//                         await dio.download(
-//                             GlobalLists.downloadRosterLink, filePath,
-//                             onReceiveProgress: (received, total) {
-//                           print("Downloading $received / $total");
-//                         });
-
-//                         setState(() {
-//                           isDownloading = false;
-//                           downloadedFilePath = filePath;
-//                         });
-
-//                         ScaffoldMessenger.of(context).showSnackBar(
-//                           SnackBar(content: Text("Download completed")),
-//                         );
-//                       } catch (e) {
-//                         setState(() {
-//                           isDownloading = false;
-//                         });
-//                         ScaffoldMessenger.of(context).showSnackBar(
-//                           SnackBar(content: Text("Download failed: $e")),
-//                         );
-//                       }
-//                     }
-//                   : (selectedShift?.is_month_end == 1 &&
-//                           selectedShift?.is_final_submitted == true)
-//                       ? () async {
-//                           // --- Download with loader ---
-//                           setState(() {
-//                             isDownloading = true;
-//                           });
-//                           try {
-//                             Directory baseDir =
-//                                 await getApplicationDocumentsDirectory();
-//                             String filePath =
-//                                 "${baseDir.path}/roster_${selectedShift.id}.pdf";
-
-//                             Dio dio = Dio();
-//                             await dio.download(
-//                                 GlobalLists.downloadRosterLink, filePath,
-//                                 onReceiveProgress: (received, total) {
-//                               print("Downloading $received / $total");
-//                             });
-
-//                             setState(() {
-//                               isDownloading = false;
-//                               downloadedFilePath = filePath;
-//                             });
-
-//                             ScaffoldMessenger.of(context).showSnackBar(
-//                               SnackBar(content: Text("Download completed")),
-//                             );
-//                           } catch (e) {
-//                             setState(() {
-//                               isDownloading = false;
-//                             });
-//                             ScaffoldMessenger.of(context).showSnackBar(
-//                               SnackBar(content: Text("Download failed: $e")),
-//                             );
-//                           }
-//                         }
-//                       // --- Keep all other conditions intact ---
-//                       : (role == GlobalLists.clientrole &&
-//                               selectedShift?.review_updated_by_oe_om == false &&
-//                               selectedShift.review_updated_by_client == false)
-//                           ? () {
-//                               selectedShift?.is_month_end == 1 &&
-//                                       selectedShift?.is_final_submitted ==
-//                                           false &&
-//                                       selectedCells.isEmpty &&
-//                                       !multiSelectMode &&
-//                                       role == GlobalLists.clientrole &&
-//                                       selectedShift.review_updated_by_oe_om ==
-//                                           false &&
-//                                       selectedShift
-//                                               .review_updated_by_client ==
-//                                           false
-//                                   ? _submitAttendaceRosterfinal(
-//                                       selectedShift.id.toString(),
-//                                     )
-//                                   : Navigator.push(
-//                                       context,
-//                                       MaterialPageRoute(
-//                                         builder: (context) =>
-//                                             ViewRemarkAttendance(
-//                                           month: month,
-//                                           year: year,
-//                                           attendancesiteid: attendancesiteid,
-//                                           clientid: attendanceclientid,
-//                                           manTag: maintag,
-//                                           shiftId: selectedShift?.id,
-//                                         ),
-//                                       ),
-//                                     );
-//                             }
-//                           : (GlobalLists.supervisorrole == role &&
-//                                   selectedShift.sup_final_submitted)
-//                               ? () {}
-//                               : (role == GlobalLists.clientrole &&
-//                                       selectedShift.review_updated_by_client)
-//                                   ? () {
-//                                       selectedShift?.is_month_end == 1 &&
-//                                               selectedShift?.is_final_submitted ==
-//                                                   false &&
-//                                               selectedCells.isEmpty &&
-//                                               !multiSelectMode &&
-//                                               role == GlobalLists.clientrole &&
-//                                               selectedShift
-//                                                       .review_updated_by_oe_om ==
-//                                                   false &&
-//                                               selectedShift
-//                                                       .review_updated_by_client ==
-//                                                   false
-//                                           ? _submitAttendaceRosterfinal(
-//                                               selectedShift.id.toString(),
-//                                             )
-//                                           : Navigator.push(
-//                                               context,
-//                                               MaterialPageRoute(
-//                                                 builder: (context) =>
-//                                                     ViewRemarkAttendance(
-//                                                   month: month,
-//                                                   year: year,
-//                                                   attendancesiteid:
-//                                                       attendancesiteid,
-//                                                   clientid:
-//                                                       attendanceclientid,
-//                                                   manTag: maintag,
-//                                                   shiftId: selectedShift?.id,
-//                                                 ),
-//                                               ),
-//                                             );
-//                                     }
-//                                   : (downloadedFilePath != null)
-//                                       ? () async {
-//                                           await OpenFilex.open(downloadedFilePath!);
-//                                         }
-//                                       : null,
-//       style: ElevatedButton.styleFrom(
-//         backgroundColor:
-//             (GlobalLists.supervisorrole == role &&
-//                     selectedShift.sup_final_submitted &&
-//                     selectedShift?.is_final_submitted)
-//                 ? customcolor.blue
-//                 : (selectedShift?.is_month_end == 1 &&
-//                         selectedShift?.is_final_submitted == true)
-//                     ? customcolor.blue
-//                     : (GlobalLists.supervisorrole == role &&
-//                             selectedShift.sup_final_submitted)
-//                         ? Colors.grey
-//                         : role == GlobalLists.supervisorrole
-//                             ? customcolor.blue
-//                             : customcolor.blue,
-//         shape: RoundedRectangleBorder(
-//           borderRadius: BorderRadius.circular(8),
-//         ),
-//         minimumSize: Size(double.infinity, 40),
-//       ),
-//       child: isDownloading
-//           ? Row(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 SizedBox(
-//                     height: 20,
-//                     width: 20,
-//                     child: CircularProgressIndicator(
-//                       color: Colors.white,
-//                       strokeWidth: 2,
-//                     )),
-//                 SizedBox(width: 12),
-//                 Text("Downloading...",
-//                     style: TextStyle(
-//                         fontFamily: AppFonts.semibold,
-//                         fontSize: 16,
-//                         color: Colors.white)),
-//               ],
-//             )
-//           : Text(
-//               (downloadedFilePath != null)
-//                   ? "View Download"
-//                   : (GlobalLists.supervisorrole == role &&
-//                           selectedShift.sup_final_submitted &&
-//                           selectedShift?.is_final_submitted)
-//                       ? "Download Roster"
-//                       : (GlobalLists.supervisorrole == role &&
-//                               selectedShift.sup_final_submitted &&
-//                               selectedShift.is_final_submitted == false &&
-//                               selectedShift.review_updated_by_client)
-//                           ? "Review Discrepancy"
-//                           : (GlobalLists.supervisorrole == role &&
-//                                   selectedShift.sup_final_submitted)
-//                               ? "Submitted to Client"
-//                               : (role == GlobalLists.clientrole &&
-//                                       selectedShift.review_updated_by_client &&
-//                                       selectedShift.is_final_submitted)
-//                                   ? "Finalized Roster"
-//                                   : (role == GlobalLists.clientrole &&
-//                                           selectedShift?.review_updated_by_oe_om ==
-//                                               true &&
-//                                           selectedShift.is_final_submitted ==
-//                                               false)
-//                                       ? "Review Updates"
-//                                       : (role == GlobalLists.clientrole &&
-//                                               selectedShift.review_updated_by_client)
-//                                           ? "Review Discrepancy"
-//                                           : selectedShift?.is_month_end == 1 &&
-//                                                   selectedShift?.is_final_submitted ==
-//                                                       true
-//                                               ? "Download Roster"
-//                                               : selectedCells.isNotEmpty &&
-//                                                       multiSelectMode
-//                                                   ? "Review Discrepancy"
-//                                                   : role ==
-//                                                               GlobalLists
-//                                                                   .clientrole &&
-//                                                           selectedShift
-//                                                                   ?.review_updated_by_oe_om ==
-//                                                               false &&
-//                                                           selectedShift.review_updated_by_client ==
-//                                                               false
-//                                                       ? "Approve Roster"
-//                                                       : "Review Discrepancy",
-//               style: TextStyle(
-//                 fontFamily: AppFonts.semibold,
-//                 fontSize: 16,
-//                 color: Colors.white,
-//               ),
-//             ),
-//     ),
-//   ),
-// ),
-//                 Padding(
-//                     padding: const EdgeInsets.only(
-//                       top: 8,
-//                       bottom: 12,
-//                       right: 12,
-//                       left: 12,
-//                     ),
-//                     child: Align(
-//                       alignment: Alignment.bottomCenter,
-//                       child: ElevatedButton(
-//                         onPressed:
-//                             ((GlobalLists.supervisorrole == role ||
-//                                     GlobalLists.operationmanagerrole == role ||
-//                                     GlobalLists.operationrole == role) &&
-//                                 selectedShift.sup_final_submitted &&
-//                                 selectedShift.is_final_submitted == false &&
-//                                 selectedShift.review_updated_by_client)
-//                             ? () {
-//                                 selectedShift?.is_month_end == 1 &&
-//                                         selectedShift?.is_final_submitted ==
-//                                             false &&
-//                                         selectedCells.isEmpty &&
-//                                         !multiSelectMode &&
-//                                         role == GlobalLists.clientrole &&
-//                                         selectedShift.review_updated_by_oe_om ==
-//                                             false &&
-//                                         selectedShift
-//                                                 .review_updated_by_client ==
-//                                             false
-//                                     ? _submitAttendaceRosterfinal(
-//                                         selectedShift.id.toString(),
-//                                       )
-//                                     : Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               ViewRemarkAttendance(
-//                                                 month: month,
-//                                                 year: year,
-//                                                 attendancesiteid:
-//                                                     attendancesiteid,
-//                                                 clientid:
-//                                                     attendanceclientid, //GlobalLists.clientid,
-//                                                 manTag: maintag,
-//                                                 shiftId: selectedShift?.id,
-//                                               ),
-//                                         ),
-//                                       );
-//                               }
-//                             : (GlobalLists.supervisorrole == role &&
-//                                   selectedShift.sup_final_submitted &&
-//                                   selectedShift?.is_final_submitted)
-//                             ? () {
-
-//                                 print("Downloading Supervisor ${GlobalLists.downloadRosterLink}");
-//                                 downloadRoster(
-//   GlobalLists.downloadRosterLink,
-//   selectedShift.id.toString(),
-// );
-//                               }
-//                             : (selectedShift?.is_month_end == 1 &&
-//                                   selectedShift?.is_final_submitted == true)
-//                             ? () {
-//                                print("Downloading ${GlobalLists.downloadRosterLink}");
-//                                downloadRoster(
-//   GlobalLists.downloadRosterLink,
-//   selectedShift.id.toString(),
-// );
-//                               }
-//                             :(role == GlobalLists.clientrole &&
-//                                     selectedShift?.review_updated_by_oe_om ==
-//                                         false &&
-//                                     selectedShift.review_updated_by_client ==
-//                                         false)?() {
-//                                 selectedShift?.is_month_end == 1 &&
-//                                         selectedShift?.is_final_submitted ==
-//                                             false &&
-//                                         selectedCells.isEmpty &&
-//                                         !multiSelectMode &&
-//                                         role == GlobalLists.clientrole &&
-//                                         selectedShift.review_updated_by_oe_om ==
-//                                             false &&
-//                                         selectedShift
-//                                                 .review_updated_by_client ==
-//                                             false
-//                                     ? _submitAttendaceRosterfinal(
-//                                         selectedShift.id.toString(),
-//                                       )
-//                                     : Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               ViewRemarkAttendance(
-//                                                 month: month,
-//                                                 year: year,
-//                                                 attendancesiteid:
-//                                                     attendancesiteid,
-//                                                 clientid:
-//                                                     attendanceclientid, //GlobalLists.clientid,
-//                                                 manTag: maintag,
-//                                                 shiftId: selectedShift?.id,
-//                                               ),
-//                                         ),
-//                                       );
-//                               }: (GlobalLists.supervisorrole == role &&
-//                                   selectedShift.sup_final_submitted)
-//                             ? ()
-//                             {
-
-//                             }
-//                             : (role == GlobalLists.clientrole &&
-//                                   selectedShift.review_updated_by_client)
-//                             ? () {
-//                                 selectedShift?.is_month_end == 1 &&
-//                                         selectedShift?.is_final_submitted ==
-//                                             false &&
-//                                         selectedCells.isEmpty &&
-//                                         !multiSelectMode &&
-//                                         role == GlobalLists.clientrole &&
-//                                         selectedShift.review_updated_by_oe_om ==
-//                                             false &&
-//                                         selectedShift
-//                                                 .review_updated_by_client ==
-//                                             false
-//                                     ? _submitAttendaceRosterfinal(
-//                                         selectedShift.id.toString(),
-//                                       )
-//                                     : Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               ViewRemarkAttendance(
-//                                                 month: month,
-//                                                 year: year,
-//                                                 attendancesiteid:
-//                                                     attendancesiteid,
-//                                                 clientid:
-//                                                     attendanceclientid, //GlobalLists.clientid,
-//                                                 manTag: maintag,
-//                                                 shiftId: selectedShift?.id,
-//                                               ),
-//                                         ),
-//                                       );
-//                               }
-//                             : null,
-//                         style: ElevatedButton.styleFrom(
-//                           backgroundColor:
-//                            (GlobalLists.supervisorrole == role &&
-//                                   selectedShift.sup_final_submitted &&
-//                                   selectedShift?.is_final_submitted)?customcolor.blue:
-//                                   ( selectedShift?.is_month_end == 1 &&
-                                   
-//                                     selectedShift?.is_final_submitted == true)?customcolor.blue:
-//                           (GlobalLists.supervisorrole == role &&
-//                                     selectedShift.sup_final_submitted)?Colors.grey: role == GlobalLists.supervisorrole
-//                               ? customcolor.blue
-//                               // :
-//                               //  selectedShift?.is_month_end == 1 &&
-//                               //       selectedShift?.is_final_submitted == true
-//                               // ? Colors.grey
-//                               : customcolor.blue,
-//                           shape: RoundedRectangleBorder(
-//                             borderRadius: BorderRadius.circular(8),
-//                           ),
-//                           minimumSize: Size(double.infinity, 40),
-//                         ),
-//                         child: Text(
-//                           (GlobalLists.supervisorrole == role &&
-//                                   selectedShift.sup_final_submitted &&
-//                                   selectedShift?.is_final_submitted)
-//                               ?"Download Roster"
-//                               : (GlobalLists.supervisorrole == role &&
-//                                     selectedShift.sup_final_submitted &&
-//                                     selectedShift.is_final_submitted == false &&
-//                                     selectedShift.review_updated_by_client)
-//                               ? "Review Discrepancy"
-//                               : (GlobalLists.supervisorrole == role &&
-//                                     selectedShift.sup_final_submitted)
-//                               ? "Submitted to Client"
-//                               : (role == GlobalLists.clientrole &&
-//                                     selectedShift.review_updated_by_client &&
-//                                     selectedShift.is_final_submitted)
-//                               ? "Finalized Roster"
-//                               : (role == GlobalLists.clientrole &&
-//                                     selectedShift?.review_updated_by_oe_om ==
-//                                         true &&  selectedShift.is_final_submitted==false)
-//                               ? "Review Updates"
-//                               :  (role == GlobalLists.clientrole &&
-//                                     selectedShift.review_updated_by_client)
-//                               ? "Review Discrepancy"//Report
-//                               :
-//                                 //is_month_end -1 check to
-//                                 selectedShift?.is_month_end == 1 &&
-//                                     //is_final_submitted client submited or not
-//                                     selectedShift?.is_final_submitted == true
-//                               ?  "Download Roster" //"View Finalize Roster"
-//                               : selectedCells.isNotEmpty && multiSelectMode
-//                               ? "Review Discrepancy"//Report
-//                               : role == GlobalLists.clientrole &&
-//                                     selectedShift?.review_updated_by_oe_om ==
-//                                         false &&
-//                                     selectedShift.review_updated_by_client ==
-//                                         false
-//                               ? "Approve Roster"
-//                               :"Review Discrepancy",
-//                           style: TextStyle(
-//                             fontFamily: AppFonts.semibold,
-//                             fontSize: 16,
-//                             color: Colors.white,
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//                   ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
+      
   }
 void _openFileOptions(String filePath) {
   showModalBottomSheet(
@@ -2439,35 +2497,47 @@ _showReasonDialog(
 
     return GestureDetector(
       onTap: () {
-        print("Clicked SAVE HERE @");
+      
         setState(() {});
-        print('reason ${day?.reason}');
+       
         if (role == GlobalLists.clientrole) {
-          print('is_final_submitted check ${is_month_end}');
-
-          print('is_final_submitted ${is_final_submit}');
-          print('attendanceStatus ${day?.attendanceStatus}');
-          print('client_approval_status ${day?.client_approval_status}');
-          print('act_deact_janitor ${day?.act_deact_janitor}');
-
+        
           canEdit =
               (is_final_submit == false ||
                   selectedShift?.is_final_submitted == null) &&
               day?.act_deact_janitor == true &&
-              day?.attendanceStatus != '-' &&
+             day?.attendance_type != '-' && //changes made ruchita 4April -
               (day?.client_approval_status == null ||
-                  day!.client_approval_status == '') &&
-              (day?.reason == null || day?.reason == '' || day?.reason == 'NA');
+                  day!.client_approval_status == '') 
+              //     &&
+              // (day?.reason == null || day?.reason == '' || day?.reason == 'NA') //changes made ruchita 4April
+              ;
         }
-        print('canEdit ${canEdit}');
+        
+print("===== DEBUG START =====");
+print("role: $role");
 
+print("is_final_submit: $is_final_submit");
+print("selectedShift.is_final_submitted: ${selectedShift?.is_final_submitted}");
+print("day.act_deact_janitor: ${day?.act_deact_janitor}");
+print("day.attendanceStatus: ${day?.attendanceStatus}");
+print("day.client_approval_status: ${day?.client_approval_status}");
+print("day.reason: ${day?.reason}");
+print("sup_final_submitted_v: $sup_final_submitted_v");
+print("isFuture: $isFuture");
+print("isBulkMode: $isBulkMode");
+print("day is null: ${day == null}");
+print("canEdit: ${canEdit}");
+print("=======================");
         if (GlobalLists.supervisorrole == role && sup_final_submitted_v) {
           print('Roster is already finalized.');
           ShowDialogs.showToast("Roster is already finalized.");
           return;
         }
+       
         if (canEdit ||
             (GlobalLists.supervisorrole == role && !sup_final_submitted_v)) {
+               print("-------------- AXXEPTED");
           if (!isFuture && day != null && !isBulkMode) {
             _showAttendanceDialog(emp, day, date);
           }
@@ -2675,32 +2745,142 @@ _showReasonDialog(
                 ),
               ),
               SizedBox(height: 12),
-              TextField(
-                controller: otController,
-                decoration: InputDecoration(
-                  hintText: 'Enter hours (e.g., 2.5)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Color(0xFF3B82F6), width: 2),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  prefixIcon: Icon(Icons.access_time, color: Color(0xFF64748B)),
-                  suffixText: 'hours',
-                ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
+                TextFormField(
+  controller: hoursController,
+  keyboardType: TextInputType.numberWithOptions(decimal: true),
+
+  inputFormatters: [
+    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,1}')),
+  ],
+
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return "Enter hours";
+    }
+
+    final number = double.tryParse(value);
+    if (number == null) {
+      return "Invalid number";
+    }
+
+    if (number < 0 || number > 30) {
+      return "Must be between 0 and 30";
+    }
+
+    return null;
+  },
+
+                    decoration: InputDecoration(
+                      
+                      hintText: 'Enter hours (e.g., 2.5)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Color(0xFF3B82F6),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+
+                      prefixIcon: Icon(
+                        Icons.access_time,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),  
+  // decoration: InputDecoration(
+  //   hintText: 'e.g., 2.5',
+  //   border: OutlineInputBorder(
+  //     borderRadius: BorderRadius.circular(12),
+  //   ),
+  //   prefixIcon: Icon(Icons.access_time),
+  //   suffixText: 'hours',
+  // ),
+
+  onChanged: (value) {
+    final number = double.tryParse(value);
+
+    if (number != null && number > 30) {
+      // Clear field
+      hoursController.clear();
+
+      // Show message
+       ShowDialogs.showToast('OT should be maximum 30 hr');
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text("OT should be maximum 30 hr"),
+      //     backgroundColor: Colors.red,
+      //   ),
+      // );
+    } else {
+      bulkOTHours = value;
+    }
+  },
+),
+  //             TextFormField(
+  //                validator: (value) {
+  //   if (value == null || value.isEmpty) {
+  //     return "Enter hours";
+  //   }
+
+  //   final number = double.tryParse(value);
+  //   if (number == null) {
+  //     return "Invalid number";
+  //   }
+
+  //   if (number < 0 || number > 30) {
+  //     return "Must be between 0 and 30";
+  //   }
+
+  //   return null;
+  // },
+  //               controller: otController,
+  //               decoration: InputDecoration(
+  //                 hintText: 'Enter hours (e.g., 2.5)',
+  //                 border: OutlineInputBorder(
+  //                   borderRadius: BorderRadius.circular(12),
+  //                   borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
+  //                 ),
+  //                 enabledBorder: OutlineInputBorder(
+  //                   borderRadius: BorderRadius.circular(12),
+  //                   borderSide: BorderSide(color: Color(0xFFE2E8F0), width: 2),
+  //                 ),
+  //                 focusedBorder: OutlineInputBorder(
+  //                   borderRadius: BorderRadius.circular(12),
+  //                   borderSide: BorderSide(color: Color(0xFF3B82F6), width: 2),
+  //                 ),
+  //                 contentPadding: EdgeInsets.symmetric(
+  //                   horizontal: 16,
+  //                   vertical: 14,
+  //                 ),
+  //                 prefixIcon: Icon(Icons.access_time, color: Color(0xFF64748B)),
+  //                 suffixText: 'hours',
+  //               ),
+  //               // keyboardType: TextInputType.numberWithOptions(decimal: true),
+  //               keyboardType: TextInputType.numberWithOptions(decimal: true),
+  // inputFormatters: [
+  //   FilteringTextInputFormatter.allow(
+  //     RegExp(r'^\d{0,2}(\.\d{0,1})?$'),
+  //   ),
+  // ],
+  //               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+  //             ),
               SizedBox(height: 8),
               Text(
                 'Enter overtime hours worked on this date',
@@ -2827,7 +3007,12 @@ _showReasonDialog(
     //  Future or null
     if (isFuture || day == null) {
       return const Color(0xFFCBD5E1); // Grey
-    }
+    } 
+    
+    // ⭐ NEW: National Holiday (HIGHEST PRIORITY)
+  if (day.national_holiday != null && day.national_holiday!.isNotEmpty) {
+    return  Color(0xFFF54927); // Purple
+  }
 
     // 2 Deactivated janitor
     if (day.act_deact_janitor == false) {
@@ -3717,8 +3902,33 @@ _showReasonDialog(
                     style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                   ),
                   SizedBox(height: 8),
-                  TextField(
+                  TextFormField(
+  controller: hoursController,
+  keyboardType: TextInputType.numberWithOptions(decimal: true),
+
+  inputFormatters: [
+    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,1}')),
+  ],
+
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return "Enter hours";
+    }
+
+    final number = double.tryParse(value);
+    if (number == null) {
+      return "Invalid number";
+    }
+
+    if (number < 0 || number > 30) {
+      return "Must be between 0 and 30";
+    }
+
+    return null;
+  },
+
                     decoration: InputDecoration(
+                      
                       hintText: 'e.g., 2.5',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -3745,20 +3955,119 @@ _showReasonDialog(
                         horizontal: 16,
                         vertical: 14,
                       ),
+
                       prefixIcon: Icon(
                         Icons.access_time,
                         color: Color(0xFF64748B),
                       ),
-                      suffixText: 'hours',
-                    ),
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                    onChanged: (value) {
-                      bulkOTHours = value;
-                    },
-                  ),
+                    ),  
+  // decoration: InputDecoration(
+  //   hintText: 'e.g., 2.5',
+  //   border: OutlineInputBorder(
+  //     borderRadius: BorderRadius.circular(12),
+  //   ),
+  //   prefixIcon: Icon(Icons.access_time),
+  //   suffixText: 'hours',
+  // ),
+
+  onChanged: (value) {
+    final number = double.tryParse(value);
+
+    if (number != null && number > 30) {
+      // Clear field
+      hoursController.clear();
+
+      // Show message
+       ShowDialogs.showToast('OT should be maximum 30 hr');
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text("OT should be maximum 30 hr"),
+      //     backgroundColor: Colors.red,
+      //   ),
+      // );
+    } else {
+      bulkOTHours = value;
+    }
+  },
+),
+//                   TextFormField(
+//                      validator: (value) {
+//     if (value == null || value.isEmpty) {
+//       return "Enter hours";
+//     }
+
+//     final number = double.tryParse(value);
+//     if (number == null) {
+//       return "Invalid number";
+//     }
+
+//     if (number < 0 || number > 30) {
+//       return "Must be between 0 and 30";
+//     }
+
+//     return null;
+//   },
+//                     decoration: InputDecoration(
+                      
+//                       hintText: 'e.g., 2.5',
+//                       border: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(12),
+//                         borderSide: BorderSide(
+//                           color: Color(0xFFE2E8F0),
+//                           width: 2,
+//                         ),
+//                       ),
+//                       enabledBorder: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(12),
+//                         borderSide: BorderSide(
+//                           color: Color(0xFFE2E8F0),
+//                           width: 2,
+//                         ),
+//                       ),
+//                       focusedBorder: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(12),
+//                         borderSide: BorderSide(
+//                           color: Color(0xFF3B82F6),
+//                           width: 2,
+//                         ),
+//                       ),
+//                       contentPadding: EdgeInsets.symmetric(
+//                         horizontal: 16,
+//                         vertical: 14,
+//                       ),
+
+//                       prefixIcon: Icon(
+//                         Icons.access_time,
+//                         color: Color(0xFF64748B),
+//                       ),
+                      
+//                       suffixText: 'hours',
+//                     ),
+                    
+//  keyboardType: TextInputType.numberWithOptions(decimal: true),
+//   inputFormatters: [
+//     FilteringTextInputFormatter.allow(
+//       RegExp(r'^\d{0,2}(\.\d{0,1})?$'),
+//     ),
+//   ],
+//   // keyboardType: const TextInputType.numberWithOptions(
+//   //   decimal: true,
+//   //   signed: false,
+//   // ),
+
+//   // // ✅ THIS IS THE FIX
+//   // inputFormatters: [
+//   //   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+//   // ],
+
+//                     // keyboardType: TextInputType.numberWithOptions(
+//                     //   decimal: true,signed: false
+//                     // ),
+//                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+//                     onChanged: (value) {
+//                       bulkOTHours = value;
+//                     },
+//                   ),
                   SizedBox(height: 8),
                   Text(
                     'Note: This OT value will be applied to all selected dates',
