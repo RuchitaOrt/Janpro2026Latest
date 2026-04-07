@@ -13,6 +13,7 @@ class ViewAttendaceMonthly {
   int totalApprovedByClient;
   int totalApprovedByOeom;
   int totalCount;
+  String? discrepancies_reasons;
 
   ViewAttendaceMonthly({
     required this.status,
@@ -21,6 +22,7 @@ class ViewAttendaceMonthly {
     required this.totalApprovedByClient,
     required this.totalApprovedByOeom,
     required this.totalCount,
+     this.discrepancies_reasons
   });
 
   factory ViewAttendaceMonthly.fromJson(Map<String, dynamic> json) =>
@@ -33,6 +35,7 @@ class ViewAttendaceMonthly {
         totalApprovedByClient: json["total_approved_by_client"] ?? 0,
         totalApprovedByOeom: json["total_approved_by_oeom"] ?? 0,
         totalCount: json["total_count"] ?? 0,
+        discrepancies_reasons:json["discrepancies_reasons"] ?? ""
       );
 
   Map<String, dynamic> toJson() => {
@@ -42,6 +45,7 @@ class ViewAttendaceMonthly {
         "total_approved_by_client": totalApprovedByClient,
         "total_approved_by_oeom": totalApprovedByOeom,
         "total_count": totalCount,
+        "discrepancies_reasons":discrepancies_reasons
       };
 }
 

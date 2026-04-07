@@ -220,6 +220,15 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
   var uploadcontroller = new TextEditingController();
   backGroundRun background = backGroundRun();
   bool visitCount = false;
+   String selectedMonth = "March";
+  int selectedYear = 2026;
+
+  final List<String> months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+
+  final List<int> years = List.generate(5, (index) => 2024 + index);
   @override
   void initState() {
     super.initState();
@@ -1111,8 +1120,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                 //
                               ),
                             ),
-                           (role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
-                                    role == GlobalLists.operationmanagerrole) ?SupervisorRankingSection():Container(),
+                          
                             (role == GlobalLists.headrole ||
                                     role == GlobalLists.reginalmanagerrole ||
                                     role == GlobalLists.clientrole ||
@@ -1129,6 +1137,8 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                       role == GlobalLists.operationmanagerrole)
                                 ? headcard()
                                 : supervisormodule(),
+
+                               
                           ],
                         ),
                       ),
@@ -3752,11 +3762,151 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
 
-        SizedBox(height: 50),
+        SizedBox(height: 10),
+(role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
+                                    role == GlobalLists.operationmanagerrole) ?
+         Material(
+            elevation: 0,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: SizeConfig.blockSizeHorizontal * 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+               mainAxisAlignment: MainAxisAlignment.start,
+  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child:   Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: customcolor.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                      Icons.star, // you can change per category
+                        color: customcolor.white,
+                        size: 20,
+                      ),
+                    ),
+                            ),
+                            SizedBox(width: 5),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Container(
+                                child:
+                               Column(
+  mainAxisAlignment: MainAxisAlignment.start,
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+
+    /// TITLE
+    const Text(
+      "SUPERVISOR RANKINGS",
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    SizedBox(height: 10,),
+Row(
+  children: [
+
+    /// 📅 MONTH
+    _buildCompactDropdown<String>(
+      value: selectedMonth,
+      items: months,
+      onChanged: (val) {
+        setState(() => selectedMonth = val!);
+      },
+    ),
+
+    const SizedBox(width: 8),
+
+    /// 📆 YEAR
+    _buildCompactDropdown<int>(
+      value: selectedYear,
+      items: years,
+      onChanged: (val) {
+        setState(() => selectedYear = val!);
+      },
+    ),
+  ],
+)
+    /// FILTERS
+  
+  ],
+),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        
+                                   
+                        //  SizedBox(width: 2,)
+                      ],
+                    ),
+                       SupervisorRankingSection(),
+                  ],
+                ),
+              ),
+            ),
+          ):Container(),
+
+          SizedBox(height: 30,)
+
       ],
     );
   }
-
+Widget _buildCompactDropdown<T>({
+  required T value,
+  required List<T> items,
+  required Function(T?) onChanged,
+}) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    height: 24, // 🔥 FIXED HEIGHT (important)
+    decoration: BoxDecoration(
+      color: const Color(0xffE8EEF9),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<T>(
+        value: value,
+        isDense: true, // 🔥 reduces height
+        icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+        style: const TextStyle(
+          fontSize: 12, // 🔥 smaller text
+          color: Colors.black,
+          fontWeight: FontWeight.w500,
+        ),
+        items: items.map((item) {
+          return DropdownMenuItem<T>(
+            value: item,
+            child: Text(
+              item.toString(),
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }).toList(),
+        onChanged: onChanged,
+      ),
+    ),
+  );
+}
   Widget clientmodule() {
     return ListView(
       shrinkWrap: true,

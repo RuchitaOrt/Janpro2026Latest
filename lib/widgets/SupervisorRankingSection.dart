@@ -11,59 +11,62 @@ class SupervisorRankingSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         /// Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Text("⭐",style: TextStyle(fontSize: 16),),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4,top: 8),
-                  child: Text(
-                    "Supervisor Rankings",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: customcolor.black
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //   children: [
+        //     Row(
+        //       children: [
+        //         // 4
+        //         Padding(
+        //           padding: const EdgeInsets.only(left: 4,top: 8),
+        //           child: Text(
+        //             "SUPERVISOR RANKINGS",
+        //             style: TextStyle(
+        //               fontSize: 16,
+        //               fontWeight: FontWeight.bold,
+        //               color: customcolor.black
+        //             ),
+        //           ),
+        //         ),
+        //       ],
+        //     ),
             
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Color(0xffE8EEF9),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                "March 2026",
-                style: TextStyle(fontSize: 12),
-              ),
-            )
-          ],
-        ),
+        //     Container(
+        //       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        //       decoration: BoxDecoration(
+        //         color: Color(0xffE8EEF9),
+        //         borderRadius: BorderRadius.circular(20),
+        //       ),
+        //       child: Text(
+        //         "March 2026",
+        //         style: TextStyle(fontSize: 12),
+        //       ),
+        //     )
+        //   ],
+        // ),
 
-        SizedBox(height: 20),
+        //  SizedBox(height: 21),
 
-        Text(
-          "Ranked by workflow completion + attendance · Resets monthly",
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
+        // Padding(
+        //   padding: const EdgeInsets.only(left: 10),
+        //   child: Text(
+        //     "Ranked by workflow completion + attendance · Resets monthly",
+        //     style: TextStyle(fontSize: 13, color: Colors.black),
+        //   ),
+        // ),
 
-        SizedBox(height: 12),
+         SizedBox(height: 15),
 
         /// Horizontal Cards
        SizedBox(
-  height: 280, // 🔥 increased from 170
+  height: 190, // 🔥 increased from 170
   child: ListView(
     scrollDirection: Axis.horizontal,
     children: const [
       RankingCard(
         rank: 1,
         name: "Rajesh Kumar",
-        location: "Andheri · 4 sites",
+        location: "Andheri site",
         workflow: 94,
         attendance: 98,
         score: 96,
@@ -71,7 +74,7 @@ class SupervisorRankingSection extends StatelessWidget {
       RankingCard(
         rank: 2,
         name: "Priya Mehta",
-        location: "Bandra · 3 sites",
+        location: "Bandra site",
         workflow: 88,
         attendance: 92,
         score: 90,
@@ -79,7 +82,7 @@ class SupervisorRankingSection extends StatelessWidget {
       RankingCard(
         rank: 3,
         name: "Amit Shah",
-        location: "Powai · 5 sites",
+        location: "Powai site",
         workflow: 81,
         attendance: 89,
         score: 85,
@@ -135,30 +138,30 @@ class RankingCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 /// Avatar
-                Container(
-                  height: 50,
-                  width: 56,
-                  decoration: BoxDecoration(
-                    color: isTop
-                        ? Colors.white.withOpacity(0.2)
-                        : const Color(0xffCFE8D1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      name.substring(0, 2).toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isTop ? Colors.white : Colors.green[800],
-                      ),
-                    ),
-                  ),
-                ),
+                // Container(
+                //   height: 50,
+                //   width: 56,
+                //   decoration: BoxDecoration(
+                //     color: isTop
+                //         ? Colors.white.withOpacity(0.2)
+                //         : const Color(0xffCFE8D1),
+                //     borderRadius: BorderRadius.circular(16),
+                //   ),
+                //   alignment: Alignment.center,
+                //   child: Padding(
+                //     padding: const EdgeInsets.only(top: 8),
+                //     child: Text(
+                //       name.substring(0, 2).toUpperCase(),
+                //       style: TextStyle(
+                //         fontSize: 18,
+                //         fontWeight: FontWeight.bold,
+                //         color: isTop ? Colors.white : Colors.green[800],
+                //       ),
+                //     ),
+                //   ),
+                // ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 5),
 
                 /// Name
                 Text(

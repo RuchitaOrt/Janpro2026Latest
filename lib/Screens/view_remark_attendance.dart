@@ -338,10 +338,17 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                                 Expanded(
                                   child: Builder(
                                     builder: (context) {
-                                      final String reasonText = attendanceData!
-                                          .data[0]
-                                          .reasons
-                                          .join(', ');
+                                      // print("attendanceData!.discrepancies_reasons");
+                                      // print(attendanceData!.discrepancies_reasons);
+                                      // print
+                                      // print(attendanceData!
+                                      //     .data[0]
+                                      //     .reasons);
+                                      final String reasonText = attendanceData!.discrepancies_reasons ?? "";
+                                      // attendanceData!
+                                      //     .data[0]
+                                      //     .reasons
+                                      //     .join(', ');
                                       final bool showReadMore =
                                           reasonText.length > 50;
 
@@ -352,7 +359,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                                           Text(
                                             showReadMore
                                                 ? reasonText.substring(0, 50)
-                                                : reasonText,
+                                                : 
+                                                reasonText,
                                             style: AppFonts.headerStyle(
                                               fontSize: 13,
                                               color: customcolor.black,
