@@ -1327,7 +1327,7 @@ int currentYear = int.tryParse(year) ?? DateTime.now().year;
                         : (GlobalLists.supervisorrole == role &&
                                 selectedShift.sup_final_submitted &&
                                 selectedShift.is_final_submitted)
-                            ? "Download Roster ${selectedShift.sup_final_submitted} ${selectedShift.is_final_submitted}"
+                            ? "Download Roster"
                             : (GlobalLists.supervisorrole == role &&
                                     selectedShift.sup_final_submitted &&
                                     selectedShift.is_final_submitted == false &&
@@ -1352,7 +1352,7 @@ int currentYear = int.tryParse(year) ?? DateTime.now().year;
                                                 : selectedShift?.is_month_end == 1 &&
                                                         selectedShift?.is_final_submitted ==
                                                             true
-                                                    ? "Download Roster"
+                                                    ? "Download Roster ${selectedShift?.is_final_submitted}"
                                                     : selectedCells.isNotEmpty &&
                                                             multiSelectMode
                                                         ? "Review Discrepancy"
@@ -2506,7 +2506,7 @@ _showReasonDialog(
               (is_final_submit == false ||
                   selectedShift?.is_final_submitted == null) &&
               day?.act_deact_janitor == true &&
-             day?.attendance_type != '-' && //changes made ruchita 4April -
+            day?.attendance_type != '-' && //changes made ruchita 4April -
               (day?.client_approval_status == null ||
                   day!.client_approval_status == '') 
               //     &&
@@ -2520,6 +2520,7 @@ print("role: $role");
 print("is_final_submit: $is_final_submit");
 print("selectedShift.is_final_submitted: ${selectedShift?.is_final_submitted}");
 print("day.act_deact_janitor: ${day?.act_deact_janitor}");
+print("day.attendancetype: ${day?.attendance_type}");
 print("day.attendanceStatus: ${day?.attendanceStatus}");
 print("day.client_approval_status: ${day?.client_approval_status}");
 print("day.reason: ${day?.reason}");
@@ -2587,7 +2588,7 @@ print("=======================");
             Container(
               height: 28,
               decoration: BoxDecoration(
-                color: _getAttendanceColor(day, isFuture).withOpacity(0.2),
+               color: _getAttendanceColor(day, isFuture).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: _getAttendanceColor(day, isFuture),
@@ -3031,7 +3032,39 @@ print("=======================");
         day.reason == null || day.reason!.isEmpty || day.reason == 'NA';
 
     // 4 If ALL are empty → use attendance_type switch
-    if (isClientEmpty && isOmEmpty && isReasonEmpty) {
+   
+  //  if (isClientEmpty && isOmEmpty && role==GlobalLists.clientrole
+  //   //  && isReasonEmpty
+  //   ) {
+  //    print("day.client_attendance_type ${day.client_attendance_type}");
+  //     switch (day.client_attendance_type) {
+
+  //       case 'P': // Present
+  //         return const Color(0xFF22C55E);
+
+  //       case 'A': // Absent
+  //         return const Color(0xFFEF4444);
+
+  //       case 'H': // Holiday
+  //         return const Color(0xFF7DD3FC);
+
+  //       case 'W': // Working on Holiday
+  //         return const Color(0xFF2563EB);
+
+  //       case 'F': // Half Day
+  //         return const Color(0xFF4ADE80);
+  //         //  case 'O': // Half Day
+  //         // return const Color(0xFFCBD5E1);
+
+  //       default:
+  //         return const Color(0xFFCBD5E1);
+  //     }
+  //   }
+   
+  //  else
+    if (isClientEmpty && isOmEmpty
+     && isReasonEmpty
+    ) {
      
       switch (day.attendance_type) {
         case 'P': // Present

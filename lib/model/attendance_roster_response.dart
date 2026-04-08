@@ -127,6 +127,7 @@ class AttendanceData {
 final dynamic national_holiday;
   final String? statusPresentAbsent;
   final int? attendanceId;
+  final String? client_attendance_type;
 
   AttendanceData({
     required this.date,
@@ -142,6 +143,7 @@ final dynamic national_holiday;
      this.act_deact_janitor,
      this.ot_hours,
      this.attendance_type,
+      this.client_attendance_type,
   });
 
   factory AttendanceData.fromJson(Map<String, dynamic> json) {
@@ -159,7 +161,8 @@ final dynamic national_holiday;
       statusPresentAbsent: json['status_present_absent'],
       attendanceId: json['attendance_id'],
       act_deact_janitor: json['act_deact_janitor']??false,
-       national_holiday:json["national_holiday"] ?? ""
+       national_holiday:json["national_holiday"] ?? "",
+       client_attendance_type:json['client_attendance_type'] ?? ""
     );
   }
 }

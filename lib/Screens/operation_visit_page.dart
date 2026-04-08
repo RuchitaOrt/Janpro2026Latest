@@ -1302,7 +1302,9 @@ String finalImage = "data:image/jpeg;base64,$base64Image";
     "longitude": "${long ?? 0}",
     "latitude": "${lat ?? 0}",
     "workflow_management": workflowValue == "Yes" ? "yes" : "no",
-    "visiting_image": visitingImageList,
+    "visiting_image":
+    jsonEncode(visitingImageList ?? []),
+    //  visitingImageList,
   };
 
   print("FINAL JSON: ${jsonEncode(payload)}");
