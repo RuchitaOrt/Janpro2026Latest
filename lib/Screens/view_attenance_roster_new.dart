@@ -1066,7 +1066,8 @@ int currentYear = int.tryParse(year) ?? DateTime.now().year;
                                   ],
                                 ),
                               )
-                            : ListView.builder(
+                            :
+                            ListView.builder(
                                 padding: EdgeInsets.only(top: 12, bottom: 80),
                                 itemCount: selectedShift?.employeeList?.length ?? 0,
                                 itemBuilder: (context, index) {
@@ -2671,7 +2672,7 @@ print("=======================");
     TextEditingController otController = TextEditingController(
       text: currentOT > 0 ? currentOT.toStringAsFixed(1) : '',
     );
-
+hoursController.text="";
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2920,6 +2921,7 @@ print("=======================");
                       onPressed: () async {
                        
                         final otText = otController.text.trim();
+                        print("otText ${hoursController.text.trim()}");
                         double hours = 0.0;
 
                         if (otText.isNotEmpty) {
@@ -2965,6 +2967,7 @@ print("=======================");
                               : attendanceclientid,
                           'month': month,
                           'year': year,
+                           "ot_hours": hoursController.text.trim(),
                         };
 
                         Navigator.pop(context);
@@ -3579,6 +3582,7 @@ print("=======================");
     bulkHasOT = false;
     bulkOTHours = '';
     _isreasonshow = false;
+    reasonController.text="";
 
     showModalBottomSheet(
       context: context,
@@ -4144,36 +4148,50 @@ print("=======================");
                         onPressed: () async {
                           // Validation
                           if (selectedDates.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Please select at least one date',
-                                ),
-                                backgroundColor: Color(0xFFEF4444),
-                              ),
-                            );
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   SnackBar(
+                            //     content: Text(
+                            //       'Please select at least one date',
+                            //     ),
+                            //     backgroundColor: Color(0xFFEF4444),
+                            //   ),
+                            // );
+                            ShowDialogs.showToast('Please select at least one date');
                             return;
                           }
 
                           if (bulkAttendanceStatus == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Please select attendance status',
-                                ),
-                                backgroundColor: Color(0xFFEF4444),
-                              ),
-                            );
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   SnackBar(
+                            //     content: Text(
+                            //       'Please select attendance status',
+                            //     ),
+                            //     backgroundColor: Color(0xFFEF4444),
+                            //   ),
+                            // );
+
+                             ShowDialogs.showToast("Please select attendance status");
                             return;
                           }
 
                           if (bulkHasOT && bulkOTHours.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Please enter OT hours'),
-                                backgroundColor: Color(0xFFEF4444),
-                              ),
-                            );
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   SnackBar(
+                            //     content: Text('Please enter OT hours'),
+                            //     backgroundColor: Color(0xFFEF4444),
+                            //   ),
+                            // );
+                              ShowDialogs.showToast("Please select attendance status");
+                            return;
+                          }
+ if (reasonController.text.isEmpty) {
+                            // ScaffoldMessenger.of(context).showSnackBar(
+                            //   SnackBar(
+                            //     content: Text('Please enter OT hours'),
+                            //     backgroundColor: Color(0xFFEF4444),
+                            //   ),
+                            // );
+                              ShowDialogs.showToast("Please enter reason");
                             return;
                           }
 
@@ -5012,6 +5030,7 @@ print("=======================");
       var supervisorid = await SPManager().getsupervisorid();
 
       // Prepare the map according to API requirements
+       print("otText ${apiData!['ot_hours']}");
       var map = {
         'site_id': apiData!['site_id'] ?? '',
         'to_date': currentDate,
@@ -5022,7 +5041,7 @@ print("=======================");
         'year': year,
         "client_id": apiData['user_id'],
         // "user_id":apiData['user_id'],
-        // 'ot_hours': apiData['ot_hours'] ?? '',
+       'ot_hours': apiData['ot_hours'] ?? '',
         // 'roster_image': apiData['roster_image'] ?? '',
       };
       if (GlobalLists.clientrole == role) {

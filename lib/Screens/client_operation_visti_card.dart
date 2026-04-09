@@ -9,6 +9,7 @@ import 'package:janpro/Utitlity/SPManager.dart';
 import 'package:janpro/Utitlity/appbar.dart';
 import 'package:janpro/Screens/Homepage.dart';
 import 'package:janpro/Utitlity/sizeConfig.dart';
+import 'package:janpro/model/VisitTypeItem.dart';
 import 'package:page_transition/page_transition.dart';
 import '../Utitlity/APIManager.dart';
 import '../Utitlity/GlobalLists.dart';
@@ -289,61 +290,9 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
                                           if (visit.supportingImage != null &&
                                               visit.supportingImage!
                                                   .isNotEmpty) {
-                                                    showimage(context, "Operation Visits",visit.supportingImage);
-        //                                     showDialog(
-        //                                       context: context,
-        //                                       builder: (ctx) =>
-        //                                       AlertDialog(
-        //                                      //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        //   scrollable: true,
-        //   title: Row(
-        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //     children: [
-        //       Text("Operation Visits"),
-        //       GestureDetector(
-        //           onTap: () {
-        //             Navigator.pop(context);
-        //           },
-        //           child: Icon(Icons.close))
-        //     ],
-        //   ),
-        //   content: SingleChildScrollView(
-        //     //MUST TO ADDED
-
-        //     physics: NeverScrollableScrollPhysics(),
-        //     child: Container(
-        //       height: SizeConfig.blockSizeVertical * 30,
-        //       width: double.maxFinite,
-        //       child: ListView(
-        //         shrinkWrap: true,
-        //         physics: ScrollPhysics(),
-        //         // mainAxisSize: MainAxisSize.min,
-        //         children: [
-                
-        //          Image.network(
-               
-        //            visit.supportingImage!,
-        //             height: SizeConfig.blockSizeVertical * 30,
-        //            fit: BoxFit.cover,
-        //            errorBuilder: (ctx, error,
-        //                    stackTrace) =>
-        //                Container(
-        //             height: SizeConfig.blockSizeVertical * 30,
-        //              color:
-        //                  Colors.grey.shade200,
-        //              child: const Icon(
-        //                  Icons.broken_image,
-        //                  size: 40,
-        //                  color: Colors.grey),
-        //            ),
-        //          )
-        //         ],
-        //       ),
-        //     ),
-        //   ),
-        // ),
-                                            
-        //                                     );
+                                                    // showimage(context, "Operation Visits",visit.supportingImage);
+                                                    showImageListDialog(context,"Visit Type",[]);
+        //                                    
                                           }
                                         },
                                         child: ClipRRect(
@@ -425,6 +374,11 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
+    //                                      visit.visitData.isNotEmpty
+    // ? Text(
+    //     visit.visitData[0].trainingVisitCategories ?? "NA",
+    //   )
+    // : Container(),
                                               Text(
                                                 visit.proposeRemark ?? "NA",
                                                 style: const TextStyle(
@@ -658,7 +612,101 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
       ShowDialogs.showToast("No visits found for $range");
     }
   }
-  
+  void showImageListDialog(
+  BuildContext context,
+  String title,
+  List<VisitItem> items,
+) {
+  showDialog(
+    context: context,
+    builder: (_) {
+      return Dialog(
+        insetPadding: const EdgeInsets.all(10),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+
+              /// HEADER
+              _buildDialogHeader(context, title),
+
+              const SizedBox(height: 16),
+
+              items.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text("No Images Available"),
+                    )
+                  : SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: items.map((item) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Column(
+                              children: [
+
+                                /// 🔹 NAME (Training, Process...)
+                                Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 6),
+
+                                /// 🔹 IMAGE / ICON
+                                GestureDetector(
+                                  onTap: () {
+                                    if (item.image != null) {
+                                      _showFullImageDialog(
+                                        context,
+                                        item.image!.path,
+                                        item.name,
+                                      );
+                                    }
+                                  },
+                                  child: item.image != null
+                                      ? ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          child: Image.file(
+                                            item.image!,
+                                            width: 70,
+                                            height: 70,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 70,
+                                          height: 70,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[200],
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Image.file(
+                                            item.image!,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
   void showimage(
   BuildContext context,
   String title,

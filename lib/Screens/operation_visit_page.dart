@@ -1533,15 +1533,16 @@ String finalImage = "data:image/jpeg;base64,$base64Image";
                                     children: [
                                       GestureDetector(
                                           onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              PageRouteBuilder(
-                                                pageBuilder: (context,
-                                                        animation1,
-                                                        animation2) =>
-                                                    HomePage(),
-                                              ),
-                                            );
+                                            Navigator.pop(context);
+                                            // Navigator.push(
+                                            //   context,
+                                            //   PageRouteBuilder(
+                                            //     pageBuilder: (context,
+                                            //             animation1,
+                                            //             animation2) =>
+                                            //         HomePage(),
+                                            //   ),
+                                            // );
                                           },
                                           child: Icon(Icons.arrow_back)),
                                       SizedBox(

@@ -3763,108 +3763,109 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
 
         SizedBox(height: 10),
-(role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
-                                    role == GlobalLists.operationmanagerrole) ?
-         Material(
-            elevation: 0,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              width: SizeConfig.blockSizeHorizontal * 100,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-               mainAxisAlignment: MainAxisAlignment.start,
-  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child:   Container(
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: customcolor.blue,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                      Icons.star, // you can change per category
-                        color: customcolor.white,
-                        size: 20,
-                      ),
-                    ),
-                            ),
-                            SizedBox(width: 5),
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Container(
-                                child:
-                               Column(
-  mainAxisAlignment: MainAxisAlignment.start,
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
+      //SUPERVISOR RANKING UNCOMMENT WHEN USING
+// (role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
+//                                     role == GlobalLists.operationmanagerrole) ?
+//          Material(
+//             elevation: 0,
+//             borderRadius: BorderRadius.circular(10),
+//             child: Container(
+//               width: SizeConfig.blockSizeHorizontal * 100,
+//               decoration: BoxDecoration(
+//                 borderRadius: BorderRadius.circular(10),
+//               ),
+//               child: Padding(
+//                 padding: const EdgeInsets.all(8.0),
+//                 child: Column(
+//                mainAxisAlignment: MainAxisAlignment.start,
+//   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Row(
+//                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Row(
+//                           mainAxisAlignment: MainAxisAlignment.start,
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Padding(
+//                               padding: const EdgeInsets.all(4.0),
+//                               child:   Container(
+//                       padding: EdgeInsets.all(4),
+//                       decoration: BoxDecoration(
+//                         color: customcolor.blue,
+//                         shape: BoxShape.circle,
+//                       ),
+//                       child: Icon(
+//                       Icons.star, // you can change per category
+//                         color: customcolor.white,
+//                         size: 20,
+//                       ),
+//                     ),
+//                             ),
+//                             SizedBox(width: 5),
+//                             Padding(
+//                               padding: const EdgeInsets.only(top: 4),
+//                               child: Container(
+//                                 child:
+//                                Column(
+//   mainAxisAlignment: MainAxisAlignment.start,
+//   crossAxisAlignment: CrossAxisAlignment.start,
+//   children: [
 
-    /// TITLE
-    const Text(
-      "SUPERVISOR RANKINGS",
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-    SizedBox(height: 10,),
-Row(
-  children: [
+//     /// TITLE
+//     const Text(
+//       "SUPERVISOR RANKINGS",
+//       style: TextStyle(
+//         fontSize: 16,
+//         fontWeight: FontWeight.bold,
+//       ),
+//     ),
+//     SizedBox(height: 10,),
+// Row(
+//   children: [
 
-    /// 📅 MONTH
-    _buildCompactDropdown<String>(
-      value: selectedMonth,
-      items: months,
-      onChanged: (val) {
-        setState(() => selectedMonth = val!);
-      },
-    ),
+//     /// 📅 MONTH
+//     _buildCompactDropdown<String>(
+//       value: selectedMonth,
+//       items: months,
+//       onChanged: (val) {
+//         setState(() => selectedMonth = val!);
+//       },
+//     ),
 
-    const SizedBox(width: 8),
+//     const SizedBox(width: 8),
 
-    /// 📆 YEAR
-    _buildCompactDropdown<int>(
-      value: selectedYear,
-      items: years,
-      onChanged: (val) {
-        setState(() => selectedYear = val!);
-      },
-    ),
-  ],
-)
-    /// FILTERS
+//     /// 📆 YEAR
+//     _buildCompactDropdown<int>(
+//       value: selectedYear,
+//       items: years,
+//       onChanged: (val) {
+//         setState(() => selectedYear = val!);
+//       },
+//     ),
+//   ],
+// )
+//     /// FILTERS
   
-  ],
-),
-                              ),
-                            ),
-                          ],
-                        ),
+//   ],
+// ),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
 
                         
                                    
-                        //  SizedBox(width: 2,)
-                      ],
-                    ),
-                       SupervisorRankingSection(),
-                  ],
-                ),
-              ),
-            ),
-          ):Container(),
+//                         //  SizedBox(width: 2,)
+//                       ],
+//                     ),
+//                        SupervisorRankingSection(),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           ):Container(),
 
           SizedBox(height: 30,)
 

@@ -51,6 +51,7 @@ class Datum {
     double? longitude;
     dynamic emp_type_str;
     String? empName;
+    
 
     Datum({
         this.id,
