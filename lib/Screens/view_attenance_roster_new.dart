@@ -2919,7 +2919,7 @@ hoursController.text="";
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                       
+                        print('attendanceEntries 11111111111');
                         final otText = otController.text.trim();
                         print("otText ${hoursController.text.trim()}");
                         double hours = 0.0;
@@ -2952,7 +2952,8 @@ hoursController.text="";
                           "attendance_type": day.attendance_type,
                           'attendance_id': day.attendanceId,
                           // ),
-                          if (hours > 0) "ot_hours": hours,
+                          // if (hours > 0) "ot_hours": hours,
+                          'ot_hours': hoursController.text.trim(),
                         };
 
                         final apiData = {
@@ -3409,8 +3410,8 @@ hoursController.text="";
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
-
                           print("Clicked HERE");
+                          print('attendanceEntries 22222222222');
                           if (selectedAttendance == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -4146,6 +4147,7 @@ hoursController.text="";
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
+                          print('attendanceEntries 333333333333333');
                           // Validation
                           if (selectedDates.isEmpty) {
                             // ScaffoldMessenger.of(context).showSnackBar(
@@ -4237,7 +4239,6 @@ hoursController.text="";
                               if (bulkHasOT && hours > 0) {
                                 entry["ot_hours"] = hours;
                               }
-
                               attendanceEntries.add(entry);
                             }
                           }
@@ -4259,7 +4260,6 @@ hoursController.text="";
                                 ? hours.toStringAsFixed(1)
                                 : '',
                           };
-
                           Navigator.pop(context);
 
                           // Submit to API
