@@ -6448,7 +6448,7 @@ Widget _buildCompactDropdown<T>({
                     MaterialPageRoute(
                       builder: (BuildContext context) =>
                           // OperationVisitCardPage()
-                          OperationVisitPage(role),
+                          OperationVisitPage(role,false,""),
                     ),
                   );
                 },

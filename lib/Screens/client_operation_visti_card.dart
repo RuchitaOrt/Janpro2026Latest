@@ -272,224 +272,395 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
                             itemBuilder: (context, index) {
                               final visit = filteredVisits[index];
 
-                              return Card(
-                                elevation: 3,
-                                margin: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                // shape: RoundedRectangleBorder(
-                                //   borderRadius: BorderRadius.circular(12),
-                                // ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          if (visit.supportingImage != null &&
-                                              visit.supportingImage!
-                                                  .isNotEmpty) {
-                                                    // showimage(context, "Operation Visits",visit.supportingImage);
-                                                    showImageListDialog(context,"Visit Type",[]);
-        //                                    
-                                          }
-                                        },
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          child: (visit.supportingImage ==
-                                                      null ||
-                                                  visit
-                                                      .supportingImage!.isEmpty)
-                                              ? Container(
-                                                  width: 70,
-                                                  height: 70,
-                                                  color: Colors.grey.shade200,
-                                                  child: const Icon(
-                                                      Icons.image_not_supported,
-                                                      color: Colors.grey,
-                                                      size: 32),
-                                                )
-                                              :
-                                              Image.network(
-  visit.supportingImage!,
-  width: 70,
-  height: 70,
-  fit: BoxFit.cover,
-  loadingBuilder: (context, child, loadingProgress) {
-    if (loadingProgress == null) {
-      // ✅ Image loaded successfully
-      return child;
-    } else {
-      // 🌀 While loading, show a loader
-      return Container(
-        width: 70,
-        height: 70,
-        alignment: Alignment.center,
-        color: Colors.grey.shade100,
-        child: const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2,color: customcolor.blue,),
-        ),
-      );
-    }
-  },
-  errorBuilder: (context, error, stackTrace) => Container(
-    width: 70,
-    height: 70,
-    color: Colors.grey.shade200,
-    alignment: Alignment.center,
-    child: const Icon(
-      Icons.broken_image,
-      color: Colors.grey,
-      size: 32,
-    ),
-  ),
-)
+                              
+                             return GestureDetector(
+                              onTap: ()
+                              {
+                                 Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => OperationVisitPage(roles,true,visit)),
+                        );
+                              },
+                               child: Card(
+                                 elevation: 4,
+                                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                 shape: RoundedRectangleBorder(
+                                   borderRadius: BorderRadius.circular(12),
+                                 ),
+                                 child: Padding(
+                                   padding: const EdgeInsets.all(10),
+                                   child:
+                                  IntrinsicHeight(
+                                 child: Row(
+                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                   children: [
+                               
+                                     /// IMAGE
+                                     GestureDetector(
+                                      onTap: ()
+                                      {
+                                        print(visit.trainingImages[0].imageUrl);
+                                          showImageListDialog(context,"Visit Type",visit.trainingImages);
+                                      },
+                                       child: ClipRRect(
+                                         borderRadius: BorderRadius.circular(10),
+                                         child: (visit.trainingImages == null ||
+                                                 visit.trainingImages!.isEmpty)
+                                             ? Container(
+                                                 width: 75,
+                                                 height: 75,
+                                                 color: Colors.grey.shade200,
+                                                 child: const Icon(Icons.image_not_supported,
+                                                     color: Colors.grey, size: 30),
+                                               )
+                                             : Image.network(
+                                                 visit.trainingImages[0]!.imageUrl,
+                                                 width: 75,
+                                                 height: 75,
+                                                 fit: BoxFit.cover,
+                                               ),
+                                       ),
+                                     ),
+                               
+                                     const SizedBox(width: 12),
+                               
+                                     /// CONTENT
+                                     Expanded(
+                                       child: Column(
+                                         crossAxisAlignment: CrossAxisAlignment.start,
+                                         mainAxisSize: MainAxisSize.max, // ✅ FIXED
+                                         children: [
+                               
+                                         visit.trainingVisitCategories.isEmpty?Container():   Text(
+                                             visit.trainingVisitCategories ?? "",
+                                             style: const TextStyle(
+                                               fontSize: 13,
+                                               fontWeight: FontWeight.bold,
+                                               color: customcolor.blue,
+                                                fontFamily: 'Roboto', 
+                                             ),
+                                             maxLines: 2,
+                                             overflow: TextOverflow.ellipsis,
+                                           ),
+                               
+                                         visit.trainingVisitCategories.isEmpty?Container():  const SizedBox(height: 6),
+                               
+                                            visit.trainingVisitNames.isEmpty?Container():  Text(
+                                              visit.trainingVisitNames ?? "",
+                                             style: const TextStyle(
+                                               fontSize: 12,
+                                               color: Colors.black87,
+                                                fontFamily: 'Roboto', 
+                                             ),
+                                             maxLines: 2,
+                                             softWrap: true,
+                                             overflow: TextOverflow.ellipsis,
+                                             textHeightBehavior: const TextHeightBehavior(
+                                               applyHeightToFirstAscent: false,
+                                               applyHeightToLastDescent: false,
+                                             ),
+                                           ),
+                               
+                                          //  visit.trainingVisitNames.isEmpty?Container():  const SizedBox(height: 6),
+                               
+                                           if (visit.proposeRemark != null)
+                                             Text(
+                                               visit.proposeRemark!,
+                                               style: const TextStyle(
+                                                 fontSize: 14,
+                                                 fontWeight: FontWeight.w600,
+                                                 color: customcolor.blue,
+                                               ),
+                                               maxLines: 1,
+                                               overflow: TextOverflow.ellipsis,
+                                               
+                                             ),
+                               
+                                          //  const SizedBox(height: 6),
+                               
+                                           Row(
+                                             children: [
+                                               const Icon(Icons.calendar_today_outlined,
+                                                   size: 13, color: Colors.grey),
+                                               const SizedBox(width: 4),
+                                               Text(
+                                                 visit.date != null
+                                                     ? formatDate(visit.date)
+                                                     : "N/A",
+                                                 style: const TextStyle(fontSize: 12),
+                                               ),
+                                               const SizedBox(width: 10),
+                                               const Icon(Icons.access_time_outlined,
+                                                   size: 13, color: Colors.grey),
+                                               const SizedBox(width: 4),
+                                               Text(
+                                                 visit.time != null
+                                                     ? formatTime(visit.time)
+                                                     : "N/A",
+                                                 style: const TextStyle(fontSize: 12),
+                                               ),
+                                             ],
+                                           ),
+                               
+                                           const SizedBox(height: 6),
+                               
+                                           if (visit.visitRemarks != null &&
+                                               visit.visitRemarks!.isNotEmpty)
+                                             _ExpandableRemark(remark: visit.visitRemarks!),
+                                         ],
+                                       ),
+                                     ),
+                                   ],
+                                 ),
+                               )
+                                 ),
+                               ),
+                             );
+//                                Card(
+//                                 elevation: 3,
+//                                 margin: const EdgeInsets.symmetric(
+//                                     horizontal: 12, vertical: 8),
+//                                 // shape: RoundedRectangleBorder(
+//                                 //   borderRadius: BorderRadius.circular(12),
+//                                 // ),
+//                                 child: Padding(
+//                                   padding: const EdgeInsets.all(12),
+//                                   child: Row(
+//                                     crossAxisAlignment:
+//                                         CrossAxisAlignment.start,
+//                                     children: [
+//                                       GestureDetector(
+//                                         onTap: () {
+//                                           if (visit.supportingImage != null &&
+//                                               visit.supportingImage!
+//                                                   .isNotEmpty) {
+//                                                     // showimage(context, "Operation Visits",visit.supportingImage);
+//                                                     showImageListDialog(context,"Visit Type",[]);
+//         //                                    
+//                                           }
+//                                         },
+//                                         child: ClipRRect(
+//                                           borderRadius:
+//                                               BorderRadius.circular(10),
+//                                           child: (visit.supportingImage ==
+//                                                       null ||
+//                                                   visit
+//                                                       .supportingImage!.isEmpty)
+//                                               ? Container(
+//                                                   width: 70,
+//                                                   height: 70,
+//                                                   color: Colors.grey.shade200,
+//                                                   child: const Icon(
+//                                                       Icons.image_not_supported,
+//                                                       color: Colors.grey,
+//                                                       size: 32),
+//                                                 )
+//                                               :
+//                                               Image.network(
+//   visit.supportingImage!,
+//   width: 70,
+//   height: 70,
+//   fit: BoxFit.cover,
+//   loadingBuilder: (context, child, loadingProgress) {
+//     if (loadingProgress == null) {
+//       // ✅ Image loaded successfully
+//       return child;
+//     } else {
+//       // 🌀 While loading, show a loader
+//       return Container(
+//         width: 70,
+//         height: 70,
+//         alignment: Alignment.center,
+//         color: Colors.grey.shade100,
+//         child: const SizedBox(
+//           width: 24,
+//           height: 24,
+//           child: CircularProgressIndicator(strokeWidth: 2,color: customcolor.blue,),
+//         ),
+//       );
+//     }
+//   },
+//   errorBuilder: (context, error, stackTrace) => Container(
+//     width: 70,
+//     height: 70,
+//     color: Colors.grey.shade200,
+//     alignment: Alignment.center,
+//     child: const Icon(
+//       Icons.broken_image,
+//       color: Colors.grey,
+//       size: 32,
+//     ),
+//   ),
+// )
 
-                                              //  Image.network(
-                                              //     visit.supportingImage!,
-                                              //     width: 70,
-                                              //     height: 70,
-                                              //     fit: BoxFit.cover,
-                                              //     errorBuilder: (context, error,
-                                              //             stackTrace) =>
-                                              //         Container(
-                                              //       width: 70,
-                                              //       height: 70,
-                                              //       color: Colors.grey.shade200,
-                                              //       child: const Icon(
-                                              //           Icons.broken_image,
-                                              //           color: Colors.grey,
-                                              //           size: 32),
-                                              //     ),
-                                              //   ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-    //                                      visit.visitData.isNotEmpty
-    // ? Text(
-    //     visit.visitData[0].trainingVisitCategories ?? "NA",
-    //   )
-    // : Container(),
-                                              Text(
-                                                visit.proposeRemark ?? "NA",
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: customcolor.blue,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              ((roles ==
-                                                              GlobalLists
-                                                                  .clientrole ||
-                                                          roles ==
-                                                              GlobalLists
-                                                                  .reginalmanagerrole) &&
-                                                      visit.empName != null)
-                                                  ? Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                          Row(
-                                                            children: [
-                                                              Text(
-                                                                visit.empName ??
-                                                                    "NA",
-                                                                style:
-                                                                    const TextStyle(
-                                                                  fontSize: 13,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color:
-                                                                      customcolor
-                                                                          .blue,
-                                                                ),
-                                                              ),
-                                                              SizedBox(
-                                                                width: 5,
-                                                              ),
-                                                              Row(
-                                                                children: [
-                                                                  Text(
-                                                                    '(${visit.emp_type_str})',
-                                                                    style:
-                                                                        const TextStyle(
-                                                                      fontSize:
-                                                                          12,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold,
-                                                                      color: customcolor
-                                                                          .blue,
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 6),
-                                                        ])
-                                                  : SizedBox(),
-                                              Row(
-                                                children: [
-                                                  const Icon(
-                                                      Icons
-                                                          .calendar_today_outlined,
-                                                      size: 14,
-                                                      color: Colors.grey),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    visit.date != null
-                                                        ? formatDate(visit.date)
-                                                        : "N/A",
-                                                    style: const TextStyle(
-                                                        color: Colors.black87,
-                                                        fontSize: 13),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  const Icon(
-                                                      Icons
-                                                          .access_time_outlined,
-                                                      size: 14,
-                                                      color: Colors.grey),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    visit.time != null
-                                                        ? formatTime(visit.time)
-                                                        : "N/A",
-                                                    style: const TextStyle(
-                                                        color: Colors.black87,
-                                                        fontSize: 13),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 6),
-                                              const SizedBox(height: 6),
-                                              visit.visitRemarks == null ||
-                                                      visit
-                                                          .visitRemarks!.isEmpty
-                                                  ? SizedBox()
-                                                  : _ExpandableRemark(
-                                                      remark:
-                                                          visit.visitRemarks!),
-                                            ]),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
+//                                               //  Image.network(
+//                                               //     visit.supportingImage!,
+//                                               //     width: 70,
+//                                               //     height: 70,
+//                                               //     fit: BoxFit.cover,
+//                                               //     errorBuilder: (context, error,
+//                                               //             stackTrace) =>
+//                                               //         Container(
+//                                               //       width: 70,
+//                                               //       height: 70,
+//                                               //       color: Colors.grey.shade200,
+//                                               //       child: const Icon(
+//                                               //           Icons.broken_image,
+//                                               //           color: Colors.grey,
+//                                               //           size: 32),
+//                                               //     ),
+//                                               //   ),
+//                                         ),
+//                                       ),
+//                                       const SizedBox(width: 12),
+//                                       Expanded(
+//                                         child:
+//                                          Column(
+//                                             crossAxisAlignment:
+//                                                 CrossAxisAlignment.start,
+//                                                  mainAxisSize: MainAxisSize.min, 
+//                                             children: [
+//     //                                     
+
+//                                                Text(
+//       "Traning , Consumables",
+//       style: const TextStyle(
+//         fontSize: 12,
+//         fontWeight: FontWeight.bold,
+//         color: customcolor.blue,
+//       ),
+//       maxLines: 1,
+//       overflow: TextOverflow.ellipsis,
+//     ),
+
+//     const SizedBox(height: 4),
+
+//     /// 🔹 Names (Black)
+//     Text(
+//       "Safety Training ,Deep cleaning ,MIcrofiber, Colo,",
+//       style: const TextStyle(
+//         fontSize: 12,
+//         fontWeight: FontWeight.w500,
+//         color: customcolor.black,
+//       ),
+//       maxLines: 2,
+//       overflow: TextOverflow.ellipsis,
+//     ),
+
+//     const SizedBox(height: 6),
+
+//                                               Text(
+//                                                 visit.proposeRemark ?? "NA",
+//                                                 style: const TextStyle(
+//                                                   fontSize: 16,
+//                                                   fontWeight: FontWeight.bold,
+//                                                   color: customcolor.blue,
+//                                                 ),
+//                                               ),
+//                                               // const SizedBox(height: 6),
+//                                               ((roles ==
+//                                                               GlobalLists
+//                                                                   .clientrole ||
+//                                                           roles ==
+//                                                               GlobalLists
+//                                                                   .reginalmanagerrole) &&
+//                                                       visit.empName != null)
+//                                                   ? Column(
+//                                                       crossAxisAlignment:
+//                                                           CrossAxisAlignment
+//                                                               .start,
+//                                                       children: [
+//                                                           Row(
+//                                                             children: [
+//                                                               Text(
+//                                                                 visit.empName ??
+//                                                                     "NA",
+//                                                                 style:
+//                                                                     const TextStyle(
+//                                                                   fontSize: 13,
+//                                                                   fontWeight:
+//                                                                       FontWeight
+//                                                                           .bold,
+//                                                                   color:
+//                                                                       customcolor
+//                                                                           .blue,
+//                                                                 ),
+//                                                               ),
+//                                                               SizedBox(
+//                                                                 width: 5,
+//                                                               ),
+//                                                               Row(
+//                                                                 children: [
+//                                                                   Text(
+//                                                                     '(${visit.emp_type_str})',
+//                                                                     style:
+//                                                                         const TextStyle(
+//                                                                       fontSize:
+//                                                                           12,
+//                                                                       fontWeight:
+//                                                                           FontWeight
+//                                                                               .bold,
+//                                                                       color: customcolor
+//                                                                           .blue,
+//                                                                     ),
+//                                                                   ),
+//                                                                 ],
+//                                                               ),
+//                                                             ],
+//                                                           ),
+//                                                           const SizedBox(
+//                                                               height: 6),
+//                                                         ])
+//                                                   : SizedBox(),
+//                                               Row(
+//                                                 children: [
+//                                                   const Icon(
+//                                                       Icons
+//                                                           .calendar_today_outlined,
+//                                                       size: 14,
+//                                                       color: Colors.grey),
+//                                                   const SizedBox(width: 4),
+//                                                   Text(
+//                                                     visit.date != null
+//                                                         ? formatDate(visit.date)
+//                                                         : "N/A",
+//                                                     style: const TextStyle(
+//                                                         color: Colors.black87,
+//                                                         fontSize: 13),
+//                                                   ),
+//                                                   const SizedBox(width: 12),
+//                                                   const Icon(
+//                                                       Icons
+//                                                           .access_time_outlined,
+//                                                       size: 14,
+//                                                       color: Colors.grey),
+//                                                   const SizedBox(width: 4),
+//                                                   Text(
+//                                                     visit.time != null
+//                                                         ? formatTime(visit.time)
+//                                                         : "N/A",
+//                                                     style: const TextStyle(
+//                                                         color: Colors.black87,
+//                                                         fontSize: 13),
+//                                                   ),
+//                                                 ],
+//                                               ),
+//                                               const SizedBox(height: 6),
+//                                               const SizedBox(height: 6),
+//                                               visit.visitRemarks == null ||
+//                                                       visit
+//                                                           .visitRemarks!.isEmpty
+//                                                   ? SizedBox()
+//                                                   : _ExpandableRemark(
+//                                                       remark:
+//                                                           visit.visitRemarks!),
+//                                             ]),
+//                                       ),
+//                                     ],
+//                                   ),
+//                                 ),
+//                               );
                             },
                           ),
                   ),
@@ -506,7 +677,7 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => OperationVisitPage(roles)),
+                              builder: (context) => OperationVisitPage(roles,false,"")),
                         );
                       },
                       icon: const Icon(Icons.add, color: Colors.white),
@@ -615,7 +786,7 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
   void showImageListDialog(
   BuildContext context,
   String title,
-  List<VisitItem> items,
+  List<TrainingImage> items,
 ) {
   showDialog(
     context: context,
@@ -632,74 +803,157 @@ class _ClientOperationVisitCardState extends State<ClientOperationVisitCard> {
               _buildDialogHeader(context, title),
 
               const SizedBox(height: 16),
+items.isEmpty
+    ? Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text("No Images Available"),
+      )
+    : SizedBox(
+        height: 200, // 🔥 control height of image cards
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
 
-              items.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text("No Images Available"),
-                    )
-                  : SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: items.map((item) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Column(
-                              children: [
+            return Container(
+              width: MediaQuery.of(context).size.width * 0.8, // 🔥 full-width feel
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
-                                /// 🔹 NAME (Training, Process...)
-                                Text(
-                                  item.name,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
+                  /// 🔹 TITLE
+                  Row(
+                    children: [
+                      Text(
+                                       "${item.trainingVisitCategory} :" ?? "",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: customcolor.blue,
+                          fontFamily: 'Roboto',
+                        ),
+                      ),
+                      Text(
+                 "${item.trainingVisitName}" ?? "",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: customcolor.black,
+                      fontFamily: 'Roboto',
+                    ),
+                  ),
 
-                                const SizedBox(height: 6),
+                    ],
+                  ),
 
-                                /// 🔹 IMAGE / ICON
-                                GestureDetector(
-                                  onTap: () {
-                                    if (item.image != null) {
-                                      _showFullImageDialog(
-                                        context,
-                                        item.image!.path,
-                                        item.name,
-                                      );
-                                    }
-                                  },
-                                  child: item.image != null
-                                      ? ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          child: Image.file(
-                                            item.image!,
-                                            width: 70,
-                                            height: 70,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        )
-                                      : Container(
-                                          width: 70,
-                                          height: 70,
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[200],
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Image.file(
-                                            item.image!,
-                                            color: Colors.black54,
-                                          ),
-                                        ),
-                                ),
-                              ],
-                            ),
+                  const SizedBox(height: 8),
+
+                  /// 🔹 IMAGE
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (item.imageUrl != null &&
+                            item.imageUrl!.isNotEmpty) {
+                          _showFullImageDialog(
+                            context,
+                            item.imageUrl!,
+                            item.trainingVisitName!,
                           );
-                        }).toList(),
+                        }
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: item.imageUrl != null &&
+                                item.imageUrl!.isNotEmpty
+                            ? Image.network(
+                                item.imageUrl!,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                color: Colors.grey[200],
+                                child: Center(
+                                  child: Icon(Icons.image_not_supported),
+                                ),
+                              ),
                       ),
                     ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+              // items.isEmpty
+              //     ? Padding(
+              //         padding: const EdgeInsets.all(20.0),
+              //         child: Text("No Images Available"),
+              //       )
+              //     : SingleChildScrollView(
+              //         scrollDirection: Axis.horizontal,
+              //         child: Column(
+              //           children: items.map((item) {
+              //             print( item.imageUrl!,);
+              //             return Padding(
+              //               padding: const EdgeInsets.symmetric(horizontal: 8),
+              //               child: Column(
+              //                 children: [
+
+              //                   /// 🔹 NAME (Training, Process...)
+              //                   Text(
+              //                     item.trainingVisitName!,
+              //                     style: TextStyle(
+              //                       fontSize: 12,
+              //                       color: Colors.grey,
+              //                         fontFamily: 'Roboto', 
+              //                     ),
+              //                   ),
+
+              //                   const SizedBox(height: 6),
+
+              //                   /// 🔹 IMAGE / ICON
+              //                   GestureDetector(
+              //                     onTap: () {
+              //                       if (item.imageUrl != null) {
+              //                         _showFullImageDialog(
+              //                           context,
+              //                           item.imageUrl!,
+              //                           item.trainingVisitName!,
+              //                         );
+              //                       }
+              //                     },
+              //                     child: item.imageUrl != null
+              //                         ? ClipRRect(
+              //                             borderRadius:
+              //                                 BorderRadius.circular(8),
+              //                             child: Image.network(
+              //                               item.imageUrl!,
+              //                               width: 70,
+              //                               height: 70,
+              //                               fit: BoxFit.cover,
+              //                             ),
+              //                           )
+              //                         : Container(
+              //                             width: 70,
+              //                             height: 70,
+              //                             decoration: BoxDecoration(
+              //                               color: Colors.grey[200],
+              //                               borderRadius:
+              //                                   BorderRadius.circular(8),
+              //                             ),
+              //                             child: Image.network(
+              //                               item.imageUrl!,
+              //                               color: Colors.black54,
+              //                             ),
+              //                           ),
+              //                   ),
+              //                 ],
+              //               ),
+              //             );
+              //           }).toList(),
+              //         ),
+              //       ),
             ],
           ),
         ),
@@ -938,16 +1192,18 @@ void _showFullImageDialog(BuildContext context, String imageUrl, String label) {
                             left: 12,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                  horizontal: 8, vertical: 10),
                               decoration: BoxDecoration(
                                 color: Colors.green.withOpacity(0.8),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Text(
-                                label,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                              child: Center(
+                                child: Text(
+                                  label,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),

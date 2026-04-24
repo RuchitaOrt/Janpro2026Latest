@@ -273,7 +273,7 @@ class _OperationVisitCardPageState extends State<OperationVisitCardPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => OperationVisitPage(roles)),
+                          builder: (context) => OperationVisitPage(roles,false,"")),
                     );
                   },
                   icon: Icon(Icons.add, color: Colors.white),
@@ -300,7 +300,7 @@ class _OperationVisitCardPageState extends State<OperationVisitCardPage> {
   navigatTovist() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => OperationVisitPage(roles)),
+      MaterialPageRoute(builder: (context) => OperationVisitPage(roles,false,"")),
     );
   }
 

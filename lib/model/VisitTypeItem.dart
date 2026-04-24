@@ -29,18 +29,21 @@ class VisitCategory {
     required this.items,
   });
 }
-
 class VisitItem {
   String name;
+  String id;
   bool isSelected;
-   String id;
   File? image;
+
+  /// 🔥 ADD THIS
+  String? networkImage;
 
   VisitItem({
     required this.name,
     required this.id,
     this.isSelected = false,
     this.image,
+    this.networkImage,
   });
 }
 // class VisitItem {
