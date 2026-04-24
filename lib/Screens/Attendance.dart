@@ -1,5 +1,3 @@
-// ignore_for_file: unused_local_variable, prefer_final_fields, deprecated_member_use, unnecessary_null_comparison, avoid_unnecessary_containers, sort_child_properties_last, sized_box_for_whitespace, curly_braces_in_flow_control_structures, unnecessary_brace_in_string_interps, no_leading_underscores_for_local_identifiers, unused_field, unused_element, unnecessary_string_interpolations, prefer_if_null_operators, avoid_function_literals_in_foreach_calls, library_private_types_in_public_api, prefer_const_constructors_in_immutables, prefer_typing_uninitialized_variables, use_key_in_widget_constructors
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -58,6 +56,7 @@ class Attendance extends StatefulWidget {
   final String? clientname;
 
   Attendance(this.clientname);
+
   //overall im getting
 
   @override
@@ -72,9 +71,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
 
   var mobilecontroller = new TextEditingController();
+
   // var datecontroller = new TextEditingController();
   var clientnamecontroller = new TextEditingController();
   List<EmployeeList> unitemployeelist = [];
+
   // List<Janitorcheckbox> dropdownList = [];
   var selectedDateTime;
   String selectedValue = "Pending";
@@ -89,6 +90,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   String clientname = "";
 
   String _isSelected = "";
+
   // List<unitatt.Datum> mainlisttab = [];
   // late Data attendancedata;
   bool isdataloaded = false;
@@ -113,6 +115,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   final scrollController = ScrollController();
   bool isExpandedSite = false;
+
   @override
   void initState() {
     super.initState();
@@ -123,6 +126,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   String month = '';
   String year = '';
+
   Widget _legendDot(Color color, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -144,6 +148,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
       ],
     );
   }
+
   // int count
 
   _fetchAttendanceRoster() async {
@@ -239,7 +244,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
             }
 
             if (rosterResponse.status == "success") {
-              GlobalLists.downloadRosterLink=rosterResponse.monthly_roster_report;
+              GlobalLists.downloadRosterLink =
+                  rosterResponse.monthly_roster_report;
               setState(() {
                 _attendanceRosterData = rosterResponse.data;
                 print(
@@ -352,8 +358,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   var clientId;
   var userId;
   var siteId;
- 
- 
+
   void _showRosterDialog() {
     if (!mounted || context == null || _attendanceRosterData.isEmpty) return;
     final _horizontalScrollKey = GlobalKey();
@@ -1015,7 +1020,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               ),
                             ],
                           ),
-                        
                         ],
                       ),
 
@@ -2799,32 +2803,43 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       onPressed: () {
                                         log('_isSelected');
                                         log('role');
-                                          _isSelected=='OverAll'||(role=='1' &&maintag==0)?  ShowDialogs.showToast('Please select client-site'):
-                                      
-                                        // _fetchAttendanceRoster();
-                                        Navigator.push(
-                                          context,
-                                          PageRouteBuilder(
-                                            pageBuilder: (context, animation1,
-                                                animation2) =>
-                                                ViewAttendanceRoster(
-                                              maintag: maintag,
-                                              attendancesiteid: GlobalLists
-                                                  .mainlisttab[maintag]
-                                                  .siteId,
-                                              attendanceshiftid:attendanceshiftid,
-                                              attendanceRosterData: _attendanceRosterData,
-                                              month: month,
-                                              year: year,
-                                              attendanceclientid: attendanceclientid,
-                                              role: role.toString(),
-                                              // onReloadData: refreshData,
-                                            ),
-                                            transitionDuration:
-                                                Duration(seconds: 0),
-                                          ),
-                                        );
-                                     
+                                        _isSelected == 'OverAll' ||
+                                                (role == '1' && maintag == 0)
+                                            ? ShowDialogs.showToast(
+                                                'Please select client-site',
+                                              )
+                                            :
+                                              // _fetchAttendanceRoster();
+                                              Navigator.push(
+                                                context,
+                                                PageRouteBuilder(
+                                                  pageBuilder:
+                                                      (
+                                                        context,
+                                                        animation1,
+                                                        animation2,
+                                                      ) => ViewAttendanceRoster(
+                                                        maintag: maintag,
+                                                        attendancesiteid:
+                                                            GlobalLists
+                                                                .mainlisttab[maintag]
+                                                                .siteId,
+                                                        attendanceshiftid:
+                                                            attendanceshiftid,
+                                                        attendanceRosterData:
+                                                            _attendanceRosterData,
+                                                        month: month,
+                                                        year: year,
+                                                        attendanceclientid:
+                                                            attendanceclientid,
+                                                        role: role.toString(),
+                                                        // onReloadData: refreshData,
+                                                      ),
+                                                  transitionDuration: Duration(
+                                                    seconds: 0,
+                                                  ),
+                                                ),
+                                              );
                                       },
                                       child: Text('View Attendance Roster'),
                                       style: ElevatedButton.styleFrom(
@@ -2845,7 +2860,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               ),
                             ),
                           )
-                        : Padding(
+                        :
+                        // Supervisor
+                        Padding(
                             padding: const EdgeInsets.only(
                               left: 10,
                               right: 10,
@@ -3130,68 +3147,78 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                         ],
                                       ),
                                     ),
-                                 
+
                                     SizedBox(height: 10),
                                     GlobalLists.mainlisttab.length > 0
                                         ? Wrap(children: _buildChoicemainList())
                                         : Container(),
-                                        SizedBox(height: 10,),
+                                    SizedBox(height: 10),
 
-                                            role ==
-                                                                    GlobalLists
-                                                                        .supervisorrole
-                                                                ?      
-                                    ElevatedButton(
-                                      onPressed: () {
-                                      log(_isSelected);
-                                       log('_isSelected');
-                                        log('role$role');
-                                        log('maintag$maintag');
+                                    role == GlobalLists.supervisorrole
+                                        ? ElevatedButton(
+                                            onPressed: () {
+                                              log(_isSelected);
+                                              log('_isSelected');
+                                              log('role$role');
+                                              log('maintag$maintag');
 
-                                          _isSelected=='OverAll'||(role=='1' &&maintag==0)?  ShowDialogs.showToast('Please select client-site'):
-                                      
-                                        // _fetchAttendanceRoster();
-                                        Navigator.push(
-                                          context,
-                                          PageRouteBuilder(
-                                            pageBuilder: (context, animation1,
-                                                animation2) =>
-                                                ViewAttendanceRoster(
-                                              maintag: maintag,
-                                              attendancesiteid: GlobalLists
-                                                  .mainlisttab[maintag]
-                                                  .siteId,
-                                               attendanceshiftid:attendanceshiftid,
-                                              attendanceRosterData: _attendanceRosterData,
-                                              month: month,
-                                              year: year,
-                                              attendanceclientid: attendanceclientid,
-                                              role: role.toString(),
-                                              // onReloadData: refreshData,
+                                              _isSelected == 'OverAll' ||
+                                                      (role == '1' &&
+                                                          maintag == 0)
+                                                  ? ShowDialogs.showToast(
+                                                      'Please select client-site',
+                                                    )
+                                                  :
+                                                    // _fetchAttendanceRoster();
+                                                    Navigator.push(
+                                                      context,
+                                                      PageRouteBuilder(
+                                                        pageBuilder:
+                                                            (
+                                                              context,
+                                                              animation1,
+                                                              animation2,
+                                                            ) => ViewAttendanceRoster(
+                                                              maintag: maintag,
+                                                              attendancesiteid:
+                                                                  GlobalLists
+                                                                      .mainlisttab[maintag]
+                                                                      .siteId,
+                                                              attendanceshiftid:
+                                                                  attendanceshiftid,
+                                                              attendanceRosterData:
+                                                                  _attendanceRosterData,
+                                                              month: month,
+                                                              year: year,
+                                                              attendanceclientid:
+                                                                  attendanceclientid,
+                                                              role: role
+                                                                  .toString(),
+                                                              // onReloadData: refreshData,
+                                                            ),
+                                                        transitionDuration:
+                                                            Duration(
+                                                              seconds: 0,
+                                                            ),
+                                                      ),
+                                                    );
+                                            },
+                                            child: Text(
+                                              'View Attendance Roster',
                                             ),
-                                            transitionDuration:
-                                                Duration(seconds: 0),
-                                          ),
-                                        );
-                                     
-                                      },
-                                      child: Text('View Attendance Roster'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: customcolor.blue,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                      ),
-                                    ):SizedBox(height: 10),
-                                  
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: customcolor.blue,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                            ),
+                                          )
+                                        : SizedBox(height: 10),
                                     //workflow
                                     SizedBox(height: 10),
                                     maintag == 0
-                                        ? GlobalLists
-                                                      .superviorgraphlist
-                                                      .length >
+                                        ? GlobalLists.superviorgraphlist.length >
                                                   0
                                               ? supervisoroverallgraph(
                                                   GlobalLists
@@ -3302,10 +3329,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                 radius: 40.0,
                                                                 //   lineWidth: 5.0,
                                                                 animation: true,
-                                                                percent:
-                                                                    GlobalLists
-                                                                            .attendancedata!
-                                                                            .percentage >
+                                                                percent: GlobalLists.attendancedata!.percentage >
                                                                         100.0
                                                                     ? 0.0
                                                                     : GlobalLists
@@ -3422,8 +3446,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       isexpandedclient = false;
 
                                       isexpandedjanitor = false;
-
-
 
                                       selectedJanitorIds.clear();
                                       addaddtendance(context);
@@ -3788,7 +3810,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         .id
                         .toString();
 
-                        log('attendanceshiftid ${attendanceshiftid}');
+                    log('attendanceshiftid ${attendanceshiftid}');
                   } else {
                     attendanceshiftid = "";
                   }
@@ -3864,7 +3886,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
               backgroundColor: customcolor.white,
               selected: maintag == value,
               onSelected: (selected) {
-
                 setState(() {
                   _isSelected = item.clientName;
                   maintag = value;
@@ -4067,7 +4088,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                               )
                                             : null,
                                         onTap: () {
-                                          
                                           Navigator.pop(context);
                                           final value = GlobalLists.mainlisttab
                                               .indexOf(item);
@@ -4469,7 +4489,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
                       SizedBox(height: 15),
 
-                    
                       Expanded(
                         child: GlobalLists.dropdownList.isEmpty
                             ? Center(
@@ -4488,7 +4507,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       GlobalLists.dropdownList[index];
                                   final isSelected = selectedJanitorIds
                                       .contains(int.parse(janitor.id));
-
                                   return Container(
                                     margin: EdgeInsets.only(bottom: 8),
                                     decoration: BoxDecoration(
@@ -4557,36 +4575,74 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               "Please select at least one janitor",
                             );
                           } else {
-                            print("COMING MARK");
-                            // print(GlobalLists
-                            //                           .mainlisttab[maintag]
-                            //                           .attendanceDetails[tag]
-                            //                           .count);
+                            print("COMING MARK ${GlobalLists.mainlisttab.length}");
+                            //Safe checks for RangeError
+                           /* if (maintag < 0 || maintag >= GlobalLists.mainlisttab.length) {
+                              print("Invalid maintag index: $maintag");
+                              ShowDialogs.showToast(
+                                "Invalid maintag index $maintag",
+                              );
+                              return;
+                            }
 
-                           
-                             int count = int.tryParse(GlobalLists
-                                                      .mainlisttab[maintag]
-                                                      .attendanceDetails[tag]
-                                                      .count.toString() ?? "0") ?? 0;
-  int total = int.tryParse(GlobalLists
-                                                      .mainlisttab[maintag]
-                                                      .attendanceDetails[tag]
-                                                      .noOfStaff.toString() ?? "0") ?? 0;
+                            final attendanceList = GlobalLists
+                                .mainlisttab[maintag]
+                                .attendanceDetails;
+                            if (tag < 0 || tag >= attendanceList.length) {
+                              print("Invalid tag index: $tag");
+                              ShowDialogs.showToast("Invalid tag index: $tag");
+                              return;
+                            }
 
-  int remaining = total - count;
+                            final attendance = attendanceList[tag];*/
+                        /*    int count = int.tryParse(
+                                  attendance.count?.toString() ?? "0",
+                                ) ??
+                                0;
+                            int total =
+                                int.tryParse(
+                                  attendance.noOfStaff?.toString() ?? "0",
+                                ) ??
+                                0;*/
 
-  if (remaining <= 0) {
-    ShowDialogs.showToast("All janitors already marked");
-    return;
-  }
 
-  if (selectedJanitorIds.length > remaining) {
-    ShowDialogs.showToast(
-      "You can only select $remaining janitor(s)",
-    );
-    return;
-  }
+                            /* int count = int.tryParse(
+                                  GlobalLists
+                                          .mainlisttab[maintag]
+                                          .attendanceDetails[tag]
+                                          .count
+                                          .toString() ??
+                                      "0",
+                                ) ??
+                                0;
+                            int total =
+                                int.tryParse(
+                                  GlobalLists
+                                          .mainlisttab[maintag]
+                                          .attendanceDetails[tag]
+                                          .noOfStaff
+                                          .toString() ??
+                                      "0",
+                                ) ??
+                                0;
 
+*/
+                            int total= GlobalLists.attendancedata.noOfStaff;
+                            int count= GlobalLists.attendancedata.count;
+                            int remaining = total - count;
+                            if (remaining <= 0) {
+                              ShowDialogs.showToast(
+                                "All janitors already marked",
+                              );
+                              return;
+                            }
+
+                            if (selectedJanitorIds.length > remaining) {
+                              ShowDialogs.showToast(
+                                "You can only select $remaining janitor(s)",
+                              );
+                              return;
+                            }
                             addattendanceApi();
                           }
                         },
@@ -5162,6 +5218,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   }
 
   bool isattendanceLoadin = false;
+
   //attendance api catch store
   attendanceApi() async {
     log('api called attendanceApi');
@@ -5775,17 +5832,17 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     log(' In side addattendanceApi');
     var status1 = await ConnectionDetector.checkInternetConnection();
     var map = <String, dynamic>{};
-      List<Map<String, dynamic>> attendanceDetails = [];
+    List<Map<String, dynamic>> attendanceDetails = [];
 
-  for (var janitor in GlobalLists.dropdownList) {
-    final id = int.parse(janitor.id);
-    if (selectedJanitorIds.contains(id)) {
-      attendanceDetails.add({
-        "name": janitor.name,
-        "contact": int.parse(janitor.contact),
-      });
+    for (var janitor in GlobalLists.dropdownList) {
+      final id = int.parse(janitor.id);
+      if (selectedJanitorIds.contains(id)) {
+        attendanceDetails.add({
+          "name": janitor.name,
+          "contact": int.parse(janitor.contact),
+        });
+      }
     }
-  }
 
     if (role == GlobalLists.unitrole ||
         role == GlobalLists.operationrole ||
@@ -5806,10 +5863,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           .split('T')[1]
           .split('.')[0];
     } else {
-    map['attendnace_details'] = jsonEncode(attendanceDetails);
+      map['attendnace_details'] = jsonEncode(attendanceDetails);
 
       map['name'] = namecontroller.text.trim();
-      map['contact'] = mobilecontroller.text.trim();  
+      map['contact'] = mobilecontroller.text.trim();
       map['client_id'] = GlobalLists.clientid;
       map['site_id'] = GlobalLists.siteid;
       map['latitude'] = lat;
@@ -5948,8 +6005,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   //janitorlist for attendance
   janotoragendaApi(String idclient, String idsite) async {
     var status1 = await ConnectionDetector.checkInternetConnection();
-
- 
 
     var map = {'client_id': idclient, 'site_id': idsite};
 
