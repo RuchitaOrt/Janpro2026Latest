@@ -292,6 +292,7 @@ setState(() {
             ShowDialogs.showToast(resp.msg);
             log('resp.msg ${resp.msg}');
             SPManager().setAuthToken(resp.token);
+             SPManager().setRMID(resp.data.rm_id);
             SPManager().setsupervisorid(resp.data.id.toString());
             GlobalLists.role = resp.data.empType.toString();
             log(GlobalLists.role, name: 'role');

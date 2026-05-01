@@ -7,8 +7,11 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:another_flushbar/flushbar.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:janpro/DBHelper/db_helper.dart';
 import 'package:janpro/Screens/client_visit_view.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
+import 'package:janpro/const/global.dart';
+import 'package:janpro/model/RankingResponse.dart';
 import 'package:janpro/widgets/SupervisorRankingSection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
@@ -187,6 +190,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
   int selectedindex = 0;
   String? role = "1";
+  String rmID="";
   late TabController _tabControllermain;
   final List<Tab> tabsmain = <Tab>[];
   int _counter = 0;
@@ -220,15 +224,18 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
   var uploadcontroller = new TextEditingController();
   backGroundRun background = backGroundRun();
   bool visitCount = false;
-   String selectedMonth = "March";
-  int selectedYear = 2026;
+ String selectedMonth = DateFormat('MMMM').format(DateTime.now());
+  int selectedYear = DateTime.now().year;
 
   final List<String> months = [
     "January","February","March","April","May","June",
     "July","August","September","October","November","December"
   ];
 
-  final List<int> years = List.generate(5, (index) => 2024 + index);
+   final List<int> years = List.generate(
+  DateTime.now().year - 2022 + 1,
+  (index) => DateTime.now().year - index,
+);
   @override
   void initState() {
     super.initState();
@@ -252,6 +259,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
 
   getrole() async {
     role = await SPManager().getroleid();
+    
     if (role == GlobalLists.clientrole ||
         role == GlobalLists.headrole ||
         role == GlobalLists.reginalmanagerrole) {
@@ -282,27 +290,22 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
       await trainingagendaApi();
       await janotoragendaApi("", "");
     }
+
+//sup ue oe om hoo rm
+
+      if (role == GlobalLists.supervisorrole 
+      
+      || role == GlobalLists.unitrole ||
+        role == GlobalLists.operationrole ||
+        role == GlobalLists.headrole ||
+        role == GlobalLists.reginalmanagerrole ||
+        role == GlobalLists.operationmanagerrole) {
+print("SUPAERVISOR RANK");
+ supervisorRankingApi();
+        }
+   
   }
 
-  // getAttandance() async {
-  //   role = await SPManager().getroleid();
-
-  //   if (role == GlobalLists.supervisorrole) {
-  //     background.janotoragendaApi(
-  //         GlobalLists.clientid, GlobalLists.siteid, context);
-  //   }
-  //   if (role == GlobalLists.unitrole ||
-  //       role == GlobalLists.operationrole ||
-  //       role == GlobalLists.operationmanagerrole ||
-  //       role == GlobalLists.headrole ||
-  //       role == GlobalLists.reginalmanagerrole ||
-  //       role == GlobalLists.clientrole) {
-  //     background.unitattendanceApi(context, role);
-  //   } else {
-  //     await background.attendanceApi(context);
-  //   }
-  //   // GlobalLists.isloadedAttendance = true;
-  // }
 
   getAttandance() async {
     role = await SPManager().getroleid();
@@ -421,6 +424,8 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
 
   getworkeflow() async {
     role = (await SPManager().getroleid())!;
+
+   
     print("R O L E");
     print(role);
     print(GlobalLists.shiftid);
@@ -1137,7 +1142,11 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                       role == GlobalLists.operationmanagerrole)
                                 ? headcard()
                                 : supervisormodule(),
-
+  // (role == GlobalLists.headrole ||
+  //               role == GlobalLists.reginalmanagerrole ||
+  //         role == GlobalLists.unitrole ||
+  //               role == GlobalLists.operationrole ||
+  //               role == GlobalLists.operationmanagerrole)?Text("supervisor rank"):Container()
                                
                           ],
                         ),
@@ -1252,6 +1261,121 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                     role == GlobalLists.operationmanagerrole)
                               ? headcard()
                               : supervisormodule(),
+                           (role == GlobalLists.supervisorrole || role == GlobalLists.unitrole ||
+        role == GlobalLists.operationrole ||
+        role == GlobalLists.headrole ||
+        role == GlobalLists.reginalmanagerrole ||
+        role == GlobalLists.operationmanagerrole) ?
+         Material(
+            elevation: 0,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: SizeConfig.blockSizeHorizontal * 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+               mainAxisAlignment: MainAxisAlignment.start,
+  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child:   Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: customcolor.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                      Icons.star, // you can change per category
+                        color: customcolor.white,
+                        size: 20,
+                      ),
+                    ),
+                            ),
+                            SizedBox(width: 5),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Container(
+                                child:
+                               Column(
+  mainAxisAlignment: MainAxisAlignment.start,
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+
+    /// TITLE
+    const Text(
+      "SUPERVISOR RANKINGS",
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    SizedBox(height: 10,),
+Row(
+  children: [
+
+    /// 📅 MONTH
+  _buildCompactDropdown<String>(
+  value: selectedMonth,
+  items: months,
+  onChanged: (val) {
+    setState(() => selectedMonth = val!);
+    supervisorRankingApi(); // 🔥 CALL API
+  },
+),
+    const SizedBox(width: 8),
+
+    /// 📆 YEAR
+   _buildCompactDropdown<int>(
+  value: selectedYear,
+  items: years,
+  onChanged: (val) {
+    setState(() => selectedYear = val!);
+    supervisorRankingApi(); // 🔥 CALL API
+  },
+),
+  ],
+)
+    /// FILTERS
+  
+  ],
+),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        
+                                   
+                        //  SizedBox(width: 2,)
+                      ],
+                    ),
+                     SizedBox(height: 20,),
+                 isLoadingRanking
+    ? SizedBox(
+        height: 190,
+        child: Center(child: CircularProgressIndicator(color: customcolor.blue,)),
+      )
+    :   SupervisorRankingSection(rankings: superviorRankingList,),
+                  ],
+                ),
+              ),
+            ),
+          ):Container(),
+
+          SizedBox(height: 30,)
+
                         ],
                       ),
                     ),
@@ -2514,265 +2638,6 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                         ],
                       ),
 
-                      //                         Stack(
-                      //                           children: [
-                      //                             Column(
-                      //                               children: [
-                      //                                  SizedBox(height: 20,),
-                      //                         //          FormTextField(
-                      //                         //   textcontroller: namecontroller,
-                      //                         //   placeholderStr: "Name of Janitor Trained",
-
-                      //                         //   textInputType: TextInputType.text,
-                      //                         //   onchange: (val) {
-
-                      //                         //   },
-                      //                         // ),
-                      //                                   Container(
-                      //                                       height: 47,
-
-                      // decoration: BoxDecoration(
-
-                      //     borderRadius: BorderRadius.circular(10),
-                      //     border: Border.all(width: 1, color: customcolor.greyborder)),
-                      //                                     child: Padding(
-                      //                                       padding: const EdgeInsets.only(left: 5),
-                      //                                       child: RawAutocomplete<Janitorcheckbox>(
-                      //                                                                         //  textEditingController: textEditingController1,
-                      //                                                             optionsBuilder: (TextEditingValue textEditingValue) {
-
-                      //                                                               if (textEditingValue.text == '') {
-
-                      //                                                                  List<Janitorcheckbox> matches = <Janitorcheckbox>[];
-                      //                                                                   matches.addAll(dropdownList);
-
-                      //                                                                   // matches.retainWhere((s){
-                      //                                                                   //   return s.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                      //                                                                   // });
-                      //                                                                   return matches.toList();
-                      //                                                               //  return const Iterable<String>.empty();
-                      //                                                               }else{
-                      //                                                                   List<Janitorcheckbox> matches = <Janitorcheckbox>[];
-                      //                                                                   matches.addAll(dropdownList);
-                      //                                                      return matches
-                      //                                                                 .where((Janitorcheckbox category) => category.name.toLowerCase()
-                      //                                                                   .startsWith(textEditingValue.text.toLowerCase())
-                      //                                                                 )
-                      //                                                                 .toList();
-
-                      //                                                               }
-                      //                                                             },
-                      //                                                     displayStringForOption: (Janitorcheckbox option) => option.name,
-                      //                                                             onSelected: (Janitorcheckbox selection) {
-                      //                                                               FocusScope.of(context).unfocus();
-                      //                                                                 print('You just selected category${selection}');
-                      //                                                                 setState(() {
-
-                      //                                                                 });
-                      //                                                             },
-
-                      //                                                             fieldViewBuilder: (BuildContext context, TextEditingController textEditingController,
-                      //                                                                 FocusNode focusNode,
-                      //                                                                 VoidCallback onFieldSubmitted) {
-                      //                                                                   textEditingController.text=janitorname;
-                      //                                                                   textEditingController.selection = TextSelection.collapsed(offset: textEditingController.text.length);
-                      //                                                                //    textEditingController.selection = TextSelection.fromPosition(TextPosition(offset: textEditingController.text.length));
-                      //                                                                   return
-                      //                                                                   TextField(
-                      //                                                           onChanged: (val)
-                      //                                                           {
-                      //                                                                                 //                         final val = TextSelection.collapsed(offset: textEditingController.text.length);
-                      //                                                                                 //  textEditingController.selection = val;
-                      //                                                           },
-                      //                                                           decoration: InputDecoration(
-                      //                                                             hintText: "Name of Janitor Trained",
-                      //                                                                           border: InputBorder.none,
-                      //                                                                           labelStyle:
-                      //              AppFonts.headerStyle(fontSize:14,
-                      //                     color: customcolor.hinttext,
-                      //                     fontWeight: FontWeight.w400  ),
-
-                      //           hintStyle:  AppFonts.headerStyle(fontSize:14,
-                      //                     color: customcolor.hinttext,
-                      //                     fontWeight: FontWeight.w400  ),
-                      //                                                             // enabledBorder: UnderlineInputBorder(
-                      //                                                             //   borderSide: BorderSide(color: customcolor.greybg),
-                      //                                                             // ),
-                      //                                                             // focusedBorder: UnderlineInputBorder(
-                      //                                                             //   borderSide: BorderSide(color: customcolor.greybg),
-                      //                                                             // ),
-                      //                                                             suffixIcon:
-                      //                                                               GestureDetector(
-                      //                                                               onTap: ()
-                      //                                                               {
-                      //                                                     setState(() {
-
-                      //                                                     textEditingController.text="";
-
-                      //                                                     });
-                      //                                                               },
-                      //                                                               child:
-                      //                                                        Image.asset(
-                      //                           "assets/images/dropdown.png",
-                      //                         scale:2.6,
-                      //                           width: 2,
-                      //                           height: 2,
-                      //                                                         ),
-                      //                                                     //           Icon(
-                      //                                                     //   Icons.arrow_drop_down_sharp,
-                      //                                                     //   color:customcolor.greyborder,
-                      //                                                     // ),
-                      //                                                             ),
-                      //                                                           ),
-                      //                                                           controller: textEditingController,
-
-                      //                                                           focusNode: focusNode,
-
-                      //                                                           onSubmitted: (String value) {
-
-                      //                                                           },
-                      //                                                                   );
-                      //                                                             },
-
-                      //                                                             optionsViewBuilder: (BuildContext context, void Function(Janitorcheckbox) onSelected,
-                      //                                                                        Iterable<Janitorcheckbox> options) {
-                      //                                                                 return Align(
-                      //                                                               alignment: Alignment.topLeft,
-                      //                                                               child: Material(
-                      //                                                                 elevation: 1,
-                      //                                                                 shape: const RoundedRectangleBorder(
-                      //                                                                   borderRadius: BorderRadius.vertical(bottom: Radius.circular(4.0)),
-                      //                                                                 ),
-                      //                                                                 child: Column(
-                      //                                                                   children: [
-                      //                                                                     Container(
-                      //                                                                       // color: customcolor.blue,
-                      //                                                                       height:options.length<=2?SizeConfig.blockSizeVertical*10: 140,
-                      //                                                                        width: SizeConfig.blockSizeHorizontal*85,
-                      //                                                                      // width: constraints.biggest.width, // <-- Right here !
-                      //                                                                       child: ListView.builder(
-                      //                                                           padding: EdgeInsets.zero,
-                      //                                                           itemCount: options.length,
-                      //                                                           shrinkWrap: false,
-                      //                                                                         // physics: ScrollPhysics(),
-                      //                                                           itemBuilder: (BuildContext context, int index) {
-                      //                                                             final Janitorcheckbox option = options.elementAt(index);
-                      //                                                             return GestureDetector(
-                      //                                                               onTap: () => onSelected(option),
-                      //                                                               child: Column(
-                      //                                                                         mainAxisAlignment: MainAxisAlignment.start,
-                      //                                                                         crossAxisAlignment: CrossAxisAlignment.start,
-                      //                                                                         children: [
-                      //                                                                       // Text(option.name),
-                      //                                                                       // Divider()
-                      //                                                                            CheckboxListTile(
-                      //                  activeColor: customcolor.green,
-
-                      //                  controlAffinity: ListTileControlAffinity.leading,
-                      //                   contentPadding: EdgeInsets.zero,
-                      //                   dense: true,
-                      //                   title: Text(
-                      //                     option.name,
-                      //                     style:
-                      //                      AppFonts.headerStyle(fontSize:12,
-                      //       color:Colors.black,fontWeight: FontWeight.normal  ),
-
-                      //                   ),
-                      //                   value: option.isselected,
-                      //                   onChanged: (value) {
-                      //                     setStateDialgoue(() {
-
-                      //                        option.isselected = value!;
-
-                      //                       // sitenamecontroller.text=agelist.toString();
-                      //                       // print("multipleSelectedlist");
-                      //                       // print(multipleSelectedlist);
-                      //                       // print(checkboxeslist[indexcheck]);
-
-                      //                       // if (multipleSelectedlist.contains(checkboxeslist[indexcheck])) {
-                      //                       //   multipleSelectedlist.remove(checkboxeslist[indexcheck]);
-                      //                       // } else {
-                      //                       //   multipleSelectedlist.add(checkboxeslist[indexcheck]);
-                      //                       // }
-                      //                   });
-                      //                   },
-                      //                 ),
-
-                      //                                                                         ],
-                      //                                                               ),
-                      //                                                             );
-                      //                                                           },
-                      //                                                                       ),
-                      //                                                                     ),
-                      //                                                                       Divider(),
-                      //             Center(
-                      //               child: GestureDetector(
-                      //                 onTap: ()
-                      //                 {
-                      //                    setStateDialgoue(() {
-                      //                   List<String> agelist=[];
-                      //                    List<String> ageidlist=[];
-                      //                         for(int i=0;i<dropdownList.length;i++)
-                      //                      {
-                      //                       if(dropdownList[i].isselected)
-                      //                       {
-                      //                       agelist.add(dropdownList[i].name.toString());
-                      //                       ageidlist.add(dropdownList[i].id.toString());
-                      //                       }
-                      //                      }
-                      //                      String s = agelist.join(', ');
-                      //                      janitorname=s;
-                      //                      janitorid=ageidlist;
-
-                      //                   });
-                      //                 },
-                      //                 child: Text("Submit", style:
-                      //                            AppFonts.headerStyle(fontSize:12,
-                      //                           color:customcolor.blue,fontWeight: FontWeight.normal  ),),
-                      //               ),
-                      //             ),
-                      //             SizedBox(height: 20,)
-                      //                                                                   ],
-                      //                                                                 ),
-                      //                                                               ),
-                      //                                                             );
-                      //                                                             },
-                      //                                                     ),
-                      //                                     ),
-                      //                                   ),
-                      //                         SizedBox(height: 20,),
-                      //       GestureDetector(
-                      //         onTap: ()
-                      //         {
-                      //            _showSelectionDialog(context,1);
-                      //         },
-                      //         child: FormTextField(
-                      //           isEnable: false,
-                      //                             textcontroller: uploadcontroller,
-                      //                             placeholderStr: "Upload Image",
-
-                      //                             //   maxLength: 10,
-                      //                             textInputType: TextInputType.text,
-                      //                             onchange: (val) {
-
-                      //                             },
-                      //                             suffixWidget: Padding(
-                      //                             padding:  EdgeInsets.only(right: 20),
-                      //                             child: Image.asset(
-                      //                             "assets/images/addimage.png",
-
-                      //                             width: 20,
-                      //                             height: 20,
-                      //                                                           ),
-                      //                           ),
-                      //                           ),
-                      //       ),
-                      //                           SizedBox(height: 30,),
-                      //                               ],
-                      //                             ),
-                      //                                   isexpanded?agendaDropdown(setStateDialgoue):Container(),
-                      //                           ],
-                      //                         ),
                     ],
                   ),
                 ],
@@ -2853,47 +2718,6 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
       },
     );
   }
-
-  // void _onImageButtonPressed(
-  //     ImageSource source, int imageno, StateSetter setStateDialgoue,
-  //     {BuildContext? context}) async {
-  //   try {
-  //     final pickedFile = await ImagePicker().pickImage(
-  //       source: source,
-  //       maxWidth: null,
-  //       maxHeight: null,
-  //       imageQuality: null,
-  //     );
-
-  //     await _displayPickImageDialog(context,
-  //         (double? maxWidth, double? maxHeight, int? quality) async {});
-  //     setState(() {
-  //       print(pickedFile);
-  //       _imageFile = File(pickedFile!.path);
-  //       print(_imageFile!.path);
-  //       _fileName = _imageFile!.path.split('/').last;
-
-  //       result.add(_imageFile!.path);
-  //       // uploadcontroller.text=_fileName!;
-
-  //       List<String> filename = [];
-  //       uploadcontroller.text = "";
-  //       for (int i = 0; i < result.length; i++) {
-  //         filename.add(result[i].split('/').last);
-  //       }
-  //       print(filename);
-  //       String s = filename.join(', ');
-  //       print(s);
-  //       uploadcontroller.text = s;
-  //       setStateDialgoue(() {});
-  //     });
-  //   } catch (e) {
-  //     setState(() {
-  //       _pickImageError = e;
-  //       print("Ruchita $e");
-  //     });
-  //   }
-  // }
 
   void _onImageButtonPressed(
     ImageSource source,
@@ -2998,102 +2822,15 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  //   void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
-  //     setState(() => _loadingPath = true);
-  //     try {
-  //       _directoryPath = null;
-  //       _paths = (await FilePicker.platform.pickFiles(
-  //         type: _pickingType,
-  //         allowMultiple: true,
-
-  //         allowedExtensions: [
-  //           'jpg',
-  //           'jpeg',
-  //           'png',
-  //         ],
-  //         // allowedExtensions: (_extension?.isNotEmpty ?? false)
-  //         //     ? _extension?.replaceAll(' ', '')?.split(',')
-  //         //     : null,
-  //       ))
-  //           ?.files;
-  //     } on PlatformException catch (e) {
-  //       print("Unsupported operation" + e.toString());
-  //     } catch (ex) {
-  //       print(ex);
-  //     }
-  //     if (!mounted) return;
-  //     setState(() {
-  //       _loadingPath = false;
-  //       _fileName = _paths != null
-  //           ? _paths!.map((e) => e.name).toString()
-  //           : 'Select Document';
-  //       print("File name is${_fileName}");
-  //       if (_paths!.length > 2) {
-  //         ShowDialogs.showToast("You can upload upto 2 images");
-  //       } else {
-  //         for (int i = 0; i < _paths!.length; i++) {
-  //           result.add(_paths![i].path!);
-  //         }
-
-  // //  uploadcontroller.text=_fileName!;
-
-  //         List<String> filename = [];
-  //         uploadcontroller.text = "";
-  //         for (int i = 0; i < result.length; i++) {
-  //           filename.add(result[i].split('/').last);
-  //         }
-  //         print(filename);
-  //         String s = filename.join(', ');
-  //         print(s);
-  //         uploadcontroller.text = s;
-  //         setStateDialgoue(() {});
-  //       }
-  //       // result = _paths![0].path!;
-  //       // uploadcontroller.text=_fileName!;
-  //     });
-  //   }
 
   Widget headcard() {
     double circleRadius = MediaQuery.of(context).size.width * 0.075; // adaptive
     double circleLineWidth = 5.0;
 
     return
-    // CustomRefreshIndicator(
-    //   key: refreshIndicatorKey,
-    //   builder: (
-    //     BuildContext context,
-    //     Widget child,
-    //     IndicatorController controller,
-    //   ) {
-    //     return Stack(
-    //       alignment: Alignment.topCenter,
-    //       children: <Widget>[
-    //         if (!controller.isIdle)
-    //           Positioned(
-    //             top: 35.0 * controller.value,
-    //             child: SizedBox(
-    //               height: 30,
-    //               width: 30,
-    //               child: CircularProgressIndicator(
-    //                 value: !controller.isLoading
-    //                     ? controller.value.clamp(0.0, 1.0)
-    //                     : null,
-    //               ),
-    //             ),
-    //           ),
-    //         Transform.translate(
-    //           offset: Offset(0, 100.0 * controller.value),
-    //           child: child,
-    //         ),
-    //       ],
-    //     );
-    //   },
-    //   onRefresh: refreshData,
-    //   child:
+   
     ListView(
-      //changes 6nov2025
-      // shrinkWrap: true,
-      //  physics: ScrollPhysics(),
+     
       shrinkWrap: true,
       physics: const ScrollPhysics(),
       children: [
@@ -3552,90 +3289,7 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
                                   backgroundColor: Colors.grey.shade300,
                                 ),
 
-                          //  ishomedataadvisible?
-                          //                                                       isFirstLoad
-                          // ?
-                          // Stack(
-                          //     alignment: Alignment.center,
-                          //     children: [
-                          //       // Grey background circle (same size as percent indicator)
-                          //       CircularPercentIndicator(
-                          //         lineWidth: 5.0,
-                          //         radius: 30.0,
-                          //         percent: 1.0, // full circle
-                          //         backgroundColor: Colors.transparent,
-                          //         progressColor: Colors.grey.shade300, // grey arc
-                          //         center: Text(
-                          //           "--",
-                          //           //  role == GlobalLists.clientrole
-                          //           //                       ? '${GlobalLists.unitdashboard.visitCount}'
-                          //           //                       : "${GlobalLists.unitdashboard.visitCount ?? 0}/${GlobalLists.unitdashboard.totalSiteCount}",
-                          //           style: AppFonts.headerStyle(
-                          //             fontSize: 14,
-                          //             color: customcolor.appbarcolor,
-                          //             fontWeight: FontWeight.w100,
-                          //           ),
-                          //         ),
-                          //         circularStrokeCap: CircularStrokeCap.round,
-                          //       ),
-
-                          //       // Blue rotating loader over grey circle
-                          //       SizedBox(
-                          //         height: 60,
-                          //         width: 60,
-                          //         child: CircularProgressIndicator(
-                          //           strokeWidth: 5,
-                          //           valueColor: AlwaysStoppedAnimation(customcolor.textblue),
-                          //           backgroundColor: Colors.transparent, // keep transparent
-                          //         ),
-                          //       ),
-                          //     ],
-                          //   )
-                          //   :
-
-                          //                         CircularPercentIndicator(
-                          //                           animationDuration: 500,
-                          //                           radius: 30.0,
-                          //                           lineWidth: 5.0,
-                          //                           animation: true,
-                          //                           percent: role == GlobalLists.clientrole
-                          //                               ? (GlobalLists.unitdashboard.visitCount ??
-                          //                                           0) >
-                          //                                       0
-                          //                                   ? 1.0
-                          //                                   : 0.0
-                          //                               : ((GlobalLists.unitdashboard.visitCount ??
-                          //                                           0) /
-                          //                                       GlobalLists
-                          //                                           .unitdashboard.totalSiteCount)
-                          //                                   .clamp(0.0, 1.0),
-                          //                           center: Text(
-                          //                             role == GlobalLists.clientrole
-                          //                                 ? '${GlobalLists.unitdashboard.visitCount}'
-                          //                                 : "${GlobalLists.unitdashboard.visitCount ?? 0}/${GlobalLists.unitdashboard.totalSiteCount}",
-                          //                             style: AppFonts.headerStyle(
-                          //                               fontSize: 14,
-                          //                               color: customcolor.appbarcolor,
-                          //                               fontWeight: FontWeight.w100,
-                          //                             ),
-                          //                           ),
-                          //                           circularStrokeCap: CircularStrokeCap.round,
-                          //                           progressColor: customcolor.textblue,
-                          //                         )
-                          // :
-                          // Row(
-                          //             children: [
-                          //               SizedBox(width: 10,),
-                          //               SizedBox(
-                          //                   height: 40,
-                          //                   width: 40,
-                          //                   child: CircularProgressIndicator(
-                          //                     strokeWidth: 3,
-                          //                     color: customcolor.textblue,
-                          //                   ),
-                          //                 ),
-                          //             ],
-                          //           ),
+                          
                         ],
                       ),
                     ),
@@ -3763,109 +3417,121 @@ class _homePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
 
         SizedBox(height: 10),
+
+
       //SUPERVISOR RANKING UNCOMMENT WHEN USING
-// (role == GlobalLists.supervisorrole || role == GlobalLists.operationrole ||
-//                                     role == GlobalLists.operationmanagerrole) ?
-//          Material(
-//             elevation: 0,
-//             borderRadius: BorderRadius.circular(10),
-//             child: Container(
-//               width: SizeConfig.blockSizeHorizontal * 100,
-//               decoration: BoxDecoration(
-//                 borderRadius: BorderRadius.circular(10),
-//               ),
-//               child: Padding(
-//                 padding: const EdgeInsets.all(8.0),
-//                 child: Column(
-//                mainAxisAlignment: MainAxisAlignment.start,
-//   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     Row(
-//                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                         crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         Row(
-//                           mainAxisAlignment: MainAxisAlignment.start,
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             Padding(
-//                               padding: const EdgeInsets.all(4.0),
-//                               child:   Container(
-//                       padding: EdgeInsets.all(4),
-//                       decoration: BoxDecoration(
-//                         color: customcolor.blue,
-//                         shape: BoxShape.circle,
-//                       ),
-//                       child: Icon(
-//                       Icons.star, // you can change per category
-//                         color: customcolor.white,
-//                         size: 20,
-//                       ),
-//                     ),
-//                             ),
-//                             SizedBox(width: 5),
-//                             Padding(
-//                               padding: const EdgeInsets.only(top: 4),
-//                               child: Container(
-//                                 child:
-//                                Column(
-//   mainAxisAlignment: MainAxisAlignment.start,
-//   crossAxisAlignment: CrossAxisAlignment.start,
-//   children: [
+(role == GlobalLists.supervisorrole || role == GlobalLists.unitrole ||
+        role == GlobalLists.operationrole ||
+        role == GlobalLists.headrole ||
+        role == GlobalLists.reginalmanagerrole ||
+        role == GlobalLists.operationmanagerrole) ?
+         Material(
+            elevation: 0,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: SizeConfig.blockSizeHorizontal * 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+               mainAxisAlignment: MainAxisAlignment.start,
+  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child:   Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: customcolor.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                      Icons.star, // you can change per category
+                        color: customcolor.white,
+                        size: 20,
+                      ),
+                    ),
+                            ),
+                            SizedBox(width: 5),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Container(
+                                child:
+                               Column(
+  mainAxisAlignment: MainAxisAlignment.start,
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
 
-//     /// TITLE
-//     const Text(
-//       "SUPERVISOR RANKINGS",
-//       style: TextStyle(
-//         fontSize: 16,
-//         fontWeight: FontWeight.bold,
-//       ),
-//     ),
-//     SizedBox(height: 10,),
-// Row(
-//   children: [
+    /// TITLE
+    const Text(
+      "SUPERVISOR RANKINGS",
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    SizedBox(height: 10,),
+Row(
+  children: [
 
-//     /// 📅 MONTH
-//     _buildCompactDropdown<String>(
-//       value: selectedMonth,
-//       items: months,
-//       onChanged: (val) {
-//         setState(() => selectedMonth = val!);
-//       },
-//     ),
+    /// 📅 MONTH
+   _buildCompactDropdown<String>(
+  value: selectedMonth,
+  items: months,
+  onChanged: (val) {
+    setState(() => selectedMonth = val!);
+    supervisorRankingApi(); // 🔥 CALL API
+  },
+),
 
-//     const SizedBox(width: 8),
+    const SizedBox(width: 8),
 
-//     /// 📆 YEAR
-//     _buildCompactDropdown<int>(
-//       value: selectedYear,
-//       items: years,
-//       onChanged: (val) {
-//         setState(() => selectedYear = val!);
-//       },
-//     ),
-//   ],
-// )
-//     /// FILTERS
-  
-//   ],
-// ),
-//                               ),
-//                             ),
-//                           ],
-//                         ),
+    /// 📆 YEAR
+    _buildCompactDropdown<int>(
+  value: selectedYear,
+  items: years,
+  onChanged: (val) {
+    setState(() => selectedYear = val!);
+    supervisorRankingApi(); // 🔥 CALL API
+  },
+),
+  ],
+),
+    /// FILTERS
+  SizedBox(height: 10,),
+  ],
+),
+                              ),
+                            ),
+                          ],
+                        ),
 
                         
                                    
-//                         //  SizedBox(width: 2,)
-//                       ],
-//                     ),
-//                        SupervisorRankingSection(),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           ):Container(),
+                        //  SizedBox(width: 2,)
+                      ],
+                    ),
+                  isLoadingRanking
+    ? SizedBox(
+        height: 190,
+        child: Center(child: CircularProgressIndicator()),
+      )
+    :  SupervisorRankingSection(rankings: superviorRankingList,),
+                  ],
+                ),
+              ),
+            ),
+          ):Container(),
 
           SizedBox(height: 30,)
 
@@ -6577,6 +6243,117 @@ Widget _buildCompactDropdown<T>({
         ),
       ],
     );
+  }
+String getMonthNumber(String month) {
+  print("getMonthNumber: $month");
+
+  const monthsMap = {
+    "Jan": "01",
+    "January": "01",
+
+    "Feb": "02",
+    "February": "02",
+
+    "Mar": "03",
+    "March": "03",
+
+    "Apr": "04",
+    "April": "04",
+
+    "May": "05",
+
+    "Jun": "06",
+    "June": "06",
+
+    "Jul": "07",
+    "July": "07",
+
+    "Aug": "08",
+    "August": "08",
+
+    "Sep": "09",
+    "September": "09",
+
+    "Oct": "10",
+    "October": "10",
+
+    "Nov": "11",
+    "November": "11",
+
+    "Dec": "12",
+    "December": "12",
+  };
+
+  return monthsMap[month] ?? "01";
+}
+List<RankingCard> superviorRankingList=[];
+bool isLoadingRanking = false;
+   supervisorRankingApi() async {
+    var status1 = await ConnectionDetector.checkInternetConnection();
+    setState(() {
+      isLoadingRanking=true;
+    });
+      rmID = (await SPManager().getRMID())!;
+    //  var datefrom = DateFormat('yyyy-MM').format(DateTime.now());
+    String monthNumber = getMonthNumber(selectedMonth);
+String datefrom = "$selectedYear-$monthNumber";
+    print(datefrom);
+    final payload = {
+
+      "date":datefrom,
+"rm_id":rmID
+      
+    };
+
+    if (status1) {
+ print("SUPAERVISOR RANK s");
+      APIManager().apiRequest(
+        context,
+        API.get_ranking_card,
+        (response) async {
+          print("SUPAERVISOR RANK reso");
+        final resp = response as RankingResponse;
+          print("SUPAERVISOR RANK resp ${resp}");
+          print('SUPAERVISOR API $resp');
+  setState(() {
+      isLoadingRanking=false;
+    });
+          if (resp.status == 1) {
+            print("SUPAERVISOR RANK status 1");
+            // ShowDialogs.showToast(resp.msg);
+           setState(() {
+              superviorRankingList=resp.rankingCard;
+              print("SUPAERVISOR LENGTH");
+              print((superviorRankingList.length.toString()));
+
+           });
+          } else {
+            print("SUPAERVISOR RANK status 0");
+            ShowDialogs.showToast(resp.msg);
+          }
+        },
+        (error) {
+            setState(() {
+      isLoadingRanking=false;
+    });
+          print('SUPAERVISOR ERR msg is $error');
+        },
+        false,
+        "",
+        jsonval: payload,
+      );
+    } else {
+       setState(() {
+      isLoadingRanking=false;
+    });
+      await DBHelper.insertOfflineRequest(
+        '${Global.baseUrl}/api/siteconfigurator/get_ranking_card',
+        payload,
+      );
+
+      ShowDialogs.showToast("Saved offline. Will sync when connected.");
+     
+    }
   }
 }
 

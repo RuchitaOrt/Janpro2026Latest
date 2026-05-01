@@ -9,17 +9,18 @@ class SPManager {
    final String clientid="clientid";
    final String fcmauthToken="fcmauthToken";
   final String ShiftId= "ShiftId";
+  final String rmid="rmid";
  
-  Future<void> clear() async {
-    final SharedPreferences pref = await SharedPreferences.getInstance();
-    pref.getKeys();
-    for (String key in pref.getKeys()) {
-      if (key == "authToken") {
-        pref.remove(key);
-      }
-    }
-    //pref.clear();
-  }
+  // Future<void> clear() async {
+  //   final SharedPreferences pref = await SharedPreferences.getInstance();
+  //   pref.getKeys();
+  //   for (String key in pref.getKeys()) {
+  //     if (key == "authToken") {
+  //       pref.remove(key);
+  //     }
+  //   }
+  //   //pref.clear();
+  // }
 
   Future<void> setAuthToken(String token) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -34,6 +35,18 @@ class SPManager {
     return val;
   }
 
+ Future<void> setRMID(String rmid) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(this.rmid, rmid);
+  }
+
+  //get auth token into shared preferences
+  Future<String?> getRMID() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? val;
+    val = (prefs.getString(this.rmid) ?? "");
+    return val;
+  }
 
   
   Future<void> setShiftID(String ShiftId) async {

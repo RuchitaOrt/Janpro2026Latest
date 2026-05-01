@@ -14,28 +14,50 @@ import 'package:flutter/material.dart';
 //     required this.items,
 //   });
 // }
+// class VisitCategory {
+//   String name;
+//   String id;
+//   IconData icon;
+//   bool isExpanded;
+//   List<VisitItem> items;
+
+//   VisitCategory({
+//     required this.name,
+//     required this.icon,
+//     required this.id,
+//     this.isExpanded = false,
+//     required this.items,
+//   });
+// }
 class VisitCategory {
   String name;
   String id;
   IconData icon;
-  bool isExpanded;
   List<VisitItem> items;
+  bool isExpanded;
+
+  // ✅ NEW
+  bool isSelected;
+  File? image;
+  String? networkImage;
 
   VisitCategory({
     required this.name,
-    required this.icon,
     required this.id,
-    this.isExpanded = false,
+    required this.icon,
     required this.items,
+    this.isExpanded = false,
+    this.isSelected = false, // ✅ NEW
+    this.image,
+    this.networkImage,
   });
 }
 class VisitItem {
   String name;
   String id;
+
   bool isSelected;
   File? image;
-
-  /// 🔥 ADD THIS
   String? networkImage;
 
   VisitItem({
@@ -46,6 +68,23 @@ class VisitItem {
     this.networkImage,
   });
 }
+// class VisitItem {
+//   String name;
+//   String id;
+//   bool isSelected;
+//   File? image;
+
+//   /// 🔥 ADD THIS
+//   String? networkImage;
+
+//   VisitItem({
+//     required this.name,
+//     required this.id,
+//     this.isSelected = false,
+//     this.image,
+//     this.networkImage,
+//   });
+// }
 // class VisitItem {
 //   String name;
 //   bool isSelected;

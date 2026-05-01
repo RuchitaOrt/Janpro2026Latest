@@ -2305,7 +2305,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     role = await SPManager().getroleid();
     if (role == GlobalLists.supervisorrole) {
       janotoragendaApi(GlobalLists.clientid, GlobalLists.siteid);
-    }
+     }
+    //  else
+    //  {
+    //   janotoragendaApi(GlobalLists.clientid, GlobalLists.siteid);
+    //  }
     if (role == GlobalLists.unitrole ||
         role == GlobalLists.operationrole ||
         role == GlobalLists.operationmanagerrole ||
@@ -3338,7 +3342,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                           100,
 
                                                                 center: new Text(
-                                                                  "${GlobalLists.attendancedata!.count}/${GlobalLists.attendancedata!.noOfStaff}",
+                                                                  
+                                                                   "${GlobalLists.attendancedata!.count}/${GlobalLists.attendancedata!.noOfStaff}",
                                                                   style: AppFonts.headerStyle(
                                                                     fontSize:
                                                                         24,
@@ -3963,8 +3968,12 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                     }
                   }
                   print("SITEID");
+                   print("janotoragendaApi 1");
                   print(GlobalLists.mainlisttab[maintag].siteId.toString());
-                  janotoragendaApi(attendanceclientid, attendancesiteid);
+                  // janotoragendaApi(attendanceclientid, attendancesiteid);
+
+                  ///commented 2026 30
+                 janotoragendaApi(GlobalLists.mainlisttab[maintag].clientId.toString(), GlobalLists.mainlisttab[maintag].siteId.toString());
                 });
               },
             ),
@@ -4139,7 +4148,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                           .toString();
                                               }
                                             }
-
+ print("janotoragendaApi 2");
                                             janotoragendaApi(
                                               attendanceclientid,
                                               attendancesiteid,
@@ -4214,218 +4223,13 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           }
         }
       }
-
+ print("janotoragendaApi 3");
       janotoragendaApi(attendanceclientid, attendancesiteid);
     });
   }
 
   List<int> selectedJanitorIds = [];
 
-  // addaddtendance(BuildContext context) {
-  //   showModalBottomSheet(
-  //     backgroundColor: Colors.white,
-  //     isScrollControlled: true,
-  //     isDismissible: true,
-  //     enableDrag: true,
-  //     elevation: 5.0,
-  //     barrierColor: Colors.black.withOpacity(0.7),
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.only(
-  //         topLeft: const Radius.circular(20.0),
-  //         topRight: const Radius.circular(20.0),
-  //       ),
-  //     ),
-  //     context: context,
-  //     builder: (builder) {
-  //       return StatefulBuilder(
-  //         builder: (BuildContext context, StateSetter setStateDialgoue) {
-  //           return new Container(
-  //             height:
-  //                 (role == GlobalLists.headrole ||
-  //                     role == GlobalLists.reginalmanagerrole ||
-  //                     role == GlobalLists.clientrole)
-  //                 ? SizeConfig.blockSizeVertical * 48 +
-  //                       MediaQuery.of(context).viewInsets.bottom
-  //                 : SizeConfig.blockSizeVertical * 47 +
-  //                       MediaQuery.of(context).viewInsets.bottom,
-  //             color: Colors.white,
-  //             margin: EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 2),
-  //             padding: EdgeInsets.all(5),
-  //             child: Stack(
-  //               children: [
-  //                 Column(
-  //                   crossAxisAlignment: CrossAxisAlignment.start,
-  //                   children: <Widget>[
-  //                     SizedBox(height: 5),
-  //                     Center(
-  //                       child: Container(
-  //                         width: 50,
-  //                         child: Divider(
-  //                           thickness: 4,
-  //                           color: customcolor.greytext,
-  //                           height: 2,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     SizedBox(height: 20),
-  //                     Text(
-  //                       "Mark Attendance",
-  //                       textAlign: TextAlign.left,
-  //                       style: AppFonts.headerStyle(
-  //                         fontSize: 22,
-  //                         color: customcolor.black,
-  //                         fontWeight: FontWeight.w400,
-  //                       ),
-  //                     ),
-  //                     SizedBox(height: 15),
-  //                     Stack(
-  //                       children: [
-  //                         Column(
-  //                           children: [
-  //                             // clientnamecontroller.text==""?Container():
-  //                             SizedBox(height: 20),
-
-  //                             Stack(
-  //                               children: [
-  //                                 Column(
-  //                                   children: [
-  //                                     GestureDetector(
-  //                                       onTap: () {
-  //                                         setStateDialgoue(() {
-  //                                           isexpandedjanitor =
-  //                                               !isexpandedjanitor;
-
-  //                                           isexpandedclient = false;
-  //                                         });
-  //                                       },
-  //                                       child: FormTextField(
-  //                                         isEnable: false,
-  //                                         textcontroller: namecontroller,
-  //                                         placeholderStr:
-  //                                             "Select Janitor's Name",
-  //                                         textInputType: TextInputType.text,
-  //                                         onchange: (val) {},
-  //                                         suffixWidget: Padding(
-  //                                           padding: EdgeInsets.only(right: 20),
-  //                                           child: Image.asset(
-  //                                             "assets/images/dropdown.png",
-  //                                             width: 10,
-  //                                             height: 10,
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                     ),
-  //                                     Stack(
-  //                                       children: [
-  //                                         Column(
-  //                                           children: [
-  //                                             SizedBox(height: 20),
-  //                                             FormTextField(
-  //                                               isEnable: false,
-  //                                               textcontroller:
-  //                                                   mobilecontroller,
-  //                                               placeholderStr: "Mobile Number",
-  //                                               lengthofmobile: 10,
-  //                                               //   maxLength: 10,
-  //                                               textInputType:
-  //                                                   TextInputType.number,
-  //                                               onchange: (val) {},
-  //                                             ),
-  //                                             SizedBox(height: 30),
-  //                                           ],
-  //                                         ),
-  //                                         isexpandedjanitor
-  //                                             ? janitorsDropdown(
-  //                                                 setStateDialgoue,
-  //                                               )
-  //                                             : Container(),
-  //                                       ],
-  //                                     ),
-  //                                   ],
-  //                                 ),
-  //                                 isexpanded
-  //                                     ? siteDropdown(setStateDialgoue)
-  //                                     : Container(),
-  //                               ],
-  //                             ),
-  //                           ],
-  //                         ),
-  //                         isexpandedclient
-  //                             ? clientDropdown(setStateDialgoue)
-  //                             : Container(),
-  //                       ],
-  //                     ),
-  //                     GestureDetector(
-  //                       onTap: () {
-  //                         if (role == GlobalLists.clientrole ||
-  //                             role == GlobalLists.headrole ||
-  //                             role == GlobalLists.reginalmanagerrole ||
-  //                             role == GlobalLists.operationrole ||
-  //                             role == GlobalLists.unitrole ||
-  //                             role == GlobalLists.operationmanagerrole) {
-  //                           // Navigator.pop(context);
-  //                           if (lat == null || long == null) {
-  //                             grantPermission();
-  //                           }
-
-  //                           else if (namecontroller.text.isEmpty) {
-  //                             ShowDialogs.showToast("Please Enter Name");
-  //                           } else if (mobilecontroller.text.isEmpty) {
-  //                             ShowDialogs.showToast("Please Enter Mobile No");
-  //                           } else if (mobilecontroller.text.length != 10) {
-  //                             ShowDialogs.showToast(
-  //                               "Please Enter Valid Mobile No",
-  //                             );
-  //                           } else {
-  //                             addattendanceApi();
-  //                           }
-  //                         } else {
-  //                           // Navigator.pop(context);
-  //                           if (lat == null || long == null) {
-  //                             grantPermission();
-  //                           } else if (namecontroller.text.isEmpty) {
-  //                             ShowDialogs.showToast("Please Enter Name");
-  //                           } else if (mobilecontroller.text.isEmpty) {
-  //                             ShowDialogs.showToast("Please Enter Mobile No");
-  //                           } else if (mobilecontroller.text.length != 10) {
-  //                             ShowDialogs.showToast(
-  //                               "Please Enter Valid Mobile No",
-  //                             );
-  //                           } else {
-  //                             print("RUCHIADD");
-  //                             addattendanceApi();
-  //                           }
-  //                         }
-  //                       },
-  //                       child: Align(
-  //                         alignment: Alignment.bottomRight,
-  //                         child: ValueListenableBuilder<bool>(
-  //                           valueListenable: GlobalLists.isaddAttendance,
-  //                           builder: (context, isLoading, _) {
-  //                             if (isLoading) {
-  //                               return CircularProgressIndicator(
-  //                                 color: customcolor.blue,
-  //                               );
-  //                             }
-  //                             return Image.asset(
-  //                               'assets/images/next.png',
-  //                               width: 50,
-  //                               height: 50,
-  //                             );
-  //                           },
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ],
-  //             ),
-  //           );
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
 
   addaddtendance(BuildContext context) {
     showModalBottomSheet(
@@ -4493,7 +4297,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                         child: GlobalLists.dropdownList.isEmpty
                             ? Center(
                                 child: Text(
-                                  "No janitor's present",
+                                  "No janitor's present  ${GlobalLists.dropdownList.length}",
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: customcolor.greytext,
@@ -4507,6 +4311,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                       GlobalLists.dropdownList[index];
                                   final isSelected = selectedJanitorIds
                                       .contains(int.parse(janitor.id));
+                                      print("isSelected");
+                                      print(selectedJanitorIds);
+                                      print(janitor.id);
+                                      print(isSelected);
                                   return Container(
                                     margin: EdgeInsets.only(bottom: 8),
                                     decoration: BoxDecoration(
@@ -4568,6 +4376,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                       ///  SUBMIT BUTTON
                       GestureDetector(
                         onTap: () {
+                          
                           if (lat == null || long == null) {
                             grantPermission();
                           } else if (selectedJanitorIds.isEmpty) {
@@ -4575,60 +4384,63 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               "Please select at least one janitor",
                             );
                           } else {
-                            print("COMING MARK ${GlobalLists.mainlisttab.length}");
-                            //Safe checks for RangeError
-                           /* if (maintag < 0 || maintag >= GlobalLists.mainlisttab.length) {
-                              print("Invalid maintag index: $maintag");
-                              ShowDialogs.showToast(
-                                "Invalid maintag index $maintag",
-                              );
-                              return;
-                            }
+                         print('NEWIPHONE In side addattendanceApi');
+                          int total= 0;
+                          int count=0;
+                          print(role);
+                          print(GlobalLists.operationrole);
+                       if(role==GlobalLists.unitrole )
+                       {
+  total= 
+                            GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .noOfStaff;
+                            //GlobalLists.attendancedata!.noOfStaff;
+                             count=
+                            GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .count;
+                            // GlobalLists.attendancedata!.count;
+                       }else if(role==GlobalLists.operationrole)
+                       {
 
-                            final attendanceList = GlobalLists
-                                .mainlisttab[maintag]
-                                .attendanceDetails;
-                            if (tag < 0 || tag >= attendanceList.length) {
-                              print("Invalid tag index: $tag");
-                              ShowDialogs.showToast("Invalid tag index: $tag");
-                              return;
-                            }
+                          total= 
+                            GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .noOfStaff;
+                            //GlobalLists.attendancedata!.noOfStaff;
+                             count=
+                            GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .count;
+                       }else if(role==GlobalLists.operationmanagerrole)
+                       {
 
-                            final attendance = attendanceList[tag];*/
-                        /*    int count = int.tryParse(
-                                  attendance.count?.toString() ?? "0",
-                                ) ??
-                                0;
-                            int total =
-                                int.tryParse(
-                                  attendance.noOfStaff?.toString() ?? "0",
-                                ) ??
-                                0;*/
-
-
-                            /* int count = int.tryParse(
-                                  GlobalLists
-                                          .mainlisttab[maintag]
-                                          .attendanceDetails[tag]
-                                          .count
-                                          .toString() ??
-                                      "0",
-                                ) ??
-                                0;
-                            int total =
-                                int.tryParse(
-                                  GlobalLists
-                                          .mainlisttab[maintag]
-                                          .attendanceDetails[tag]
-                                          .noOfStaff
-                                          .toString() ??
-                                      "0",
-                                ) ??
-                                0;
-
-*/
-                            int total= GlobalLists.attendancedata.noOfStaff;
-                            int count= GlobalLists.attendancedata.count;
+                          total= 
+                            GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .noOfStaff;
+                            //GlobalLists.attendancedata!.noOfStaff;
+                             count=
+                            GlobalLists
+                                                      .mainlisttab[maintag]
+                                                      .attendanceDetails[tag]
+                                                      .count;
+                       }else
+                       {
+                          total= 
+                         
+                            GlobalLists.attendancedata!.noOfStaff;
+                           
+                           
+                           count=  GlobalLists.attendancedata!.count;
+                       }
+                           
                             int remaining = total - count;
                             if (remaining <= 0) {
                               ShowDialogs.showToast(
@@ -4870,7 +4682,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                             .clientmasterlist[index]
                             .siteId
                             .toString();
-
+ print("janotoragendaApi 4");
                         janotoragendaApi(attendanceclientid, attendancesiteid);
                       });
                     },
@@ -5468,7 +5280,9 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   void _handleAttendanceResponse(unitatt.UnitAttendanceResponse resp) async {
     GlobalLists.mainlisttab = [];
-    setState(() {
+    setState(()  {
+     
+      
       isdataloaded = true;
       for (int i = 0; i < resp.data.length; i++) {
         GlobalLists.mainlisttab.add(resp.data[i]);
@@ -5520,9 +5334,18 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
           attendanceclientid = GlobalLists.mainlisttab[maintag].clientId
               .toString();
           attendancesiteid = GlobalLists.mainlisttab[maintag].siteId.toString();
+           print("janotoragendaApi 5");
           janotoragendaApi(attendanceclientid, attendancesiteid);
         }
       }
+
+      //30April Added 2026
+       janotoragendaApi(GlobalLists.mainlisttab[maintag].attendanceDetails[0].clientId
+              .toString(),GlobalLists.mainlisttab[maintag].attendanceDetails[0].siteId.toString());
+           print(GlobalLists.mainlisttab[maintag].attendanceDetails[0].siteId.toString());
+           print(GlobalLists.mainlisttab[maintag].attendanceDetails[0].clientId);
+                 print("unit 1");
+     
       print("unit 1");
       unitgraphattendanceApi();
     });
@@ -5829,7 +5652,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   //addattendance api
   addattendanceApi() async {
-    log(' In side addattendanceApi');
+    print('NEWIPHONE In side addattendanceApi');
     var status1 = await ConnectionDetector.checkInternetConnection();
     var map = <String, dynamic>{};
     List<Map<String, dynamic>> attendanceDetails = [];
@@ -6007,7 +5830,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     var status1 = await ConnectionDetector.checkInternetConnection();
 
     var map = {'client_id': idclient, 'site_id': idsite};
-
+print("APICALL");
     final cacheKey = 'cached_janitor_${idclient}_$idsite';
 
     if (status1) {

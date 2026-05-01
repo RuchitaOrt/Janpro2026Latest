@@ -40,6 +40,7 @@ import 'package:janpro/model/OperationalPrioritylistResponse.dart';
 import 'package:janpro/model/OperationalRatinggraphwiseResponse.dart';
 import 'package:janpro/model/OperationalWorkflowResponse.dart';
 import 'package:janpro/model/ProfileResponse.dart';
+import 'package:janpro/model/RankingResponse.dart';
 import 'package:janpro/model/RatinglistResponse.dart';
 import 'package:janpro/model/RejectAttendanceRooster.dart';
 import 'package:janpro/model/SubmitAttendanceRooster.dart';
@@ -147,7 +148,8 @@ enum API {
   view_monthly_attendance_rooster_details,
 
   add_attendance_daily_count,
-  client_final_submit_attendance_rooster
+  client_final_submit_attendance_rooster,
+  get_ranking_card
 }
 
 enum HTTPMethod { GET, POST, PUT, DELETE }
@@ -425,7 +427,10 @@ case API.client_final_submit_attendance_rooster:
         apiPathString = "/api/attendancemaster/client_final_submit_attendance_rooster";
 
         break;
+case API.get_ranking_card:
+ apiPathString = "/api/siteconfigurator/get_ranking_card";
 
+        break;
         
       default:
         apiPathString = "/Login";
@@ -501,6 +506,7 @@ case API.client_final_submit_attendance_rooster:
       case API.view_monthly_attendance_rooster_details:
       case API.add_attendance_daily_count:
       case API.client_final_submit_attendance_rooster:
+      case API.get_ranking_card:
         method = HTTPMethod.POST;
         break;
 
@@ -704,7 +710,9 @@ case API.client_final_submit_attendance_rooster:
       case API.client_final_submit_attendance_rooster:
       className = "CommonResponse";
         break;
-
+case API.get_ranking_card:
+ className = "RankingResponse";
+        break;
       default:
         className = 'CommonResponse';
     }
@@ -912,6 +920,9 @@ case API.client_final_submit_attendance_rooster:
     }
       if (className == 'CommonResponse') {
       responseObj = CommonResponse.fromJson(json);
+    }
+     if (className == 'RankingResponse') {
+      responseObj = RankingResponse.fromJson(json);
     }
 
     return responseObj;

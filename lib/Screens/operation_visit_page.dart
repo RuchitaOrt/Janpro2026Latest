@@ -1,3 +1,5 @@
+
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -151,17 +153,37 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
   Widget selectedItemsUI() {
     List<Map<String, dynamic>> selectedItemsWithCategory = [];
 
-    for (var category in visitCategories) {
-      for (var item in category.items) {
-        if (item.isSelected) {
-          selectedItemsWithCategory.add({
-            "category": category.name,
-            "item": item,
-          });
-        }
-      }
-    }
+    // for (var category in visitCategories) {
+    //   for (var item in category.items) {
+    //     if (item.isSelected) {
+    //       selectedItemsWithCategory.add({
+    //         "category": category.name,
+    //         "item": item,
+    //       });
+    //     }
+    //   }
+    // }
+for (var category in visitCategories) {
 
+  /// ✅ CATEGORY WITHOUT ITEMS
+  if (category.items.isEmpty && category.isSelected) {
+    selectedItemsWithCategory.add({
+      "category": category.name,
+      "item": null,
+      "categoryObj": category,
+    });
+  }
+
+  /// ✅ ITEMS
+  for (var item in category.items) {
+    if (item.isSelected) {
+      selectedItemsWithCategory.add({
+        "category": category.name,
+        "item": item,
+      });
+    }
+  }
+}
     if (selectedItemsWithCategory.isEmpty) return SizedBox();
 
     return Column(
@@ -175,8 +197,60 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
         SizedBox(height: 10),
 
         ...selectedItemsWithCategory.map((data) {
+            String categoryName = data["category"];
+
+  /// CATEGORY IMAGE CASE
+  if (data["item"] == null) {
+    VisitCategory category = data["categoryObj"];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 20),
+        Text("$categoryName Image",
+            style: TextStyle(fontWeight: FontWeight.w600)),
+        SizedBox(height: 10),
+
+        GestureDetector(
+          onTap: widget.isEdit == true
+              ? null
+              : () async {
+                  final picked =
+                      await ImagePicker().pickImage(
+                    source: ImageSource.gallery,
+                  );
+
+                  if (picked != null) {
+                    setState(() {
+                      category.image = File(picked.path);
+                    });
+                  }
+                },
+          child: Container(
+            height: 110,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: (category.image != null ||
+                    (category.networkImage != null &&
+                        category.networkImage!.isNotEmpty))
+                ? Image.file(
+                    category.image!,
+                    fit: BoxFit.cover,
+                  )
+                : Center(
+                    child: Icon(Icons.camera_alt,
+                        color: customcolor.blue),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
           VisitItem item = data["item"];
-          String categoryName = data["category"];
+          // String categoryName = data["category"];
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,28 +406,367 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
       ],
     );
   }
+void updateVisitTypeText() {
+  List<String> names = [];
 
-  void updateVisitTypeText() {
-    List<VisitItem> selectedItems = visitCategories
-        .expand((cat) => cat.items)
-        .where((item) => item.isSelected)
-        .toList();
-
-    visitTypeController.text = selectedItems.map((e) => e.name).join(", ");
+  for (var cat in visitCategories) {
+    if (cat.items.isEmpty) {
+      if (cat.isSelected) {
+        names.add(cat.name);
+      }
+    } else {
+      for (var item in cat.items) {
+        if (item.isSelected) {
+          names.add(item.name);
+        }
+      }
+    }
   }
 
-  Widget visitTypeDropdownUI() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: visitCategories.length,
-      itemBuilder: (context, index) {
-        final category = visitCategories[index];
+  visitTypeController.text = names.join(", ");
+}
+  // void updateVisitTypeText() {
+  //   List<VisitItem> selectedItems = visitCategories
+  //       .expand((cat) => cat.items)
+  //       .where((item) => item.isSelected)
+  //       .toList();
 
-        int selectedCount = category.items.where((e) => e.isSelected).length;
+  //   visitTypeController.text = selectedItems.map((e) => e.name).join(", ");
+  // }
+// Widget visitTypeDropdownUI() {
+//   return ListView.builder(
+//     shrinkWrap: true,
+//     physics: NeverScrollableScrollPhysics(),
+//     itemCount: visitCategories.length,
+//     itemBuilder: (context, index) {
+//       final category = visitCategories[index];
+//       bool hasItems = category.items.isNotEmpty;
 
-        return Container(
+//       int selectedCount =
+//           category.items.where((e) => e.isSelected).length;
+
+//       return Container(
+//         margin: EdgeInsets.only(bottom: 12),
+//         padding: EdgeInsets.all(14),
+//         decoration: BoxDecoration(
+//           color: Colors.white,
+//           borderRadius: BorderRadius.circular(14),
+//           boxShadow: [
+//             BoxShadow(
+//               color: Colors.black12,
+//               blurRadius: 6,
+//               offset: Offset(0, 2),
+//             ),
+//           ],
+//         ),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+
+//             /// =========================
+//             /// 🔷 CATEGORY ROW
+//             /// =========================
+//             Row(
+//               children: [
+//                 /// ROUND CHECKBOX
+//                 GestureDetector(
+//                   onTap: widget.isEdit == true
+//                       ? null
+//                       : () {
+//                           setState(() {
+//                             if (!hasItems) {
+//                               category.isSelected =
+//                                   !(category.isSelected ?? false);
+
+//                               if (!(category.isSelected ?? false)) {
+//                                 category.image = null;
+//                               }
+//                             } else {
+//                               category.isExpanded =
+//                                   !category.isExpanded;
+//                             }
+
+//                             updateVisitTypeText();
+//                           });
+//                         },
+//                   child: Container(
+//                     width: 24,
+//                     height: 24,
+//                     decoration: BoxDecoration(
+//                       shape: BoxShape.circle,
+//                       border: Border.all(
+//                         color: (!hasItems
+//                                 ? (category.isSelected ?? false)
+//                                 : false)
+//                             ? customcolor.green
+//                             : Colors.grey,
+//                       ),
+//                       color: (!hasItems
+//                               ? (category.isSelected ?? false)
+//                               : false)
+//                           ? customcolor.green
+//                           : Colors.transparent,
+//                     ),
+//                     child: (!hasItems &&
+//                             (category.isSelected ?? false))
+//                         ? Icon(Icons.check,
+//                             size: 16, color: Colors.white)
+//                         : null,
+//                   ),
+//                 ),
+
+//                 SizedBox(width: 12),
+
+//                 /// CATEGORY NAME
+//                 Expanded(
+//                   child: Text(
+//                     category.name,
+//                     style: TextStyle(
+//                       fontWeight: FontWeight.bold,
+//                       fontSize: 15,
+//                     ),
+//                   ),
+//                 ),
+
+//                 /// 🔥 CAMERA / TICK ICON (RIGHT SIDE)
+//                 GestureDetector(
+//                   onTap: widget.isEdit == true
+//                       ? null
+//                       : () async {
+//                           /// CATEGORY WITHOUT ITEMS
+//                           if (!hasItems) {
+//                             if (!(category.isSelected ?? false)) {
+//                               ShowDialogs.showToast("Select first");
+//                               return;
+//                             }
+
+//                             final picked =
+//                                 await ImagePicker().pickImage(
+//                               source: ImageSource.gallery,
+//                             );
+
+//                             if (picked != null) {
+//                               setState(() {
+//                                 category.image =
+//                                     File(picked.path);
+//                               });
+//                             }
+//                           }
+//                         },
+//                   child: Icon(
+//                     (!hasItems &&
+//                             (category.image != null ||
+//                                 category.networkImage != null))
+//                         ? Icons.check_circle
+//                         : Icons.camera_alt,
+//                     color: (!hasItems &&
+//                             (category.image != null ||
+//                                 category.networkImage != null))
+//                         ? Colors.green
+//                         : Colors.grey,
+//                   ),
+//                 ),
+
+//                 /// DROPDOWN ICON (ONLY IF ITEMS)
+//                 if (hasItems)
+//                   Icon(
+//                     category.isExpanded
+//                         ? Icons.keyboard_arrow_up
+//                         : Icons.keyboard_arrow_down,
+//                     color: Colors.grey,
+//                   ),
+//               ],
+//             ),
+
+//             /// =========================
+//             /// 🔥 CATEGORY IMAGE PREVIEW BELOW
+//             /// =========================
+//             if (!hasItems &&
+//                 (category.image != null ||
+//                     (category.networkImage != null &&
+//                         category.networkImage!.isNotEmpty)))
+//               Padding(
+//                 padding: const EdgeInsets.only(top: 12),
+//                 child: Container(
+//                   height: 110,
+//                   width: double.infinity,
+//                   decoration: BoxDecoration(
+//                     borderRadius: BorderRadius.circular(10),
+//                     border: Border.all(color: Colors.grey),
+//                   ),
+//                   child: Stack(
+//                     children: [
+//                       ClipRRect(
+//                         borderRadius: BorderRadius.circular(10),
+//                         child: (category.networkImage != null &&
+//                                 category.networkImage!.isNotEmpty)
+//                             ? Image.network(
+//                                 category.networkImage!,
+//                                 width: double.infinity,
+//                                 fit: BoxFit.cover,
+//                               )
+//                             : Image.file(
+//                                 category.image!,
+//                                 width: double.infinity,
+//                                 fit: BoxFit.cover,
+//                               ),
+//                       ),
+//                       if (widget.isEdit != true)
+//                         Positioned(
+//                           right: 5,
+//                           top: 5,
+//                           child: GestureDetector(
+//                             onTap: () {
+//                               setState(() {
+//                                 category.image = null;
+//                               });
+//                             },
+//                             child: Icon(Icons.cancel,
+//                                 color: Colors.red),
+//                           ),
+//                         ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+
+//             /// =========================
+//             /// 🔷 ITEMS LIST
+//             /// =========================
+//             if (hasItems)
+//               AnimatedCrossFade(
+//                 firstChild: SizedBox(),
+//                 secondChild: Column(
+//                   children: category.items.map((item) {
+//                     return Padding(
+//                       padding: const EdgeInsets.symmetric(
+//                           vertical: 6),
+//                       child: Row(
+//                         children: [
+//                           GestureDetector(
+//                             onTap: widget.isEdit == true
+//                                 ? null
+//                                 : () {
+//                                     setState(() {
+//                                       item.isSelected =
+//                                           !item.isSelected;
+
+//                                       if (!item.isSelected) {
+//                                         item.image = null;
+//                                       }
+
+//                                       updateVisitTypeText();
+//                                     });
+//                                   },
+//                             child: Container(
+//                               width: 24,
+//                               height: 24,
+//                               decoration: BoxDecoration(
+//                                 shape: BoxShape.circle,
+//                                 border: Border.all(
+//                                   color: item.isSelected
+//                                       ? customcolor.green
+//                                       : Colors.grey,
+//                                 ),
+//                                 color: item.isSelected
+//                                     ? customcolor.green
+//                                     : Colors.transparent,
+//                               ),
+//                               child: item.isSelected
+//                                   ? Icon(Icons.check,
+//                                       size: 16,
+//                                       color: Colors.white)
+//                                   : null,
+//                             ),
+//                           ),
+
+//                           SizedBox(width: 12),
+//                           Expanded(child: Text(item.name)),
+
+//                           /// 🔥 CAMERA / TICK FOR ITEMS
+//                           GestureDetector(
+//                             onTap: widget.isEdit == true
+//                                 ? null
+//                                 : () async {
+//                                     if (!item.isSelected) {
+//                                       ShowDialogs.showToast(
+//                                           "Select item first");
+//                                       return;
+//                                     }
+
+//                                     final picked =
+//                                         await ImagePicker()
+//                                             .pickImage(
+//                                       source:
+//                                           ImageSource.gallery,
+//                                     );
+
+//                                     if (picked != null) {
+//                                       setState(() {
+//                                         item.image =
+//                                             File(picked.path);
+//                                       });
+//                                     }
+//                                   },
+//                             child: Icon(
+//                               (item.image != null ||
+//                                       item.networkImage != null)
+//                                   ? Icons.check_circle
+//                                   : Icons.camera_alt,
+//                               color: (item.image != null ||
+//                                       item.networkImage != null)
+//                                   ? Colors.green
+//                                   : Colors.grey,
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     );
+//                   }).toList(),
+//                 ),
+//                 crossFadeState: category.isExpanded
+//                     ? CrossFadeState.showSecond
+//                     : CrossFadeState.showFirst,
+//                 duration: Duration(milliseconds: 250),
+//               ),
+//           ],
+//         ),
+//       );
+//     },
+//   );
+// }
+Widget visitTypeDropdownUI() {
+  return ListView.builder(
+    shrinkWrap: true,
+    physics: NeverScrollableScrollPhysics(),
+    itemCount: visitCategories.length,
+    itemBuilder: (context, index) {
+      final category = visitCategories[index];
+      bool hasItems = category.items.isNotEmpty;
+
+      return GestureDetector(
+        onTap: widget.isEdit == true
+            ? null
+            : () {
+                setState(() {
+                  if (hasItems) {
+                    category.isExpanded =
+                        !(category.isExpanded ?? false);
+                  } else {
+                    category.isSelected =
+                        !(category.isSelected ?? false);
+
+                    if (!(category.isSelected ?? false)) {
+                      category.image = null;
+                    }
+
+                    updateVisitTypeText();
+                  }
+                });
+              },
+        child: Container(
           margin: EdgeInsets.only(bottom: 12),
+          padding: EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
@@ -366,186 +779,241 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
             ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// 🔷 HEADER
-              InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () {
-                  setState(() {
-                    category.isExpanded = !category.isExpanded;
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: [
-                      /// 🔷 LEFT ICON
+
+              /// =========================
+              /// 🔷 CATEGORY ROW
+              /// =========================
+              Row(
+                children: [
+
+                  /// LEFT ICON / CHECKBOX
+                  hasItems
+                      ? Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color:
+                                customcolor.blue.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            category.icon,
+                            color: customcolor.blue,
+                            size: 20,
+                          ),
+                        )
+                      : 
                       Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: customcolor.blue.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          category.icon, // you can change per category
-                          color: customcolor.blue,
-                          size: 20,
-                        ),
-                      ),
-
-                      SizedBox(width: 12),
-
-                      /// 🔷 TITLE + COUNT
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              category.name,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color:
+                                customcolor.blue.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: 
+                           Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: (category.isSelected ?? false)
+                                  ? customcolor.blue
+                                  : Colors.white,
                             ),
-                            if (selectedCount > 0)
-                              Text(
-                                "$selectedCount selected",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                              ),
-                          ],
+                            color: (category.isSelected ?? false)
+                                ? customcolor.blue
+                                : Colors.white,
+                          ),
+                          child: (category.isSelected ?? false)
+                              ? Icon(Icons.check,
+                                  size: 16,
+                                  color: Colors.white)
+                              : null,
                         ),
-                      ),
+                          // Icon(
+                          //   category.icon,
+                          //   color: customcolor.blue,
+                          //   size: 20,
+                          // ),
+                        ),
+                      
+                     
 
-                      /// 🔽 ARROW
-                      Icon(
-                        category.isExpanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        color: Colors.grey,
+                  SizedBox(width: 12),
+
+                  /// CATEGORY NAME
+                  Expanded(
+                    child: Text(
+                      category.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  /// RIGHT SIDE ICON
+                  hasItems
+                      ? Icon(
+                          category.isExpanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          color: Colors.grey,
+                        )
+                        : GestureDetector(
+    onTap: widget.isEdit == true
+        ? null
+        : () async {
+            if (!(category.isSelected ?? false)) {
+              ShowDialogs.showToast("Select category first");
+              return;
+            }
+
+            final picked = await ImagePicker().pickImage(
+              source: ImageSource.gallery,
+            );
+
+            if (picked != null) {
+              setState(() {
+                category.image = File(picked.path);
+              });
+            }
+          },
+    child: Icon(
+      (category.image != null ||
+              category.networkImage != null)
+          ? Icons.check_circle
+          : Icons.camera_alt,
+      color: (category.image != null ||
+              category.networkImage != null)
+          ? Colors.green
+          : Colors.grey,
+    ),
+  ),
+                      // : Icon(
+                      //     (category.image != null ||
+                      //             category.networkImage != null)
+                      //         ? Icons.check_circle
+                      //         : Icons.radio_button_unchecked,
+                      //     color: (category.image != null ||
+                      //             category.networkImage != null)
+                      //         ? Colors.green
+                      //         : Colors.grey,
+                      //   ),
+                ],
               ),
 
-              /// 🔷 ITEMS
-              AnimatedCrossFade(
-                firstChild: SizedBox(),
-                secondChild: Column(
-                  children: category.items.map((item) {
-                    return Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          child: Row(
-                            children: [
-                              /// ✅ ROUND CHECKBOX STYLE
-                              GestureDetector(
-                                onTap:  widget.isEdit == true
-    ? null:() {
-                                  setState(() {
-                                    item.isSelected = !item.isSelected;
+              /// =========================
+              /// 🔷 ITEMS LIST
+              /// =========================
+              if (hasItems)
+                AnimatedCrossFade(
+                  firstChild: SizedBox(),
+                  secondChild: Column(
+                    children: category.items.map((item) {
+                      return Padding(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
 
-                                    if (!item.isSelected) {
-                                      item.image = null;
-                                    }
+                            /// ITEM CHECKBOX
+                            GestureDetector(
+                              onTap: widget.isEdit == true
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        item.isSelected =
+                                            !item.isSelected;
 
-                                    updateVisitTypeText();
-                                  });
-                                },
-                                child: Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: item.isSelected
-                                          ? customcolor.green
-                                          : Colors.grey,
-                                    ),
+                                        if (!item.isSelected) {
+                                          item.image = null;
+                                        }
+
+                                        updateVisitTypeText();
+                                      });
+                                    },
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
                                     color: item.isSelected
                                         ? customcolor.green
-                                        : Colors.transparent,
-                                  ),
-                                  child: item.isSelected
-                                      ? Icon(
-                                          Icons.check,
-                                          size: 16,
-                                          color: Colors.white,
-                                        )
-                                      : null,
-                                ),
-                              ),
-
-                              SizedBox(width: 12),
-
-                              /// 🔷 ITEM NAME
-                              Expanded(child: Text(item.name)),
-
-                              /// 📷 CAMERA / ✅ TICK
-                              GestureDetector(
-                                onTap:widget.isEdit == true
-    ? null
-    :() async {
-                                  if (!item.isSelected) {
-                                    ShowDialogs.showToast("Select item first");
-                                    return;
-                                  }
-
-                                  final picked = await ImagePicker().pickImage(
-                                    source: ImageSource.gallery,
-                                  );
-
-                                  if (picked != null) {
-                                    setState(() {
-                                      item.image = File(picked.path);
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    (item.image != null ||
-                                            item.networkImage != null)
-                                        ? Icons.check_circle
-                                        : Icons.camera_alt,
-                                    color:
-                                        (item.image != null ||
-                                            item.networkImage != null)
-                                        ? Colors.green
                                         : Colors.grey,
                                   ),
+                                  color: item.isSelected
+                                      ? customcolor.green
+                                      : Colors.transparent,
                                 ),
+                                child: item.isSelected
+                                    ? Icon(Icons.check,
+                                        size: 16,
+                                        color: Colors.white)
+                                    : null,
                               ),
-                            ],
-                          ),
+                            ),
+
+                            SizedBox(width: 12),
+
+                            Expanded(child: Text(item.name)),
+
+                            /// CAMERA
+                            GestureDetector(
+                              onTap: widget.isEdit == true
+                                  ? null
+                                  : () async {
+                                      if (!item.isSelected) {
+                                        ShowDialogs.showToast(
+                                            "Select item first");
+                                        return;
+                                      }
+
+                                      final picked =
+                                          await ImagePicker()
+                                              .pickImage(
+                                        source:
+                                            ImageSource.gallery,
+                                      );
+
+                                      if (picked != null) {
+                                        setState(() {
+                                          item.image =
+                                              File(picked.path);
+                                        });
+                                      }
+                                    },
+                              child: Icon(
+                                (item.image != null ||
+                                        item.networkImage != null)
+                                    ? Icons.check_circle
+                                    : Icons.camera_alt,
+                                color: (item.image != null ||
+                                        item.networkImage != null)
+                                    ? Colors.green
+                                    : Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
+                  crossFadeState: category.isExpanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: Duration(milliseconds: 250),
                 ),
-                crossFadeState: category.isExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: Duration(milliseconds: 250),
-              ),
             ],
           ),
-        );
-      },
-    );
-  }
-
+        ),
+      );
+    },
+  );
+}
   List<VisitCategory> visitCategories = [];
 
   String? workflowValue;
@@ -777,34 +1245,75 @@ class _OperationVisitPageState extends State<OperationVisitPage> {
       return;
     }
 
-    for (var item in selectedItems) {
-      if (item.image == null) {
-        ShowDialogs.showToast("Please upload image for ${item.name}");
+    // for (var item in selectedItems) {
+    //   if (item.image == null) {
+    //     ShowDialogs.showToast("Please upload image for ${item.name}");
+    //     return;
+    //   }
+    // }
+for (var category in visitCategories) {
+  if (category.items.isEmpty) {
+    if (category.isSelected && category.image == null) {
+      ShowDialogs.showToast(
+          "Please upload image for ${category.name}");
+      return;
+    }
+  } else {
+    for (var item in category.items) {
+      if (item.isSelected && item.image == null) {
+        ShowDialogs.showToast(
+            "Please upload image for ${item.name}");
         return;
       }
     }
-
+  }
+}
     var isConnected = await ConnectionDetector.checkInternetConnection();
     var roles = await SPManager().getsupervisorid();
 
     // ✅ BUILD visiting_image ARRAY
     List<Map<String, dynamic>> visitingImageList = [];
 
-    for (var category in visitCategories) {
-      for (var item in category.items) {
-        if (item.isSelected &&
-            (item.image != null || item.networkImage != null)) {
-          String base64Image = await convertToBase64(item.image!);
-          String finalImage = "data:image/jpeg;base64,$base64Image";
-          visitingImageList.add({
-            "training_visit_id": int.parse(item.id),
-            "image": finalImage,
-          });
-
-          print("ID: ${item.id}");
-        }
-      }
+for (var category in visitCategories) {
+  /// ✅ CATEGORY WITHOUT ITEMS
+  if (category.items.isEmpty) {
+    if (category.isSelected == true && category.image != null) {
+      String base64Image = await convertToBase64(category.image!);
+      visitingImageList.add({
+        "training_visit_id": int.parse(category.id),
+        "image": "data:image/jpeg;base64,$base64Image",
+      });
     }
+  }
+
+  /// ✅ CATEGORY WITH ITEMS
+  for (var item in category.items) {
+    if (item.isSelected && item.image != null) {
+      String base64Image = await convertToBase64(item.image!);
+      visitingImageList.add({
+        "training_visit_id": int.parse(item.id),
+        "image": "data:image/jpeg;base64,$base64Image",
+      });
+    }
+  }
+}
+    // List<Map<String, dynamic>> visitingImageList = [];
+
+    // for (var category in visitCategories) {
+    //   for (var item in category.items) {
+    //     if (item.isSelected &&
+    //         (item.image != null || item.networkImage != null)) {
+    //       String base64Image = await convertToBase64(item.image!);
+    //       String finalImage = "data:image/jpeg;base64,$base64Image";
+    //       visitingImageList.add({
+    //         "training_visit_id": int.parse(item.id),
+    //         "image": finalImage,
+    //       });
+
+    //       print("ID: ${item.id}");
+    //     }
+    //   }
+    // }
 
     // ✅ FINAL PAYLOAD
     final Map<String, dynamic> payload = {

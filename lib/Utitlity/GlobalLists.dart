@@ -4,6 +4,7 @@ import 'package:janpro/model/ClientwisetrainingResponse.dart' as training;
 import 'package:janpro/model/DashboardlistResponse.dart';
 import 'package:janpro/model/GetComplaintResponse.dart' as complaint;
 import 'package:janpro/model/OperationalRatinggraphwiseResponse.dart';
+import 'package:janpro/model/RankingResponse.dart';
 import 'package:janpro/model/UnitDashboardResponse.dart' as unitdash;
 import 'package:janpro/model/UnitclientMasterResponse.dart' as clientmaster;
 import 'package:janpro/model/WorkflowlistResponse.dart';
@@ -47,12 +48,13 @@ static ValueNotifier<bool> isWorflowLoading = ValueNotifier<bool>(false);
 static ValueNotifier<bool> iscomplaintLoadin = ValueNotifier<bool>(false);
 static ValueNotifier<bool> isAddEditJanitor = ValueNotifier<bool>(false);
 static ValueNotifier<bool> isActiveLoader = ValueNotifier<bool>(false);
+
 static  int isShiftActive = 1;
 
 static String downloadRosterLink="";
   static List<unitatt.Datum> mainlisttab = [];
   static List<Janitorcheckbox> dropdownList = [];
-  static late att.Data attendancedata;
+  static  att.Data? attendancedata;
   static TextEditingController datecontroller = new TextEditingController();
 
   static bool isclientdata = false;

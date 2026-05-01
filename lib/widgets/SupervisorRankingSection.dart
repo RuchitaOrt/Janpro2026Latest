@@ -1,100 +1,91 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:janpro/Utitlity/custom_color.dart';
+import 'package:janpro/model/RankingResponse.dart';
 
 class SupervisorRankingSection extends StatelessWidget {
-  const SupervisorRankingSection({super.key});
+  final List<RankingCard> rankings; // 👈 dynamic data
+
+  const SupervisorRankingSection({super.key, required this.rankings});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        /// Header
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //   children: [
-        //     Row(
-        //       children: [
-        //         // 4
-        //         Padding(
-        //           padding: const EdgeInsets.only(left: 4,top: 8),
-        //           child: Text(
-        //             "SUPERVISOR RANKINGS",
-        //             style: TextStyle(
-        //               fontSize: 16,
-        //               fontWeight: FontWeight.bold,
-        //               color: customcolor.black
-        //             ),
-        //           ),
-        //         ),
-        //       ],
-        //     ),
-            
-        //     Container(
-        //       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        //       decoration: BoxDecoration(
-        //         color: Color(0xffE8EEF9),
-        //         borderRadius: BorderRadius.circular(20),
-        //       ),
-        //       child: Text(
-        //         "March 2026",
-        //         style: TextStyle(fontSize: 12),
-        //       ),
-        //     )
-        //   ],
-        // ),
+    if (rankings.isEmpty) {
+      return const Center(child: Text("No Data"));
+    }
 
-        //  SizedBox(height: 21),
+    return SizedBox(
+      height: 190,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: rankings.length,
+        itemBuilder: (context, index) {
+          final item = rankings[index];
 
-        // Padding(
-        //   padding: const EdgeInsets.only(left: 10),
-        //   child: Text(
-        //     "Ranked by workflow completion + attendance · Resets monthly",
-        //     style: TextStyle(fontSize: 13, color: Colors.black),
-        //   ),
-        // ),
-
-         SizedBox(height: 15),
-
-        /// Horizontal Cards
-       SizedBox(
-  height: 190, // 🔥 increased from 170
-  child: ListView(
-    scrollDirection: Axis.horizontal,
-    children: const [
-      RankingCard(
-        rank: 1,
-        name: "Rajesh Kumar",
-        location: "Andheri site",
-        workflow: 94,
-        attendance: 98,
-        score: 96,
+          return RankingData(
+            rank: item.rank,
+            name: item.supervisorName ?? "",
+            location: item.siteName ?? "",
+            workflow: item.workflowAvg.toInt() ?? 0,
+            attendance: item.attendanceAvg.toInt() ?? 0,
+            score: item.score.toInt() ?? 0,
+          );
+        },
       ),
-      RankingCard(
-        rank: 2,
-        name: "Priya Mehta",
-        location: "Bandra site",
-        workflow: 88,
-        attendance: 92,
-        score: 90,
-      ),
-      RankingCard(
-        rank: 3,
-        name: "Amit Shah",
-        location: "Powai site",
-        workflow: 81,
-        attendance: 89,
-        score: 85,
-      ),
-    ],
-  ),
-)
-      ],
     );
   }
 }
-class RankingCard extends StatelessWidget {
+// class SupervisorRankingSection extends StatelessWidget {
+//   const SupervisorRankingSection({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+       
+
+//          SizedBox(height: 15),
+
+//         /// Horizontal Cards
+//        SizedBox(
+//   height: 190, // 🔥 increased from 170
+//   child: ListView(
+//     scrollDirection: Axis.horizontal,
+//     children: const [
+//       RankingCard(
+//         rank: 1,
+//         name: "Rajesh Kumar",
+//         location: "Andheri site",
+//         workflow: 94,
+//         attendance: 98,
+//         score: 96,
+//       ),
+//       RankingCard(
+//         rank: 2,
+//         name: "Priya Mehta",
+//         location: "Bandra site",
+//         workflow: 88,
+//         attendance: 92,
+//         score: 90,
+//       ),
+//       RankingCard(
+//         rank: 3,
+//         name: "Amit Shah",
+//         location: "Powai site",
+//         workflow: 81,
+//         attendance: 89,
+//         score: 85,
+//       ),
+//     ],
+//   ),
+// )
+//       ],
+//     );
+//   }
+// }
+
+class RankingData extends StatelessWidget {
   final int rank;
   final String name;
   final String location;
@@ -102,7 +93,7 @@ class RankingCard extends StatelessWidget {
   final int attendance;
   final int score;
 
-  const RankingCard({
+  const RankingData({
     super.key,
     required this.rank,
     required this.name,
@@ -118,7 +109,7 @@ class RankingCard extends StatelessWidget {
 
     return Container(
       width: 230, // 🔥 wider like design
-      margin: const EdgeInsets.only(right: 16),
+      margin: const EdgeInsets.only(right: 16,),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
         gradient: isTop

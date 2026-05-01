@@ -43,6 +43,7 @@ class Data {
     dynamic createdBy;
     dynamic updatedBy;
     String empName;
+    dynamic rm_id;
     int empType;
     String empEmailId;
     String password;
@@ -63,6 +64,7 @@ class Data {
         required this.contact,
         this.reportManager,
         required this.isActive,
+         this.rm_id
     });
 
     factory Data.fromJson(Map<String, dynamic> json) => Data(
@@ -80,6 +82,7 @@ class Data {
         contact: json["contact"] ?? "",
         reportManager: json["report_manager"],
         isActive: json["isActive"] ?? false,
+        rm_id:json['rm_id']
     );
 
     Map<String, dynamic> toJson() => {
@@ -95,5 +98,6 @@ class Data {
         "contact": contact,
         "report_manager": reportManager,
         "isActive": isActive,
+        'rm_id':rm_id
     };
 }
