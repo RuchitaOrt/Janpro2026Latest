@@ -827,15 +827,15 @@ items.isEmpty
                   Row(
                     children: [
                       Text(
-                                       "${item.trainingVisitCategory} :" ?? "",
+                                       "${item.trainingVisitCategory} " ?? "",
                         style: TextStyle(
                           fontSize: 16,
                           color: customcolor.blue,
                           fontFamily: 'Roboto',
                         ),
                       ),
-                      Text(
-                 "${item.trainingVisitName}" ?? "",
+                   item.trainingVisitName==""?Container():   Text(
+                 ": ${item.trainingVisitName}" ?? "",
                     style: TextStyle(
                       fontSize: 14,
                       color: customcolor.black,

@@ -8,6 +8,7 @@ import 'dart:ui';
 import 'package:another_flushbar/flushbar.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:janpro/DBHelper/db_helper.dart';
+import 'package:janpro/Screens/SupervisorRankingListScreen.dart';
 import 'package:janpro/Screens/client_visit_view.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/const/global.dart';
@@ -1323,28 +1324,61 @@ print("SUPAERVISOR RANK");
     ),
     SizedBox(height: 10,),
 Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
   children: [
-
-    /// 📅 MONTH
-  _buildCompactDropdown<String>(
-  value: selectedMonth,
-  items: months,
-  onChanged: (val) {
-    setState(() => selectedMonth = val!);
-    supervisorRankingApi(); // 🔥 CALL API
-  },
-),
-    const SizedBox(width: 8),
-
-    /// 📆 YEAR
-   _buildCompactDropdown<int>(
-  value: selectedYear,
-  items: years,
-  onChanged: (val) {
-    setState(() => selectedYear = val!);
-    supervisorRankingApi(); // 🔥 CALL API
-  },
-),
+    Container(
+      width: SizeConfig.blockSizeHorizontal *60,
+      child: Row(
+        children: [
+      
+          /// 📅 MONTH
+        _buildCompactDropdown<String>(
+        value: selectedMonth,
+        items: months,
+        onChanged: (val) {
+          setState(() => selectedMonth = val!);
+          supervisorRankingApi(); // 🔥 CALL API
+        },
+      ),
+          const SizedBox(width: 8),
+      
+          /// 📆 YEAR
+         _buildCompactDropdown<int>(
+        value: selectedYear,
+        items: years,
+        onChanged: (val) {
+          setState(() => selectedYear = val!);
+          supervisorRankingApi(); // 🔥 CALL API
+        },
+      ),
+        ],
+      ),
+    ),
+   if ((rankingPagination?.totalRecords ?? 0) > 5)
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SupervisorRankingListScreen(
+            selectedMonth: selectedMonth,
+            selectedYear: selectedYear,
+          ),
+        ),
+      );
+    },
+    child: Text(
+      "View All",
+      style: TextStyle(
+        fontSize: 12,
+        color: customcolor.blue,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  )
+else
+  const SizedBox(),
+    
   ],
 )
     /// FILTERS
@@ -3482,29 +3516,61 @@ Row(
     ),
     SizedBox(height: 10,),
 Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
   children: [
-
-    /// 📅 MONTH
-   _buildCompactDropdown<String>(
-  value: selectedMonth,
-  items: months,
-  onChanged: (val) {
-    setState(() => selectedMonth = val!);
-    supervisorRankingApi(); // 🔥 CALL API
-  },
-),
-
-    const SizedBox(width: 8),
-
-    /// 📆 YEAR
-    _buildCompactDropdown<int>(
-  value: selectedYear,
-  items: years,
-  onChanged: (val) {
-    setState(() => selectedYear = val!);
-    supervisorRankingApi(); // 🔥 CALL API
-  },
-),
+    Container(
+      width: SizeConfig.blockSizeHorizontal *60,
+      child: Row(
+        children: [
+      
+          /// 📅 MONTH
+         _buildCompactDropdown<String>(
+        value: selectedMonth,
+        items: months,
+        onChanged: (val) {
+          setState(() => selectedMonth = val!);
+          supervisorRankingApi(); // 🔥 CALL API
+        },
+      ),
+      
+          const SizedBox(width: 8),
+      
+          /// 📆 YEAR
+          _buildCompactDropdown<int>(
+        value: selectedYear,
+        items: years,
+        onChanged: (val) {
+          setState(() => selectedYear = val!);
+          supervisorRankingApi(); // 🔥 CALL API
+        },
+      ),
+        ],
+      ),
+    ),
+    if ((rankingPagination?.totalRecords ?? 0) > 5)
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SupervisorRankingListScreen(
+            selectedMonth: selectedMonth,
+            selectedYear: selectedYear,
+          ),
+        ),
+      );
+    },
+    child: Text(
+      "View All",
+      style: TextStyle(
+        fontSize: 12,
+        color: customcolor.blue,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  )
+else
+  const SizedBox(),
   ],
 ),
     /// FILTERS
@@ -6288,6 +6354,7 @@ String getMonthNumber(String month) {
 }
 List<RankingCard> superviorRankingList=[];
 bool isLoadingRanking = false;
+Pagination? rankingPagination;
    supervisorRankingApi() async {
     var status1 = await ConnectionDetector.checkInternetConnection();
     setState(() {
@@ -6301,7 +6368,8 @@ String datefrom = "$selectedYear-$monthNumber";
     final payload = {
 
       "date":datefrom,
-"rm_id":rmID
+"rm_id":rmID,
+"page":"1"
       
     };
 
@@ -6313,6 +6381,7 @@ String datefrom = "$selectedYear-$monthNumber";
         (response) async {
           print("SUPAERVISOR RANK reso");
         final resp = response as RankingResponse;
+       
           print("SUPAERVISOR RANK resp ${resp}");
           print('SUPAERVISOR API $resp');
   setState(() {
@@ -6323,6 +6392,7 @@ String datefrom = "$selectedYear-$monthNumber";
             // ShowDialogs.showToast(resp.msg);
            setState(() {
               superviorRankingList=resp.rankingCard;
+               rankingPagination = resp.pagination; 
               print("SUPAERVISOR LENGTH");
               print((superviorRankingList.length.toString()));
 

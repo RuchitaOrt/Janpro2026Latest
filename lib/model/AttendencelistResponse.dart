@@ -167,12 +167,14 @@ class EmployeeList {
   String name;
   String contact;
   String loginTime;
+   int? janmarkid;
 
   EmployeeList({
     required this.id,
     required this.name,
     required this.contact,
     required this.loginTime,
+     this.janmarkid
   });
 
   factory EmployeeList.fromJson(Map<String, dynamic> json) => EmployeeList(
@@ -180,6 +182,7 @@ class EmployeeList {
     name: json["name"]??"",
     contact: json["contact"]??"",
     loginTime: json["login_time"]??"",
+     janmarkid: json['jan_mark_id'] ?? ""
   );
 
   Map<String, dynamic> toJson() => {
@@ -187,6 +190,7 @@ class EmployeeList {
     "name": name,
     "contact": contact,
     "login_time": loginTime,
+    "janmarkid":janmarkid
   };
 }
 

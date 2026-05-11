@@ -3452,7 +3452,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
                                       isexpandedjanitor = false;
 
-                                      selectedJanitorIds.clear();
+                                      // selectedJanitorIds.clear();
                                       addaddtendance(context);
                                       // Add your action for the center button here
                                     },
@@ -4229,7 +4229,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   }
 
   List<int> selectedJanitorIds = [];
-
+  List<int> apiSelectedJanitorIds = [];
 
   addaddtendance(BuildContext context) {
     showModalBottomSheet(
@@ -4304,21 +4304,22 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                   ),
                                 ),
                               )
-                            : ListView.builder(
+                            : 
+                            ListView.builder(
                                 itemCount: GlobalLists.dropdownList.length,
                                 itemBuilder: (context, index) {
                                   final janitor =
                                       GlobalLists.dropdownList[index];
-                                  final isSelected = selectedJanitorIds
-                                      .contains(int.parse(janitor.id));
-                                      print("isSelected");
-                                      print(selectedJanitorIds);
-                                      print(janitor.id);
+                                      print("IN MARK");
+                                    final id = int.parse(janitor.id.toString());
+
+final isFromApi = apiSelectedJanitorIds.contains(id);   // 🔒 disable
+final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                                       print(isSelected);
                                   return Container(
                                     margin: EdgeInsets.only(bottom: 8),
                                     decoration: BoxDecoration(
-                                      color: isSelected
+                                      color: isFromApi
                                           ? customcolor.blue.withOpacity(0.08)
                                           : Colors.white,
                                       borderRadius: BorderRadius.circular(10),
@@ -4326,7 +4327,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                         color: customcolor.greybg,
                                       ),
                                     ),
-                                    child: CheckboxListTile(
+                                    child: 
+                                    CheckboxListTile(
                                       value: isSelected,
                                       activeColor: customcolor.blue,
                                       controlAffinity:
@@ -4346,8 +4348,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                           color: customcolor.greytext,
                                         ),
                                       ),
-                                      onChanged: (value) {
+                                      onChanged:isFromApi
+        ? null // disable ONLY api ones
+        : (value) {
                                         setStateDialgoue(() {
+                                         
                                           if (value == true) {
                                             selectedJanitorIds.add(
                                               int.parse(janitor.id),
@@ -4753,6 +4758,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
   }
 
   supervisorattendancelist(List<EmployeeList> employeelist) {
+    
     return Container(
       height: SizeConfig.blockSizeVertical * 50,
       child: ListView.builder(
@@ -4761,6 +4767,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
         physics: ScrollPhysics(),
         itemCount: employeelist.length,
         itemBuilder: (context, index) {
+           apiSelectedJanitorIds.add(
+                                              int.parse(employeelist[index].janmarkid.toString()),
+                                            );
+                                            print("SELCTED JANITOR");
+                                            print(apiSelectedJanitorIds);
           return Padding(
             padding: const EdgeInsets.only(right: 2.0, bottom: 6),
             child: Card(
@@ -4871,7 +4882,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
-                                  "Login Timing",
+                                  "Login Timing ${employeelist[index].janmarkid.toString()}",
                                   style: AppFonts.headerStyle(
                                     fontSize: ResponsiveFlutter.of(
                                       context,
@@ -4911,8 +4922,15 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
     List<unitatt.EmployeeList> employeelist,
     bool delete_permission,
   ) {
+   apiSelectedJanitorIds.clear();
+
     return Column(
       children: employeelist.map((employee) {
+         apiSelectedJanitorIds.add(
+                                              int.parse(employee.janmarkid.toString()),
+                                            );
+                                            print("SELCTED JANITOR");
+                                            print(apiSelectedJanitorIds);
         return Padding(
           padding: const EdgeInsets.only(right: 2.0, bottom: 6),
           child: Card(

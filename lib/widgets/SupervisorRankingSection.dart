@@ -26,64 +26,15 @@ class SupervisorRankingSection extends StatelessWidget {
             rank: item.rank,
             name: item.supervisorName ?? "",
             location: item.siteName ?? "",
-            workflow: item.workflowAvg.toInt() ?? 0,
-            attendance: item.attendanceAvg.toInt() ?? 0,
-            score: item.score.toInt() ?? 0,
+            workflow: item.workflowAvg.toInt() ,
+            attendance: item.attendanceAvg.toInt() ,
+            score: item.score.toInt() ,
           );
         },
       ),
     );
   }
 }
-// class SupervisorRankingSection extends StatelessWidget {
-//   const SupervisorRankingSection({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-       
-
-//          SizedBox(height: 15),
-
-//         /// Horizontal Cards
-//        SizedBox(
-//   height: 190, // 🔥 increased from 170
-//   child: ListView(
-//     scrollDirection: Axis.horizontal,
-//     children: const [
-//       RankingCard(
-//         rank: 1,
-//         name: "Rajesh Kumar",
-//         location: "Andheri site",
-//         workflow: 94,
-//         attendance: 98,
-//         score: 96,
-//       ),
-//       RankingCard(
-//         rank: 2,
-//         name: "Priya Mehta",
-//         location: "Bandra site",
-//         workflow: 88,
-//         attendance: 92,
-//         score: 90,
-//       ),
-//       RankingCard(
-//         rank: 3,
-//         name: "Amit Shah",
-//         location: "Powai site",
-//         workflow: 81,
-//         attendance: 89,
-//         score: 85,
-//       ),
-//     ],
-//   ),
-// )
-//       ],
-//     );
-//   }
-// }
 
 class RankingData extends StatelessWidget {
   final int rank;
@@ -128,29 +79,7 @@ class RankingData extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// Avatar
-                // Container(
-                //   height: 50,
-                //   width: 56,
-                //   decoration: BoxDecoration(
-                //     color: isTop
-                //         ? Colors.white.withOpacity(0.2)
-                //         : const Color(0xffCFE8D1),
-                //     borderRadius: BorderRadius.circular(16),
-                //   ),
-                //   alignment: Alignment.center,
-                //   child: Padding(
-                //     padding: const EdgeInsets.only(top: 8),
-                //     child: Text(
-                //       name.substring(0, 2).toUpperCase(),
-                //       style: TextStyle(
-                //         fontSize: 18,
-                //         fontWeight: FontWeight.bold,
-                //         color: isTop ? Colors.white : Colors.green[800],
-                //       ),
-                //     ),
-                //   ),
-                // ),
+               
 
                 const SizedBox(height: 5),
 

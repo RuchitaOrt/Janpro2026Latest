@@ -280,7 +280,7 @@ class _AppDrawerfilterState extends State<AppDrawerfilter> {
                 height: 30,
                 child: Center(
                   child: Text(
-                    "Version 2.0.1",
+                    "Version 1.0.0+13",
                     style: TextStyle(color: customcolor.white),
                   ),
                 ),
