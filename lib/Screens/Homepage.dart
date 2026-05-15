@@ -6355,76 +6355,168 @@ String getMonthNumber(String month) {
 List<RankingCard> superviorRankingList=[];
 bool isLoadingRanking = false;
 Pagination? rankingPagination;
-   supervisorRankingApi() async {
-    var status1 = await ConnectionDetector.checkInternetConnection();
-    setState(() {
-      isLoadingRanking=true;
-    });
-      rmID = (await SPManager().getRMID())!;
-    //  var datefrom = DateFormat('yyyy-MM').format(DateTime.now());
-    String monthNumber = getMonthNumber(selectedMonth);
-String datefrom = "$selectedYear-$monthNumber";
-    print(datefrom);
-    final payload = {
+//    supervisorRankingApi() async {
+//     var status1 = await ConnectionDetector.checkInternetConnection();
+//     setState(() {
+//       isLoadingRanking=true;
+//     });
+//       rmID = (await SPManager().getRMID())!;
+//     //  var datefrom = DateFormat('yyyy-MM').format(DateTime.now());
+//     String monthNumber = getMonthNumber(selectedMonth);
+// String datefrom = "$selectedYear-$monthNumber";
+//     print(datefrom);
+//     final payload = {
 
-      "date":datefrom,
-"rm_id":rmID,
-"page":"1"
+//       "date":datefrom,
+// "rm_id":rmID,
+// "page":"1"
       
-    };
+//     };
 
-    if (status1) {
- print("SUPAERVISOR RANK s");
-      APIManager().apiRequest(
-        context,
-        API.get_ranking_card,
-        (response) async {
-          print("SUPAERVISOR RANK reso");
-        final resp = response as RankingResponse;
+//     if (status1) {
+//  print("SUPAERVISOR RANK s");
+//       APIManager().apiRequest(
+//         context,
+//         API.get_ranking_card,
+//         (response) async {
+//           print("SUPAERVISOR RANK reso");
+//         final resp = response as RankingResponse;
        
-          print("SUPAERVISOR RANK resp ${resp}");
-          print('SUPAERVISOR API $resp');
-  setState(() {
-      isLoadingRanking=false;
-    });
-          if (resp.status == 1) {
-            print("SUPAERVISOR RANK status 1");
-            // ShowDialogs.showToast(resp.msg);
-           setState(() {
-              superviorRankingList=resp.rankingCard;
-               rankingPagination = resp.pagination; 
-              print("SUPAERVISOR LENGTH");
-              print((superviorRankingList.length.toString()));
+//           print("SUPAERVISOR RANK resp ${resp}");
+//           print('SUPAERVISOR API $resp');
+//   setState(() {
+//       isLoadingRanking=false;
+//     });
+//           if (resp.status == 1) {
+//             print("SUPAERVISOR RANK status 1");
+//             // ShowDialogs.showToast(resp.msg);
+//            setState(() {
+//               superviorRankingList=resp.rankingCard;
+//                rankingPagination = resp.pagination; 
+//               print("SUPAERVISOR LENGTH");
+//               print((superviorRankingList.length.toString()));
 
-           });
-          } else {
-            print("SUPAERVISOR RANK status 0");
-            ShowDialogs.showToast(resp.msg);
-          }
-        },
-        (error) {
-            setState(() {
-      isLoadingRanking=false;
-    });
-          print('SUPAERVISOR ERR msg is $error');
-        },
-        false,
-        "",
-        jsonval: payload,
-      );
-    } else {
-       setState(() {
-      isLoadingRanking=false;
-    });
-      await DBHelper.insertOfflineRequest(
-        '${Global.baseUrl}/api/siteconfigurator/get_ranking_card',
-        payload,
-      );
-
-      ShowDialogs.showToast("Saved offline. Will sync when connected.");
+//            });
+//           } else {
+//             print("SUPAERVISOR RANK status 0");
+//             ShowDialogs.showToast(resp.msg);
+//           }
+//         },
+//         (error) {
+//             setState(() {
+//       isLoadingRanking=false;
+//     });
+//           print('SUPAERVISOR ERR msg is $error');
+//         },
+//         false,
+//         "",
+//         jsonval: payload,
+//       );
+//     } else {
+//        setState(() {
+//       isLoadingRanking=false;
+//     });
      
+
+//       ShowDialogs.showToast("Saved offline. Will sync when connected.");
+     
+//     }
+//   }
+supervisorRankingApi() async {
+  var status1 = await ConnectionDetector.checkInternetConnection();
+
+  setState(() {
+    isLoadingRanking = true;
+  });
+
+  rmID = (await SPManager().getRMID())!;
+
+  String monthNumber = getMonthNumber(selectedMonth);
+  String datefrom = "$selectedYear-$monthNumber";
+
+  final payload = {
+    "date": datefrom,
+    "rm_id": rmID,
+    "page": "1"
+  };
+
+  final prefs = await SharedPreferences.getInstance();
+
+  /// UNIQUE CACHE KEY
+  String cacheKey = 'rankingCache_${rmID}_$datefrom';
+
+  if (status1) {
+    APIManager().apiRequest(
+      context,
+      API.get_ranking_card,
+      (response) async {
+        final resp = response as RankingResponse;
+
+        setState(() {
+          isLoadingRanking = false;
+        });
+
+        if (resp.status == 1) {
+
+          /// SAVE API RESPONSE TO CACHE
+          await prefs.setString(
+            cacheKey,
+            jsonEncode(resp.toJson()),
+          );
+
+          setState(() {
+            superviorRankingList = resp.rankingCard;
+            rankingPagination = resp.pagination;
+          });
+
+        } else {
+          ShowDialogs.showToast(resp.msg);
+        }
+      },
+      (error) {
+        setState(() {
+          isLoadingRanking = false;
+        });
+
+        print('SUPERVISOR ERR msg is $error');
+
+        ShowDialogs.showToast("Server Not Responding");
+      },
+      false,
+      "",
+      jsonval: payload,
+    );
+  } else {
+
+    /// LOAD CACHED DATA
+    String? cachedData = prefs.getString(cacheKey);
+
+    setState(() {
+      isLoadingRanking = false;
+    });
+
+    if (cachedData != null) {
+
+      final decoded = jsonDecode(cachedData);
+
+      RankingResponse cachedResponse =
+          RankingResponse.fromJson(decoded);
+
+      setState(() {
+        superviorRankingList = cachedResponse.rankingCard;
+        rankingPagination = cachedResponse.pagination;
+      });
+
+      ShowDialogs.showToast("Loaded offline data");
+
+    } else {
+
+      ShowDialogs.showToast(
+        "No internet and no cached data available",
+      );
     }
   }
+}
 }
 
 extension ExtendedIterable<E> on Iterable<E> {

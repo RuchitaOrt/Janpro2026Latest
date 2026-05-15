@@ -4381,14 +4381,22 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                       ///  SUBMIT BUTTON
                       GestureDetector(
                         onTap: () {
-                          
+                        // ShowDialogs.showToast(
+                        //       "D:Clicked on button",
+                        //     );
                           if (lat == null || long == null) {
                             grantPermission();
+                            //  ShowDialogs.showToast(
+                            //   "D:Location not granted",
+                            // );
                           } else if (selectedJanitorIds.isEmpty) {
                             ShowDialogs.showToast(
                               "Please select at least one janitor",
                             );
                           } else {
+                            //  ShowDialogs.showToast(
+                            //   "D:in else",
+                            // );
                          print('NEWIPHONE In side addattendanceApi');
                           int total= 0;
                           int count=0;
@@ -4396,6 +4404,9 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                           print(GlobalLists.operationrole);
                        if(role==GlobalLists.unitrole )
                        {
+                        //  ShowDialogs.showToast(
+                        //       "D:in unitrole",
+                        //     );
   total= 
                             GlobalLists
                                                       .mainlisttab[maintag]
@@ -4410,7 +4421,9 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                             // GlobalLists.attendancedata!.count;
                        }else if(role==GlobalLists.operationrole)
                        {
-
+//  ShowDialogs.showToast(
+//                               "D:in operationrole",
+//                             );
                           total= 
                             GlobalLists
                                                       .mainlisttab[maintag]
@@ -4424,6 +4437,9 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                                                       .count;
                        }else if(role==GlobalLists.operationmanagerrole)
                        {
+                        // ShowDialogs.showToast(
+                        //       "D:in operationmanagerrole",
+                        //     );
 
                           total= 
                             GlobalLists
@@ -4438,6 +4454,9 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                                                       .count;
                        }else
                        {
+                        //  ShowDialogs.showToast(
+                        //       "D:in else role ${role}",
+                        //     );
                           total= 
                          
                             GlobalLists.attendancedata!.noOfStaff;
@@ -4445,7 +4464,9 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                            
                            count=  GlobalLists.attendancedata!.count;
                        }
-                           
+                            //  ShowDialogs.showToast(
+                            //   "D: ${total.toString()} ${count.toString()}",
+                            // );
                             int remaining = total - count;
                             if (remaining <= 0) {
                               ShowDialogs.showToast(
@@ -4460,6 +4481,9 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
                               );
                               return;
                             }
+                            // ShowDialogs.showToast(
+                            //   "D: called api",
+                            // );
                             addattendanceApi();
                           }
                         },
@@ -5720,7 +5744,9 @@ final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
           .split('T')[1]
           .split('.')[0];
     }
-
+//  ShowDialogs.showToast(
+//                               "D: called ${map}",
+//                             );
     log('addattendanceApi Map: $map');
 
     if (status1) {

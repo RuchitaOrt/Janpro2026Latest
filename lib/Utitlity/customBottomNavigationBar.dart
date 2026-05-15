@@ -148,11 +148,12 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                               color: Colors.transparent,
                               height: SizeConfig.blockSizeHorizontal * 14,
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   SizedBox(
                                     height: SizeConfig.blockSizeHorizontal * 7,
                                   ),
+                                   
                                   Text(
                                     "Home",
                                     style: AppFonts.headerStyle(
@@ -161,7 +162,15 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                                             ? customcolor.tabblue
                                             : customcolor.hinttext,
                                         fontWeight: FontWeight.normal),
-                                  )
+                                  ),Text(
+                                    "Version 1.0.0+13",
+                                    style: AppFonts.headerStyle(
+                                        fontSize: 7,
+                                        color: customcolor.tabblue,
+                                           
+                                        fontWeight: FontWeight.normal),
+                                  ),
+                                 
                                 ],
                               )),
                         ),
@@ -343,11 +352,13 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                             color: Colors.transparent,
                             height: SizeConfig.blockSizeHorizontal * 14,
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+
                               children: [
                                 SizedBox(
                                   height: SizeConfig.blockSizeHorizontal * 7,
                                 ),
+                                
                                 Text(
                                   "Home",
                                   style: AppFonts.headerStyle(
@@ -356,7 +367,15 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                                           ? customcolor.tabblue
                                           : customcolor.hinttext,
                                       fontWeight: FontWeight.normal),
-                                )
+                                ),
+                                  Text(
+                                    "Version 1.0.0+13",
+                                    style: AppFonts.headerStyle(
+                                        fontSize: 7,
+                                        color: customcolor.tabblue,
+                                           
+                                        fontWeight: FontWeight.normal),
+                                  ),
                               ],
                             )),
                       ),

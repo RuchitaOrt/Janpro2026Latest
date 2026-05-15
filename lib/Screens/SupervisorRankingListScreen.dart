@@ -11,6 +11,7 @@ import 'package:janpro/Utitlity/internetConnection.dart';
 import 'package:janpro/const/global.dart';
 
 import 'package:janpro/model/RankingResponse.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SupervisorRankingListScreen extends StatefulWidget {
   final String selectedMonth;
@@ -116,98 +117,149 @@ void filterRanking(String query) {
 
     return months[month] ?? "01";
   }
+Future<void> getRanking() async {
+  if (isApiCalling) return;
 
-  Future<void> getRanking() async {
-    if (isApiCalling) return;
+  isApiCalling = true;
 
-    isApiCalling = true;
+  if (mounted) {
+    setState(() {
+      isLoading = true;
+    });
+  }
 
-    if (mounted) {
-      setState(() {
-        isLoading = true;
-      });
-    }
+  rmID = (await SPManager().getRMID()) ?? "";
 
-    rmID = (await SPManager().getRMID()) ?? "";
+  String monthNumber = getMonthNumber(widget.selectedMonth);
 
-    String monthNumber = getMonthNumber(widget.selectedMonth);
+  String datefrom = "${widget.selectedYear}-$monthNumber";
 
-    String datefrom = "${widget.selectedYear}-$monthNumber";
+  final payload = {
+    "date": datefrom,
+    "rm_id": rmID,
+    "page": page.toString(),
+  };
 
-    final payload = {
-      "date": datefrom,
-      "rm_id":  rmID,
-      "page": page.toString(),
-    };
+  /// UNIQUE CACHE KEY
+  final cacheKey =
+      'rankingCache_${datefrom}_${rmID}_page_$page';
 
-    var status = await ConnectionDetector.checkInternetConnection();
+  var status = await ConnectionDetector.checkInternetConnection();
 
-    if (status) {
-      APIManager().apiRequest(
-        context,
-        API.get_ranking_card,
-        (response) async {
-          final resp = response as RankingResponse;
+  /// ========================= ONLINE =========================
+  if (status) {
+    APIManager().apiRequest(
+      context,
+      API.get_ranking_card,
+      (response) async {
+        final resp = response as RankingResponse;
 
-          if (!mounted) return;
+        if (!mounted) return;
 
-          if (resp.status == 1) {
-            final newData = resp.rankingCard ?? [];
+        if (resp.status == 1) {
+          final prefs = await SharedPreferences.getInstance();
 
-            setState(() {
-             rankingList.addAll(newData);
+          /// SAVE COMPLETE RESPONSE
+          await prefs.setString(
+            cacheKey,
+            jsonEncode(resp.toJson()),
+          );
 
-filteredRankingList = rankingList;
-
-              hasMore = resp.pagination?.hasNext ?? false;
-
-              if (hasMore) {
-                page++;
-              }
-
-              isLoading = false;
-            });
-          } else {
-            setState(() {
-              hasMore = false;
-              isLoading = false;
-            });
-          }
-
-          isApiCalling = false;
-        },
-        (error) {
-          if (!mounted) return;
+          final newData = resp.rankingCard ?? [];
 
           setState(() {
+            rankingList.addAll(newData);
+
+            filteredRankingList = rankingList;
+
+            hasMore = resp.pagination?.hasNext ?? false;
+
+            if (hasMore) {
+              page++;
+            }
+
             isLoading = false;
           });
+        } else {
+          setState(() {
+            hasMore = false;
+            isLoading = false;
+          });
+        }
 
-          isApiCalling = false;
-        },
-        false,
-        "",
-        jsonval: payload,
-      );
-    } else {
-      isApiCalling = false;
+        isApiCalling = false;
+      },
+      (error) {
+        if (!mounted) return;
 
-      if (mounted) {
         setState(() {
           isLoading = false;
         });
+
+        isApiCalling = false;
+      },
+      false,
+      "",
+      jsonval: payload,
+    );
+  }
+
+  /// ========================= OFFLINE =========================
+  else {
+    final prefs = await SharedPreferences.getInstance();
+
+    List<RankingCard> offlineData = [];
+
+    int tempPage = 1;
+
+    /// LOAD ALL SAVED PAGES
+    while (true) {
+      final key =
+          'rankingCache_${datefrom}_${rmID}_page_$tempPage';
+
+      final cachedString = prefs.getString(key);
+
+      if (cachedString == null) {
+        break;
       }
 
-      await DBHelper.insertOfflineRequest(
-        '${Global.baseUrl}/api/siteconfigurator/get_ranking_card',
-        payload,
+      final decoded = jsonDecode(cachedString);
+
+      RankingResponse cachedResponse =
+          RankingResponse.fromJson(decoded);
+
+      offlineData.addAll(
+        cachedResponse.rankingCard ?? [],
       );
 
+      tempPage++;
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      rankingList = offlineData;
+
+      filteredRankingList = rankingList;
+
+      isLoading = false;
+
+      hasMore = false;
+    });
+
+    isApiCalling = false;
+
+    if (offlineData.isNotEmpty) {
       ShowDialogs.showToast(
-        "Saved offline. Will sync when connected.",
+        "Offline cached data loaded",
+      );
+    } else {
+      ShowDialogs.showToast(
+        "No offline cached ranking data found",
       );
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -304,7 +356,6 @@ filteredRankingList = rankingList;
     );
   }
 }
-
 class RankingData extends StatelessWidget {
   final int rank;
   final String name;
@@ -327,11 +378,19 @@ class RankingData extends StatelessWidget {
   Widget build(BuildContext context) {
     final isTop = rank == 1;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    final cardPadding = screenWidth * 0.04;
+
+    final avatarSize = screenWidth * 0.12;
+
+    final badgeSize = screenWidth * 0.11;
+
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: screenWidth * 0.04),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(22),
         gradient: isTop
             ? const LinearGradient(
                 colors: [
@@ -345,16 +404,16 @@ class RankingData extends StatelessWidget {
         color: isTop ? null : const Color(0xffF7F7F7),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.all(cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -364,13 +423,13 @@ class RankingData extends StatelessWidget {
                   children: [
                     /// AVATAR
                     Container(
-                      height: 48,
-                      width: 48,
+                      height: avatarSize,
+                      width: avatarSize,
                       decoration: BoxDecoration(
                         color: isTop
                             ? Colors.white.withOpacity(0.18)
                             : customcolor.blue.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       alignment: Alignment.center,
                       child: Text(
@@ -378,7 +437,7 @@ class RankingData extends StatelessWidget {
                             ? name.substring(0, 2).toUpperCase()
                             : "NA",
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: screenWidth * 0.045,
                           fontWeight: FontWeight.bold,
                           color:
                               isTop ? Colors.white : customcolor.blue,
@@ -386,12 +445,12 @@ class RankingData extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(width: 14),
+                    SizedBox(width: screenWidth * 0.03),
 
                     /// NAME + LOCATION
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        padding: const EdgeInsets.only(top: 4),
                         child: Column(
                           crossAxisAlignment:
                               CrossAxisAlignment.start,
@@ -401,22 +460,22 @@ class RankingData extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: screenWidth * 0.042,
                                 fontWeight: FontWeight.w700,
                                 color: isTop
                                     ? Colors.white
                                     : Colors.black,
                               ),
                             ),
-                        
-                            const SizedBox(height: 4),
-                        
+
+                            SizedBox(height: 4),
+
                             Text(
                               location,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: screenWidth * 0.032,
                                 color: isTop
                                     ? Colors.white70
                                     : Colors.grey,
@@ -426,37 +485,40 @@ class RankingData extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    SizedBox(width: badgeSize * 0.7),
                   ],
                 ),
 
-                const SizedBox(height: 22),
+                SizedBox(height: screenWidth * 0.05),
 
-                /// WORKFLOW
+                /// STATS
                 _stat(
                   "Workflow",
                   workflow,
                   isTop,
                   Colors.green,
+                  screenWidth,
                 ),
 
-                const SizedBox(height: 10),
+                SizedBox(height: 10),
 
-                /// ATTENDANCE
                 _stat(
                   "Attendance",
                   attendance,
                   isTop,
                   Colors.orange,
+                  screenWidth,
                 ),
 
-                const SizedBox(height: 22),
+                SizedBox(height: screenWidth * 0.05),
 
-                /// PROGRESS BAR
+                /// PROGRESS
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
-                    value: score / 100,
-                    minHeight: 9,
+                    value: (score / 100).clamp(0.0, 1.0),
+                    minHeight: 8,
                     backgroundColor: isTop
                         ? Colors.white24
                         : Colors.grey.shade300,
@@ -468,7 +530,7 @@ class RankingData extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                SizedBox(height: 12),
 
                 /// SCORE
                 Row(
@@ -478,18 +540,17 @@ class RankingData extends StatelessWidget {
                     Text(
                       "Score",
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: screenWidth * 0.04,
                         fontWeight: FontWeight.bold,
                         color: isTop
                             ? Colors.white
                             : Colors.black,
                       ),
                     ),
-
                     Text(
                       "$score",
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: screenWidth * 0.045,
                         fontWeight: FontWeight.bold,
                         color: isTop
                             ? Colors.white
@@ -504,11 +565,11 @@ class RankingData extends StatelessWidget {
 
           /// RANK BADGE
           Positioned(
-            top: 16,
-            right: 16,
+            top: 14,
+            right: 14,
             child: Container(
-              height: 42,
-              width: 42,
+              height: badgeSize,
+              width: badgeSize,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: rank == 1
@@ -516,19 +577,14 @@ class RankingData extends StatelessWidget {
                     : customcolor.blue.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 3),
-                child: Text(
-                  "$rank",
-                  style: TextStyle(
-                    color: rank == 1
-                        ? Colors.black
-                        : customcolor.blue,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily:
-                        GoogleFonts.playfairDisplay().fontFamily,
-                  ),
+              child: Text(
+                "#$rank",
+                style: TextStyle(
+                  color: rank == 1
+                      ? Colors.black
+                      : customcolor.blue,
+                  fontSize: screenWidth * 0.04,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -543,25 +599,26 @@ class RankingData extends StatelessWidget {
     int value,
     bool isTop,
     Color dotColor,
+    double screenWidth,
   ) {
     return Row(
       children: [
         Container(
-          height: 9,
-          width: 9,
+          height: 8,
+          width: 8,
           decoration: BoxDecoration(
             color: dotColor,
             shape: BoxShape.circle,
           ),
         ),
 
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
 
         Expanded(
           child: Text(
             title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: screenWidth * 0.034,
               color: isTop
                   ? Colors.white70
                   : Colors.black54,
@@ -569,16 +626,296 @@ class RankingData extends StatelessWidget {
           ),
         ),
 
-        Text(
-          "$value%",
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color:
-                isTop ? Colors.white : Colors.black,
+        Flexible(
+          child: Text(
+            "$value%",
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: screenWidth * 0.035,
+              fontWeight: FontWeight.w700,
+              color:
+                  isTop ? Colors.white : Colors.black,
+            ),
           ),
         ),
       ],
     );
   }
 }
+// class RankingData extends StatelessWidget {
+//   final int rank;
+//   final String name;
+//   final String location;
+//   final int workflow;
+//   final int attendance;
+//   final int score;
+
+//   const RankingData({
+//     super.key,
+//     required this.rank,
+//     required this.name,
+//     required this.location,
+//     required this.workflow,
+//     required this.attendance,
+//     required this.score,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isTop = rank == 1;
+
+//     return Container(
+//       width: double.infinity,
+//       margin: const EdgeInsets.only(bottom: 16),
+//       decoration: BoxDecoration(
+//         borderRadius: BorderRadius.circular(26),
+//         gradient: isTop
+//             ? const LinearGradient(
+//                 colors: [
+//                   Color(0xff1E56B3),
+//                   Color(0xff2F6FE4),
+//                 ],
+//                 begin: Alignment.topLeft,
+//                 end: Alignment.bottomRight,
+//               )
+//             : null,
+//         color: isTop ? null : const Color(0xffF7F7F7),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.06),
+//             blurRadius: 10,
+//             offset: const Offset(0, 4),
+//           ),
+//         ],
+//       ),
+//       child: Stack(
+//         children: [
+//           Padding(
+//             padding: const EdgeInsets.all(18),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 /// TOP SECTION
+//                 Row(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     /// AVATAR
+//                     Container(
+//                       height: 48,
+//                       width: 48,
+//                       decoration: BoxDecoration(
+//                         color: isTop
+//                             ? Colors.white.withOpacity(0.18)
+//                             : customcolor.blue.withOpacity(0.10),
+//                         borderRadius: BorderRadius.circular(18),
+//                       ),
+//                       alignment: Alignment.center,
+//                       child: Text(
+//                         name.isNotEmpty
+//                             ? name.substring(0, 2).toUpperCase()
+//                             : "NA",
+//                         style: TextStyle(
+//                           fontSize: 20,
+//                           fontWeight: FontWeight.bold,
+//                           color:
+//                               isTop ? Colors.white : customcolor.blue,
+//                         ),
+//                       ),
+//                     ),
+
+//                     const SizedBox(width: 14),
+
+//                     /// NAME + LOCATION
+//                     Expanded(
+//                       child: Padding(
+//                         padding: const EdgeInsets.only(top: 6),
+//                         child: Column(
+//                           crossAxisAlignment:
+//                               CrossAxisAlignment.start,
+//                           children: [
+//                             Text(
+//                               name,
+//                               maxLines: 1,
+//                               overflow: TextOverflow.ellipsis,
+//                               style: TextStyle(
+//                                 fontSize: 16,
+//                                 fontWeight: FontWeight.w700,
+//                                 color: isTop
+//                                     ? Colors.white
+//                                     : Colors.black,
+//                               ),
+//                             ),
+                        
+//                             const SizedBox(height: 4),
+                        
+//                             Text(
+//                               location,
+//                               maxLines: 2,
+//                               overflow: TextOverflow.ellipsis,
+//                               style: TextStyle(
+//                                 fontSize: 13,
+//                                 color: isTop
+//                                     ? Colors.white70
+//                                     : Colors.grey,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+
+//                 const SizedBox(height: 22),
+
+//                 /// WORKFLOW
+//                 _stat(
+//                   "Workflow",
+//                   workflow,
+//                   isTop,
+//                   Colors.green,
+//                 ),
+
+//                 const SizedBox(height: 10),
+
+//                 /// ATTENDANCE
+//                 _stat(
+//                   "Attendance",
+//                   attendance,
+//                   isTop,
+//                   Colors.orange,
+//                 ),
+
+//                 const SizedBox(height: 22),
+
+//                 /// PROGRESS BAR
+//                 ClipRRect(
+//                   borderRadius: BorderRadius.circular(10),
+//                   child: LinearProgressIndicator(
+//                     value: score / 100,
+//                     minHeight: 9,
+//                     backgroundColor: isTop
+//                         ? Colors.white24
+//                         : Colors.grey.shade300,
+//                     valueColor: AlwaysStoppedAnimation(
+//                       isTop
+//                           ? Colors.greenAccent
+//                           : customcolor.blue,
+//                     ),
+//                   ),
+//                 ),
+
+//                 const SizedBox(height: 10),
+
+//                 /// SCORE
+//                 Row(
+//                   mainAxisAlignment:
+//                       MainAxisAlignment.spaceBetween,
+//                   children: [
+//                     Text(
+//                       "Score",
+//                       style: TextStyle(
+//                         fontSize: 16,
+//                         fontWeight: FontWeight.bold,
+//                         color: isTop
+//                             ? Colors.white
+//                             : Colors.black,
+//                       ),
+//                     ),
+
+//                     Text(
+//                       "$score",
+//                       style: TextStyle(
+//                         fontSize: 18,
+//                         fontWeight: FontWeight.bold,
+//                         color: isTop
+//                             ? Colors.white
+//                             : Colors.black,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ],
+//             ),
+//           ),
+
+//           /// RANK BADGE
+//           Positioned(
+//             top: 16,
+//             right: 16,
+//             child: Container(
+//               height: 42,
+//               width: 42,
+//               alignment: Alignment.center,
+//               decoration: BoxDecoration(
+//                 color: rank == 1
+//                     ? Colors.amber
+//                     : customcolor.blue.withOpacity(0.15),
+//                 shape: BoxShape.circle,
+//               ),
+//               child: Padding(
+//                 padding: const EdgeInsets.only(bottom: 3),
+//                 child: Text(
+//                   "$rank",
+//                   style: TextStyle(
+//                     color: rank == 1
+//                         ? Colors.black
+//                         : customcolor.blue,
+//                     fontSize: 20,
+//                     fontWeight: FontWeight.bold,
+//                     fontFamily:
+//                         GoogleFonts.playfairDisplay().fontFamily,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _stat(
+//     String title,
+//     int value,
+//     bool isTop,
+//     Color dotColor,
+//   ) {
+//     return Row(
+//       children: [
+//         Container(
+//           height: 9,
+//           width: 9,
+//           decoration: BoxDecoration(
+//             color: dotColor,
+//             shape: BoxShape.circle,
+//           ),
+//         ),
+
+//         const SizedBox(width: 8),
+
+//         Expanded(
+//           child: Text(
+//             title,
+//             style: TextStyle(
+//               fontSize: 14,
+//               color: isTop
+//                   ? Colors.white70
+//                   : Colors.black54,
+//             ),
+//           ),
+//         ),
+
+//         Text(
+//           "$value%",
+//           style: TextStyle(
+//             fontSize: 15,
+//             fontWeight: FontWeight.w700,
+//             color:
+//                 isTop ? Colors.white : Colors.black,
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
