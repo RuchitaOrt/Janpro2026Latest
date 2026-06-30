@@ -55,10 +55,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   if (message.notification != null) {
     await flutterLocalNotificationsPlugin.show(
-     id: message.hashCode,
-     title:  message.notification?.title,
-    body:   message.notification?.body,
-   notificationDetails:    NotificationDetails(
+      id: message.hashCode,
+      title: message.notification?.title,
+      body: message.notification?.body,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           kCustomChannel.id,
           kCustomChannel.name,
@@ -93,7 +93,7 @@ Future<void> main() async {
   );
 
   await flutterLocalNotificationsPlugin.initialize(
-  settings:   initSettings,
+    settings: initSettings,
     // onDidReceiveNotificationResponse handled later in app state if needed
   );
 
@@ -245,7 +245,7 @@ class _MyAppState extends State<MyApp> {
     );
 
     await flutterLocalNotificationsPlugin.initialize(
-     settings:  initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: (details) {
         var payload = details.payload;
         if (payload != null) {
@@ -293,8 +293,10 @@ class _MyAppState extends State<MyApp> {
       client_site_name: message.data['client_site_name'] ?? '',
       date: message.data['date'] ?? "",
       emp_id: message.data['emp_id'] ?? "",
-      isclient: message.data['isclient'] == true ||
-          message.data['isclient'] == "true" ? true : false,
+      isclient:
+          message.data['isclient'] == true || message.data['isclient'] == "true"
+          ? true
+          : false,
 
       shift_end_time: message.data['shift_end_time'] ?? '',
       shift_id: message.data['shift_id'] ?? '',
@@ -305,10 +307,10 @@ class _MyAppState extends State<MyApp> {
     String payload = newNote.toJsonString();
 
     await flutterLocalNotificationsPlugin.show(
-     id:  0,
-     title:  title,
+      id: 0,
+      title: title,
       body: body,
-     notificationDetails: platform,
+      notificationDetails: platform,
       payload: payload,
     );
   }
@@ -354,10 +356,10 @@ class _MyAppState extends State<MyApp> {
     );
 
     await flutterLocalNotificationsPlugin.show(
-   id:  0,
-     title:  title,
+      id: 0,
+      title: title,
       body: body,
-     notificationDetails: platform,
+      notificationDetails: platform,
       payload: payload,
     );
   }
@@ -498,19 +500,17 @@ class _MyAppState extends State<MyApp> {
           builder: (_) => SpecialActivity(valueMap['client_site_name']),
         ),
       );
-    }
-    else if (type == "Roster Finalized"||type == "Roster Reviewed"||type == "Roster Review Due"||type == "Discrepancy Reported"||type == "Roster Approved") {
+    } else if (type == "Roster Finalized" ||
+        type == "Roster Reviewed" ||
+        type == "Roster Review Due" ||
+        type == "Discrepancy Reported" ||
+        type == "Roster Approved") {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
-          builder: (_) => Attendance(
-            valueMap['client_site_name']
-            
-          ),
+          builder: (_) => Attendance(valueMap['client_site_name']),
         ),
       );
-    }
-    
-     else if (type == "rating") {
+    } else if (type == "rating") {
       navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (_) => Rating(valueMap['client_site_name'])),
       );

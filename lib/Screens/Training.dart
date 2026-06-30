@@ -1572,7 +1572,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    employeelist[index].name,
+                    employeelist[index].name ?? "",
                     style: AppFonts.headerStyle(
                         fontSize: ResponsiveFlutter.of(context).fontSize(2.3),
                         color: customcolor.black,
@@ -1605,7 +1605,7 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
                                     fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                employeelist[index].contact,
+                                employeelist[index].contact ?? "",
                                 style: AppFonts.headerStyle(
                                     fontSize: ResponsiveFlutter.of(context)
                                         .fontSize(1.8),
@@ -1649,43 +1649,6 @@ class _TrainingState extends State<Training> with TickerProviderStateMixin {
     );
   }
 
-//attendance api
-  // attendanceApi() async {
-  //   var status1 = await ConnectionDetector.checkInternetConnection();
-
-  //   if (status1) {
-  //     GlobalLists.attendanceemployeelist = [];
-
-  //     ShowDialogs.showLoadingDialog(context, _keyLoader);
-
-  //     var map = new Map<String, dynamic>();
-
-  //     var supervisorid = await SPManager().getsupervisorid();
-  //     print(supervisorid);
-  //     map['supervisor'] = supervisorid;
-
-  //     APIManager().apiRequest(context, API.attendance, (response) async {
-  //       AttendencelistResponse resp = response;
-  //       print('called API ${resp}');
-  //       if (resp.status == 1) {
-  //         Navigator.of(this.context).pop();
-  //         //   ShowDialogs.showToast(resp.msg);
-  //         setState(() {
-  //           attendancedata = resp.data;
-  //           GlobalLists.attendanceemployeelist = resp.data.employeeList;
-  //           isdataloaded = true;
-  //         });
-  //       } else {
-  //         ShowDialogs.showToast(resp.msg);
-  //         Navigator.of(this.context).pop();
-  //       }
-  //     }, (error) {
-  //       print('ERR msg is $error');
-  //     }, false, "", jsonval: map);
-  //   } else {
-  //     ShowDialogs.showToast("Please check internet connection");
-  //   }
-  // }
 
   bool isTrainingLoaded = false;
   traininglistApi() async {

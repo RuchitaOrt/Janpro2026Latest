@@ -164,9 +164,184 @@ class backGroundRun {
       // ShowDialogs.showToast("No offline data found.");
     }
   }
+  // attendanceApi() async {
+  //   log('api called attendanceApi');
+  //   var status1 = await ConnectionDetector.checkInternetConnection();
+
+  //   if (status1) {
+  //     // GlobalLists.attendanceemployeelist = [];
+  //     //29OctRUCHI
+  //     setState(() {
+  //       isattendanceLoadin = true;
+  //     });
+
+  //     var supervisorid = await SPManager().getsupervisorid();
+  //     var map = {
+  //       'supervisor': supervisorid,
+  //       'today_date':
+  //       //  "23-06-2026",
+  //       GlobalLists.datecontroller.text,
+  //     };
+
+  //     APIManager().apiRequest(
+  //       context,
+  //       API.attendance,
+  //       (response) async {
+  //         att.AttendencelistResponse resp = response;
+  //         print("RAW RESPONSE");
+  //         print(jsonEncode(resp));
+  //         if (resp.status == 1) {
+  //           setState(() {
+  //             GlobalLists.attendancedata = resp.data;
+  //             GlobalLists.superviorgraphlist = resp.graphData!;
+
+  //             log('GlobalLists.attendancedata');
+  //             print(
+  //               'GlobalLists.attendancedata.count ${GlobalLists.attendancedata!.attendanceDetails![0].employeeList!.length}',
+  //             );
+
+  //             GlobalLists.mainlisttab = [
+  //               unitatt.Datum(
+  //                 clientName: "OverAll",
+  //                 clientId: 0,
+  //                 siteId: 0,
+  //                 attendanceDetails: [],
+  //                 lowattendance: false,
+  //                 attendedCount: 0,
+  //                 totalNoStaff: 0,
+  //                 notapplicable: 0,
+  //               ),
+  //               unitatt.Datum(
+  //                 clientName: resp.data!.clientSiteName!,
+  //                 clientId: resp.data!.clientId!,
+  //                 siteId: resp.data!.siteId!,
+  //                 attendanceDetails: [],
+  //                 lowattendance: resp.data!.lowattendance!,
+  //                 attendedCount: 0,
+  //                 totalNoStaff: 0,
+  //                 notapplicable: 0,
+  //               ),
+  //             ];
+  //             print("========== RESPONSE CHECK ==========");
+  //             print(response);
+  //             print(response.runtimeType);
+  //             print(resp.data?.attendanceDetails?.length);
+
+  //             for (final shift in resp.data?.attendanceDetails ?? []) {
+  //               print("${shift.shiftName} => ${shift.employeeList?.length}");
+  //             }
+  //             //24june
+  //             // GlobalLists.attendanceemployeelist = resp.data!.employeeList;
+  //             GlobalLists.attendanceDetails =
+  //                 resp.data?.attendanceDetails ?? [];
+  //             print("SHIFT COUNT ${GlobalLists.attendanceDetails.length}");
+
+  //             for (var shift in GlobalLists.attendanceDetails) {
+  //               print("${shift.shiftName} => ${shift.employeeList?.length}");
+  //             }
+
+  //             selectedShiftIndex = 0;
+  //             isdataloaded = true;
+
+  //             if (resp.data!.clientSiteName == widget.clientname) {
+  //               maintag = 1;
+  //             }
+  //           });
+
+  //           final prefs = await SharedPreferences.getInstance();
+  //           await prefs.setString(
+  //             'cached_attendance_data',
+  //             att.attendencelistResponseToJson(resp),
+  //           );
+
+  //           setState(() {
+  //             isattendanceLoadin = false;
+  //           });
+  //           // Navigator.of(this.context).pop();
+  //         } else {
+  //           setState(() {
+  //             GlobalLists.mainlisttab.clear();
+
+  //             GlobalLists.superviorgraphlist.clear();
+  //             isattendanceLoadin = false;
+  //           });
+  //           // Navigator.of(this.context).pop();
+  //         }
+  //       },
+  //       (error) {
+  //         //  Navigator.of(this.context).pop();
+  //         setState(() {
+  //           GlobalLists.mainlisttab.clear();
+  //           GlobalLists.superviorgraphlist.clear();
+
+  //           isattendanceLoadin = false;
+  //         });
+  //         log('ERR msg is $error');
+  //       },
+  //       false,
+  //       "",
+  //       jsonval: map,
+  //     );
+  //   } else {
+  //     //  Offline Mode: Load from SharedPreferences
+  //     final prefs = await SharedPreferences.getInstance();
+  //     String? cachedData = prefs.getString('cached_attendance_data');
+
+  //     if (cachedData != null) {
+  //       try {
+  //         att.AttendencelistResponse resp = att.attendencelistResponseFromJson(
+  //           cachedData,
+  //         );
+
+  //         setState(() {
+  //           GlobalLists.attendancedata = resp.data;
+  //           GlobalLists.superviorgraphlist = resp.graphData!;
+  //           GlobalLists.mainlisttab = [
+  //             unitatt.Datum(
+  //               clientName: "OverAll",
+  //               clientId: 0,
+  //               siteId: 0,
+  //               attendanceDetails: [],
+  //               lowattendance: false,
+  //               attendedCount: 0,
+  //               totalNoStaff: 0,
+  //               notapplicable: 0,
+  //             ),
+  //             unitatt.Datum(
+  //               clientName: resp.data!.clientSiteName!,
+  //               clientId: resp.data!.clientId!,
+  //               siteId: resp.data!.siteId!,
+  //               attendanceDetails: [],
+  //               lowattendance: resp.data!.lowattendance!,
+  //               attendedCount: 0,
+  //               totalNoStaff: 0,
+  //               notapplicable: 0,
+  //             ),
+  //           ];
+  //           GlobalLists.attendanceDetails = resp.data?.attendanceDetails ?? [];
+  //           //24june
+  //           // GlobalLists.attendanceemployeelist = resp.data.employeeList;
+  //           isdataloaded = true;
+
+  //           if (resp.data!.clientSiteName == widget.clientname) {
+  //             maintag = 1;
+  //           }
+  //         });
+
+  //         ShowDialogs.showToast("Offline attendance data loaded");
+  //       } catch (e) {
+  //         ShowDialogs.showToast("Failed to load offline data");
+  //       }
+  //     } else {
+  //       ShowDialogs.showToast("No internet and no cached data available");
+  //     }
+  //   }
+  // }
 
   attendanceApi(BuildContext context) async {
-    log(" Enter attendanceApi");
+
+    // 24june
+    // log(" Enter attendanceApi");
     var status1 = await ConnectionDetector.checkInternetConnection();
 
     if (status1) {
@@ -188,7 +363,7 @@ class backGroundRun {
 
         if (resp.status == 1) {
           GlobalLists.attendancedata = resp.data;
-          GlobalLists.superviorgraphlist = resp.graphData;
+          GlobalLists.superviorgraphlist = resp.graphData!;
           GlobalLists.mainlisttab = [
             unitatt.Datum(
               clientName: "OverAll",
@@ -201,17 +376,18 @@ class backGroundRun {
               notapplicable: 0,
             ),
             unitatt.Datum(
-              clientName: resp.data.clientSiteName,
-              clientId: resp.data.clientId,
-              siteId: resp.data.siteId,
+              clientName: resp.data!.clientSiteName!,
+              clientId: resp.data!.clientId!,
+              siteId: resp.data!.siteId!,
               attendanceDetails: [],
-              lowattendance: resp.data.lowattendance,
+              lowattendance: resp.data!.lowattendance!,
               attendedCount: 0,
               totalNoStaff: 0,
               notapplicable: 0,
             ),
           ];
-          GlobalLists.attendanceemployeelist = resp.data.employeeList;
+          GlobalLists.attendanceemployeelist = GlobalLists.attendanceDetails[0]!.employeeList!;
+          // resp.data.employeeList;
           log('attendanceApi DOne');
 
           // if (resp.data.clientSiteName == widget.clientname) {
@@ -237,7 +413,7 @@ class backGroundRun {
               attendencelistResponseFromJson(cachedData);
 
           GlobalLists.attendancedata = resp.data;
-          GlobalLists.superviorgraphlist = resp.graphData;
+          GlobalLists.superviorgraphlist = resp.graphData!;
           GlobalLists.mainlisttab = [
             unitatt.Datum(
               clientName: "OverAll",
@@ -250,17 +426,18 @@ class backGroundRun {
               notapplicable: 0,
             ),
             unitatt.Datum(
-              clientName: resp.data.clientSiteName,
-              clientId: resp.data.clientId,
-              siteId: resp.data.siteId,
+              clientName: resp.data!.clientSiteName!,
+              clientId: resp.data!.clientId!,
+              siteId: resp.data!.siteId!,
               attendanceDetails: [],
-              lowattendance: resp.data.lowattendance,
+              lowattendance: resp.data!.lowattendance!,
               attendedCount: 0,
               totalNoStaff: 0,
               notapplicable: 0,
             ),
           ];
-          GlobalLists.attendanceemployeelist = resp.data.employeeList;
+          GlobalLists.attendanceemployeelist = GlobalLists.attendanceDetails[0]!.employeeList!;
+          // resp.data.employeeList;
 
           // if (resp.data.clientSiteName == widget.clientname) {
           //   maintag = 1;

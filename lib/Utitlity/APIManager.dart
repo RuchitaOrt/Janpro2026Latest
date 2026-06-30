@@ -205,7 +205,7 @@ class APIManager {
       baseURL! + "/api/siteconfigurator/add_information";
   static String markstatus =
       baseURL! + "/api/trainingmaster/update_janitor_status";
-
+  static String approved_rejected_om_oe_client_submit_attendance_rooster=baseURL! + "/api/attendancemaster/approved_rejected_om_oe_client_submit_attendance_rooster";
   Future<String> apiEndPoint(API api) async {
     var apiPathString = "";
 
@@ -230,8 +230,11 @@ class APIManager {
         break;
       case API.attendance:
         // apiPathString = "/api/attendancemaster/supervisor_attendance_list";
-        apiPathString =
-            "/api/attendancemaster/mobileapi_test_supervisor_attendance_list";
+        // apiPathString =
+        //     "/api/attendancemaster/mobileapi_test_supervisor_attendance_list";
+
+         apiPathString =
+            "/api/attendancemaster/multipletime_supervisor_attendance_list";
         break;
       case API.addattendance:
         apiPathString = "/api/attendancemaster/Mobile_Add_AttendanceMaster";
@@ -1034,18 +1037,32 @@ case API.get_ranking_card:
             this.classNameForAPI(api) == "UnitComplaintResponse" ||
             this.classNameForAPI(api) == "ClientsiteDashboardResponse" ||
             this.classNameForAPI(api) == "AttendanceRosterResponse" ||
-            this.classNameForAPI(api) == "UnitDashboardResponse") {
+            this.classNameForAPI(api) == "UnitDashboardResponse"||
+             this.classNameForAPI(api) == "RankingResponse") {
           if (jsonResponse['status'] == 0) {
             print("status is zero");
             if (this.classNameForAPI(api) == "AddAttendanceResponse" ||
                 this.classNameForAPI(api) == "AddratingResponse" ||
                 this.classNameForAPI(api) == "JanitorAdd" ||
                 this.classNameForAPI(api) == "JanitorUpdate" ||
-                this.classNameForAPI(api) == "JanitorDelete") {
+                this.classNameForAPI(api) == "JanitorDelete"||
+                 this.classNameForAPI(api) == "RankingResponse") {
               ShowDialogs.showToast(jsonResponse['msg']);
+              GlobalLists.supervisorRanking.value=false;
+              print("value");
+              if(this.classNameForAPI(api) == "RankingResponse")
+              {
+
+
+              GlobalLists.superviorRankingList.clear();
+              GlobalLists.superviorRankingList.clear();
+              }
+             
             //  Navigator.of(context).pop();
             } else {}
+            
             GlobalLists.isAddcomplaintLoader.value=false;
+            GlobalLists.supervisorRanking.value=false;
              GlobalLists.isWorflowLoading.value=false;
              GlobalLists.isaddAttendance.value=false;
             GlobalLists.iscomplaintLoadin.value=false;

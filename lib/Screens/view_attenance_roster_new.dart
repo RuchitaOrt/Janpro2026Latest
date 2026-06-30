@@ -5,12 +5,14 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:janpro/Screens/Attendance.dart';
 import 'package:janpro/Screens/view_remark_attendance.dart';
 import 'package:janpro/Utitlity/APIManager.dart';
 import 'package:janpro/Utitlity/AppDrawer.dart';
+import 'package:janpro/Utitlity/FormTextField.dart';
 import 'package:janpro/Utitlity/GlobalLists.dart';
 import 'package:janpro/Utitlity/ResponsiveFlutter.dart';
 import 'package:janpro/Utitlity/SPManager.dart';
@@ -130,6 +132,7 @@ class _ViewAttendanceRosterState extends State<ViewAttendanceRoster> {
   final GlobalKey<ScaffoldState> _scaffoldKey1 = new GlobalKey<ScaffoldState>();
 bool isDownloading = false;
 String? downloadedFilePath;
+ TextEditingController uploadcontroller=new TextEditingController();
   final List<String> monthNames = [
     '',
     'January',
@@ -490,10 +493,12 @@ dynamic selectedShift =
 List<dynamic> allEmployees = [];
 
 for (var shift in shifts) {
-  if (shift.employeeList != null) {
+  // if (shift.employeeList != null) {
+  print(shift.toString());
     allEmployees.addAll(shift.employeeList);
-  }
+   //}
 }
+print(allEmployees.length);
     if (selectedMonthIndex == null) {
       selectedMonthIndex = currentMonth;
     }
@@ -747,7 +752,8 @@ for (var shift in shifts) {
                               ),
                             ),
                     
-                            selectedShift?.employeeList?.isEmpty ||
+                           // selectedShift?.employeeList?.isEmpty ||
+                           allEmployees.isEmpty ||
                                     GlobalLists.supervisorrole != role &&
                                         !selectedShift.sup_final_submitted
                                 ? SizedBox()
@@ -899,7 +905,8 @@ for (var shift in shifts) {
                     
                             // Stats bar
                             _isLandscap ||
-                                    selectedShift?.employeeList?.isEmpty ||
+                            allEmployees.isEmpty||
+                                    // selectedShift?.employeeList?.isEmpty ||
                                     GlobalLists.supervisorrole != role &&
                                         !selectedShift.sup_final_submitted
                                 ? SizedBox()
@@ -1016,7 +1023,9 @@ for (var shift in shifts) {
                     
                       // Employee Cards
                       Expanded(
-                        child: selectedShift?.employeeList?.isEmpty ?? true
+                        child: 
+                        allEmployees.isEmpty
+                        // selectedShift?.employeeList?.isEmpty ?? true
                             ? Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1068,6 +1077,8 @@ for (var shift in shifts) {
                                  //12may
                                 // selectedShift?.employeeList?.length ?? 0,
                                 itemBuilder: (context, index) {
+                                  print("allEmployees.length");
+                                  print(allEmployees.length);
                                   is_final_submit = selectedShift.is_final_submitted;
                                   is_month_end = selectedShift.is_month_end;
                                   sup_final_submitted_v =
@@ -1093,9 +1104,10 @@ for (var shift in shifts) {
                           selectedShift.review_updated_by_client == false)
                       ? SizedBox()
                       : isCurrentMonthYear(selectedMonthIndex!, selectedYear!)
-                      ? SizedBox()
-                      : selectedShift?.employeeList.isEmpty ||
-                            selectedShift?.employeeList.length == 0 ||
+                      ?SizedBox()
+                      : 
+                      allEmployees.isEmpty ||
+                            allEmployees.length == 0 ||
                             GlobalLists.supervisorrole != role &&
                                 selectedShift.sup_final_submitted == false ||
                             selectedEmployees.isNotEmpty
@@ -2334,7 +2346,29 @@ hoursController.text="";
     //  Final fallback
     return const Color(0xFFCBD5E1);
   }
+  String? selectedImagePath;
 
+final TextEditingController uploadController =
+    TextEditingController();
+Future<void> pickImage() async {
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.image,
+  );
+
+  if (result != null) {
+    selectedImagePath = result.files.single.path;
+
+    uploadController.text =
+        result.files.single.name; // or selectedImagePath!
+
+    setState(() {});
+  }
+}
+Future<void> openSelectedFile() async {
+  if (selectedImagePath == null) return;
+
+  // await OpenFile.open(selectedImagePath!);
+}
   Color _getAttendanceTextColor(AttendanceData? day, bool isFuture) {
     if (isFuture || day == null) {
       return const Color(0xFFCBD5E1); // Grey
@@ -2597,6 +2631,11 @@ hoursController.text="";
                               // attendanceReason = value;
                             },
                           ),
+
+                       
+                        
+                                                              
+                                                             
                         ],
                       ),
 
@@ -3106,7 +3145,7 @@ hoursController.text="";
                             maxLines: 3,
                             controller: reasonController,
                             decoration: InputDecoration(
-                              hintText: 'Enter reason',
+                              hintText: 'Enter reason1',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

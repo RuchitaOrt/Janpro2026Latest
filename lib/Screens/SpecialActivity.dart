@@ -1554,44 +1554,6 @@ class _SpecialActivityState extends State<SpecialActivity>
           );
   }
 
-//attendance api
-  // attendanceApi() async {
-  //   var status1 = await ConnectionDetector.checkInternetConnection();
-
-  //   if (status1) {
-  //     GlobalLists.attendanceemployeelist = [];
-
-  //     ShowDialogs.showLoadingDialog(context, _keyLoader);
-
-  //     var map = new Map<String, dynamic>();
-
-  //     var supervisorid = await SPManager().getsupervisorid();
-  //     print(supervisorid);
-  //     map['supervisor'] = supervisorid;
-
-  //     APIManager().apiRequest(context, API.attendance, (response) async {
-  //       AttendencelistResponse resp = response;
-  //       print('called API ${resp}');
-  //       if (resp.status == 1) {
-  //         Navigator.of(this.context).pop();
-  //         //   ShowDialogs.showToast(resp.msg);
-  //         setState(() {
-  //           attendancedata = resp.data;
-  //           GlobalLists.attendanceemployeelist = resp.data.employeeList;
-  //           isdataloaded = true;
-  //         });
-  //       } else {
-  //         ShowDialogs.showToast(resp.msg);
-  //         Navigator.of(this.context).pop();
-  //       }
-  //     }, (error) {
-  //       print('ERR msg is $error');
-  //     }, false, "", jsonval: map);
-  //   } else {
-  //     ShowDialogs.showToast("Please check internet connection");
-  //   }
-  // }
-
   Future<Placemark> getLocation() async {
 
   // Get current position

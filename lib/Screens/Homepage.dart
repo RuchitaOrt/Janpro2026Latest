@@ -328,6 +328,7 @@ print("SUPAERVISOR RANK");
       background.unitattendanceApi(context, role);
     } else {
       log('attendance call');
+      ///23june
       background.attendanceApi(context);
     }
     if (role == GlobalLists.unitrole ||
@@ -344,83 +345,6 @@ print("SUPAERVISOR RANK");
       //   checkPermissionStatus();
     }
     GlobalLists.isloadedAttendance = true;
-  }
-
-  attendanceApi() async {
-    log('attendanceApi');
-    var status1 = await ConnectionDetector.checkInternetConnection();
-
-    if (status1) {
-      var supervisorid = await SPManager().getsupervisorid();
-      var map = {
-        'supervisor': supervisorid,
-        'today_date': GlobalLists.datecontroller.text,
-      };
-
-      APIManager().apiRequest(
-        context,
-        API.attendance,
-        (response) async {
-          att.AttendencelistResponse resp = response;
-
-          if (resp.status == 1) {
-            setState(() {
-              GlobalLists.attendancedata = resp.data;
-
-              log('GlobalLists.attendancedata');
-              log(
-                'GlobalLists.attendancedata.count ${GlobalLists.attendancedata}',
-              );
-              GlobalLists.superviorgraphlist = resp.graphData;
-              GlobalLists.mainlisttab = [
-                unitatt.Datum(
-                  clientName: "OverAll",
-                  clientId: 0,
-                  siteId: 0,
-                  attendanceDetails: [],
-                  lowattendance: false,
-                  attendedCount: 0,
-                  totalNoStaff: 0,
-                  notapplicable: 0,
-                ),
-                unitatt.Datum(
-                  clientName: resp.data.clientSiteName,
-                  clientId: resp.data.clientId,
-                  siteId: resp.data.siteId,
-                  attendanceDetails: [],
-                  lowattendance: resp.data.lowattendance,
-                  attendedCount: 0,
-                  totalNoStaff: 0,
-                  notapplicable: 0,
-                ),
-              ];
-              GlobalLists.attendanceemployeelist = resp.data.employeeList;
-              // isdataloaded = true;
-
-              // if (resp.data.clientSiteName == widget.clientname) {
-              //   maintag = 1;
-              // }
-            });
-
-            // ✅ Save JSON to SharedPreferences
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString(
-              'cached_attendance_data',
-              att.attendencelistResponseToJson(resp),
-            );
-            // Navigator.of(this.context).pop();
-          } else {
-            // Navigator.of(this.context).pop();
-          }
-        },
-        (error) {
-          log('ERR msg is $error');
-        },
-        false,
-        "",
-        jsonval: map,
-      );
-    }
   }
 
   getworkeflow() async {
@@ -1396,12 +1320,36 @@ else
                       ],
                     ),
                      SizedBox(height: 20,),
-                 isLoadingRanking
-    ? SizedBox(
-        height: 190,
-        child: Center(child: CircularProgressIndicator(color: customcolor.blue,)),
-      )
-    :   SupervisorRankingSection(rankings: superviorRankingList,),
+    //              GlobalLists.supervisorRanking.value 
+    // ? SizedBox(
+    //     height: 190,
+    //     child: Center(child: CircularProgressIndicator(color: customcolor.blue,)),
+    //   )
+    // :  
+     ValueListenableBuilder(
+       valueListenable: GlobalLists.supervisorRanking,
+       builder: (context, isLoading, child) {
+         if (isLoading) {
+                      return SizedBox(
+                          height: 190,
+                        child: Center(
+                            child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              color: customcolor.blue,
+                            ),
+                            SizedBox(height: 15),
+                            Text("Loading, please wait...",
+                                style: TextStyle(color: Colors.black))
+                          ],
+                        )),
+                      );
+                    }
+         return SupervisorRankingSection(rankings: GlobalLists.superviorRankingList,);
+       }
+     ),
                   ],
                 ),
               ),
@@ -3587,12 +3535,36 @@ else
                         //  SizedBox(width: 2,)
                       ],
                     ),
-                  isLoadingRanking
-    ? SizedBox(
-        height: 190,
-        child: Center(child: CircularProgressIndicator()),
-      )
-    :  SupervisorRankingSection(rankings: superviorRankingList,),
+    //               GlobalLists.supervisorRanking.value 
+    // ? SizedBox(
+    //     height: 190,
+    //     child: Center(child: CircularProgressIndicator()),
+    //   )
+    // :  
+    ValueListenableBuilder(
+     valueListenable: GlobalLists.supervisorRanking,
+       builder: (context, isLoading, _) {
+              if (isLoading) {
+                      return SizedBox(
+                          height: 190,
+                        child: Center(
+                            child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              color: customcolor.blue,
+                            ),
+                            SizedBox(height: 15),
+                            Text("Loading, please wait...",
+                                style: TextStyle(color: Colors.black))
+                          ],
+                        )),
+                      );
+                    }
+        return SupervisorRankingSection(rankings: GlobalLists.superviorRankingList,);
+      }
+    ),
                   ],
                 ),
               ),
@@ -6352,8 +6324,8 @@ String getMonthNumber(String month) {
 
   return monthsMap[month] ?? "01";
 }
-List<RankingCard> superviorRankingList=[];
-bool isLoadingRanking = false;
+//  List<RankingCard> superviorRankingList=[];
+// bool isLoadingRanking = false;
 Pagination? rankingPagination;
 //    supervisorRankingApi() async {
 //     var status1 = await ConnectionDetector.checkInternetConnection();
@@ -6426,7 +6398,7 @@ supervisorRankingApi() async {
   var status1 = await ConnectionDetector.checkInternetConnection();
 
   setState(() {
-    isLoadingRanking = true;
+    GlobalLists.supervisorRanking.value  = true;
   });
 
   rmID = (await SPManager().getRMID())!;
@@ -6453,7 +6425,7 @@ supervisorRankingApi() async {
         final resp = response as RankingResponse;
 
         setState(() {
-          isLoadingRanking = false;
+          GlobalLists.supervisorRanking.value = false;
         });
 
         if (resp.status == 1) {
@@ -6465,7 +6437,7 @@ supervisorRankingApi() async {
           );
 
           setState(() {
-            superviorRankingList = resp.rankingCard;
+            GlobalLists.superviorRankingList = resp.rankingCard;
             rankingPagination = resp.pagination;
           });
 
@@ -6475,7 +6447,7 @@ supervisorRankingApi() async {
       },
       (error) {
         setState(() {
-          isLoadingRanking = false;
+          GlobalLists.supervisorRanking.value  = false;
         });
 
         print('SUPERVISOR ERR msg is $error');
@@ -6492,8 +6464,11 @@ supervisorRankingApi() async {
     String? cachedData = prefs.getString(cacheKey);
 
     setState(() {
-      isLoadingRanking = false;
+      GlobalLists.supervisorRanking.value  = false;
     });
+setState(() {
+          GlobalLists.supervisorRanking.value  = false;
+        });
 
     if (cachedData != null) {
 
@@ -6503,7 +6478,7 @@ supervisorRankingApi() async {
           RankingResponse.fromJson(decoded);
 
       setState(() {
-        superviorRankingList = cachedResponse.rankingCard;
+        GlobalLists.superviorRankingList = cachedResponse.rankingCard;
         rankingPagination = cachedResponse.pagination;
       });
 

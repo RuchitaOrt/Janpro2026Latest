@@ -41,19 +41,28 @@ import 'package:janpro/model/Workflowoperationalmodel.dart' as newopera;
 import '../model/WorkflowoperationalDetailmodel.dart' as worke;
 
 class GlobalLists {
-//background check
-static  ValueNotifier<bool> isAddcomplaintLoader = ValueNotifier(false);
-static  ValueNotifier<bool> isaddAttendance = ValueNotifier(false);
-static ValueNotifier<bool> isWorflowLoading = ValueNotifier<bool>(false);
-static ValueNotifier<bool> iscomplaintLoadin = ValueNotifier<bool>(false);
-static ValueNotifier<bool> isAddEditJanitor = ValueNotifier<bool>(false);
-static ValueNotifier<bool> isActiveLoader = ValueNotifier<bool>(false);
+  //background check
+  static ValueNotifier<bool> isAddcomplaintLoader = ValueNotifier(false);
+  static ValueNotifier<bool> isaddAttendance = ValueNotifier(false);
+  static ValueNotifier<bool> isWorflowLoading = ValueNotifier<bool>(false);
+  static ValueNotifier<bool> iscomplaintLoadin = ValueNotifier<bool>(false);
+  static ValueNotifier<bool> isAddEditJanitor = ValueNotifier<bool>(false);
+  static ValueNotifier<bool> isActiveLoader = ValueNotifier<bool>(false);
 
-static  int isShiftActive = 1;
+  static List<AttendanceDetail> attendanceDetails = [];
 
-static String downloadRosterLink="";
+  static ValueNotifier<bool> supervisorRanking = ValueNotifier(false);
+  static List<RankingCard> superviorRankingList = [];
+  static int isShiftActive = 1;
+
+  static String downloadRosterLink = "";
   static List<unitatt.Datum> mainlisttab = [];
   static List<Janitorcheckbox> dropdownList = [];
+
+  static List<EmployeeList> Supervisoremployeelist=[];
+  //static List<att.Data> attendancedata = [];
+
+  
   static  att.Data? attendancedata;
   static TextEditingController datecontroller = new TextEditingController();
 
@@ -90,10 +99,8 @@ static String downloadRosterLink="";
   static int maxVisitCount = 0;
 
   static int tagvist = 0;
- static List<visit.Datum> mainlisttabvisit = [];
+  static List<visit.Datum> mainlisttabvisit = [];
 
-
-  
   // int maintag = 0;
 
   static bool isloadedAttendance = false;
@@ -130,7 +137,7 @@ static String downloadRosterLink="";
   //pendingcomplaint
   static List<Penddingcomplaint> pendingcomplaintlist = [];
 
-//Login
+  //Login
   //  static String unitrole = "2";
   //  static String headrole = "3";
   //  static String clientrole = "4";
@@ -144,39 +151,40 @@ static String downloadRosterLink="";
   static String clientrole = "7";
   static String role = "";
 
-//       "emp_type": 1,  Supervisor
-// "emp_type": 2,   Unit Executive
-//  "emp_type": 3,  Operation Manager
-//  "emp_type": 4,  Operation Executive
-//  "emp_type": 5,  HOO Head Of Operations
-//  "emp_type": 6,  Region Manager
+  //       "emp_type": 1,  Supervisor
+  // "emp_type": 2,   Unit Executive
+  //  "emp_type": 3,  Operation Manager
+  //  "emp_type": 4,  Operation Executive
+  //  "emp_type": 5,  HOO Head Of Operations
+  //  "emp_type": 6,  Region Manager
 
   //unit module
   static List<unitdash.Lowattendancedatum> unitlowattendacelist = [];
 
   static unitdash.UnitDashboardResponse unitdashboard =
       unitdash.UnitDashboardResponse(
-          pendingTrainingPercentage: 0,
-          pendingTrainingSiteCount: 0,
-          notapplicable: 0,
-          clientdata: [],
-          lowRatingCount: 0,
-          pendingWorkflowSite: 0,
-          totalPrioritySiteCount: 0,
-          pendingPriorityWorkflowSiteCount: 0,
-          status: 0,
-          msg: "",
-          workflowCheckCount: 0,
-          workflowTotalCount: 0,
-          workflowPercentage: 0,
-          priorityWorkflowPercentage: [],
-          attendancePercentage: 0,
-          pendingCompliantCount: 0,
-          ratingCount: 0,
-          lowattendancedata: [],
-          lowatteandancecount: 0,
-          totalSiteCount: 0,
-          visitCount: 0);
+        pendingTrainingPercentage: 0,
+        pendingTrainingSiteCount: 0,
+        notapplicable: 0,
+        clientdata: [],
+        lowRatingCount: 0,
+        pendingWorkflowSite: 0,
+        totalPrioritySiteCount: 0,
+        pendingPriorityWorkflowSiteCount: 0,
+        status: 0,
+        msg: "",
+        workflowCheckCount: 0,
+        workflowTotalCount: 0,
+        workflowPercentage: 0,
+        priorityWorkflowPercentage: [],
+        attendancePercentage: 0,
+        pendingCompliantCount: 0,
+        ratingCount: 0,
+        lowattendancedata: [],
+        lowatteandancecount: 0,
+        totalSiteCount: 0,
+        visitCount: 0,
+      );
   static List<unitatt.Datum> employeeattendacelist = [];
 
   static List<clientmaster.Datum> clientmasterlist = [];
@@ -202,7 +210,6 @@ static String downloadRosterLink="";
   static List<visitGraph.Datum> visitgraphlist = [];
   static List<visitGraph.GraphDatum> visitGraphlist = [];
 
-
   static int traningclienttag = 0;
 
   // static List<agen.Datum> agendalist = [];
@@ -216,11 +223,8 @@ static String downloadRosterLink="";
   static List<block.Datum> masterblocklist = [];
   static List<sitedrop.Datum> sitedropdown = [];
   // static List<visitview.Datum> opersationvisitview = [];
-  static List <visitGraph.VisitDatum> opersationvisitview = [];
-  static List <viewcard.Datum> visitview = [];
-
-
-
+  static List<visitGraph.VisitDatum> opersationvisitview = [];
+  static List<viewcard.Datum> visitview = [];
 
   static List<clientsite.Datum> complaintclientlist = [];
   static List<GraphDatum> superviorgraphlist = [];
@@ -230,7 +234,7 @@ static String downloadRosterLink="";
   static var visitClintId;
   static var visitSiteId;
 
-//janitor master
+  //janitor master
 
   static List<janodet.Datum> janitormasterlist = [];
 
