@@ -78,6 +78,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   String? _extension;
   bool _loadingPath = false;
   FileType _pickingType = FileType.custom;
+
   /// recordId -> user's current selection (approve/reject)
   Map<int, String> approvalSelection = {};
 
@@ -138,7 +139,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         if (r.omOeApprovalStatus == null || r.omOeApprovalStatus!.isEmpty) {
           print("in if");
           print(r.id);
-           print(r.omOeApprovalStatus);
+          print(r.omOeApprovalStatus);
           return false;
         }
       }
@@ -146,17 +147,17 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     return true;
   }
 
-   bool get _isnotificationCompleted {
+  bool get _isnotificationCompleted {
     if (attendanceData == null) return false;
 
     for (var d in attendanceData!.data) {
       for (var r in d.records) {
         //  print(r.id);
         //    print(r.omOeApprovalStatus);
-        if (r.notification_sent == true ) {
+        if (r.notification_sent == true) {
           print("in if");
           print(r.id);
-           print(r.omOeApprovalStatus);
+          print(r.omOeApprovalStatus);
           return false;
         }
       }
@@ -183,13 +184,14 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   /// Check if OM/OE user should be in read-only mode
   bool get _isOmOeReadOnly {
     print("_isOmOeReadOnly");
-     print(_isOmOeApprovalCompleted);
+    print(_isOmOeApprovalCompleted);
     // If user is not a client and OM/OE approval is completed
     return GlobalLists.clientrole != role && _isOmOeApprovalCompleted;
   }
-    bool get _isClientReadOnly {
+
+  bool get _isClientReadOnly {
     print("_isOmOeReadOnly");
-     print(_isOmOeApprovalCompleted);
+    print(_isOmOeApprovalCompleted);
     // If user is not a client and OM/OE approval is completed
     return GlobalLists.clientrole == role && !_isOmOeApprovalCompleted;
   }
@@ -219,7 +221,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       }
     }
   }
-  final GlobalKey<ScaffoldState> _scaffoldKeyview = new GlobalKey<ScaffoldState>();
+
+  final GlobalKey<ScaffoldState> _scaffoldKeyview =
+      new GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -231,31 +235,30 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffoldKeyview,
+      key: _scaffoldKeyview,
 
-        endDrawer: Theme(
-          data: Theme.of(context).copyWith(
-            canvasColor: customcolor.blue,
-            primaryColor: customcolor.blue,
-          ),
-          child: AppDrawerfilter(role),
+      endDrawer: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: customcolor.blue,
+          primaryColor: customcolor.blue,
         ),
-        backgroundColor: customcolor.greybg,
-         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(148),
-          child: AppbarComman(
-            setStyleStr: 'View Remark Attendance',
-            onPressedBack: () {},
-            onPressedNotify: () {},
-            onPressedSearch: () {},
-            onPressedSort: () {},
-            onPressedmenu: () {
-              _scaffoldKeyview.currentState!.openEndDrawer();
-            },
-          ),
+        child: AppDrawerfilter(role),
+      ),
+      backgroundColor: customcolor.greybg,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(148),
+        child: AppbarComman(
+          setStyleStr: 'View Remark Attendance',
+          onPressedBack: () {},
+          onPressedNotify: () {},
+          onPressedSearch: () {},
+          onPressedSort: () {},
+          onPressedmenu: () {
+            _scaffoldKeyview.currentState!.openEndDrawer();
+          },
         ),
+      ),
 
-   
       body: attendanceData?.data.length == 0 || attendanceData == null
           ? const Center(child: Text("No Record Found"))
           : Padding(
@@ -368,7 +371,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                                       // print(attendanceData!
                                       //     .data[0]
                                       //     .reasons);
-                                      final String reasonText = attendanceData!.discrepancies_reasons ?? "";
+                                      final String reasonText =
+                                          attendanceData!
+                                              .discrepancies_reasons ??
+                                          "";
                                       // attendanceData!
                                       //     .data[0]
                                       //     .reasons
@@ -383,8 +389,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                                           Text(
                                             showReadMore
                                                 ? reasonText.substring(0, 50)
-                                                : 
-                                                reasonText,
+                                                : reasonText,
                                             style: AppFonts.headerStyle(
                                               fontSize: 13,
                                               color: customcolor.black,
@@ -456,9 +461,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                                 ),
                               ],
                             ),
+
                             //3june
-
-
                           ],
                         ),
                       ),
@@ -656,174 +660,254 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         ],
                       ),
                     ),
-                    //17JUne
-                    (role==GlobalLists.supervisorrole ||role==GlobalLists.operationmanagerrole||role==GlobalLists.operationrole ||role==GlobalLists.unitrole)?
-StatefulBuilder(
-  builder: (BuildContext context, StateSetter setStateDialgoue) {
-    return Column(
-      children: [
-        GestureDetector(
-                                                        onTap: () {
-                                                          _showSelectionDialog(context,
-                                                              1, setStateDialgoue);
-                                                        },
-                                                        child: FormTextField(
-                                                          isEnable: false,
-                                                          textcontroller:
-                                                              uploadcontroller,
-                                                          placeholderStr:
-                                                              "Upload Image",
-        
-                                                          //   maxLength: 10,
-                                                          textInputType:
-                                                              TextInputType.text,
-                                                          onchange: (val) {},
-                                                          suffixWidget: Padding(
-                                                            padding: EdgeInsets.only(
-                                                                right: 20),
-                                                            child: Image.asset(
-                                                              "assets/images/addimage.png",
-                                                              width: 20,
-                                                              height: 20,
-                                                            ),
-                                                          ),
+
+              attendanceData!.data[0].roster_image.length == 0
+                  ? SizedBox()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 20, left: 5),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Uploaded Images uu${_allClientApproved}",
+                              style: AppFonts.headerStyle(
+                                fontSize: 13,
+                                color: customcolor.black,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 5,
+                                top: 3,
+                                bottom: 2,
+                              ),
+                              child: Wrap(
+                                alignment: WrapAlignment.start,
+                                runAlignment: WrapAlignment.start,
+                                crossAxisAlignment: WrapCrossAlignment.start,
+                                spacing: 6.0,
+                                children: List<Widget>.generate(
+                                  attendanceData!.data[0].roster_image.length,
+                                  (int index) {
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        print("openfile");
+                                        showfileimage(
+                                          attendanceData!
+                                              .data[0]
+                                              .roster_image[index]!
+                                              .split('/')
+                                              .last,
+                                          attendanceData!
+                                              .data[0]
+                                              .roster_image[index]!,
+                                          true,
+                                        );
+                                      },
+                                      child: Chip(
+                                        side: BorderSide(
+                                          style: BorderStyle.solid,
+                                          color: customcolor.blue,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(4),
+                                          ),
+                                        ),
+                                        labelPadding: EdgeInsets.all(2.0),
+
+                                        label: Text(
+                                          attendanceData!
+                                              .data[0]
+                                              .roster_image[index]!
+                                              .split('/')
+                                              .last,
+                                          style: TextStyle(
+                                            color: customcolor.blue,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+
+                                        backgroundColor: customcolor.blue
+                                            .withOpacity(0.1),
+                                        // elevation: 6.0,
+                                        // shadowColor: Colors.grey[60],
+                                        // padding: EdgeInsets.all(6.0),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              //17JUne
+              (role == GlobalLists.operationmanagerrole ||
+                      role == GlobalLists.operationrole ||
+                      role == GlobalLists.unitrole ||
+                      role == GlobalLists.clientrole)
+                  ?
+                   (_allClientApproved 
+                  ||
+                            (_isClientReadOnly && !_isnotificationCompleted))
+                        ? Container()
+                        :(_isOmOeReadOnly && role != GlobalLists.clientrole)?Container(): StatefulBuilder(
+                            builder: (BuildContext context, StateSetter setStateDialgoue) {
+                              return Column(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      _showSelectionDialog(
+                                        context,
+                                        1,
+                                        setStateDialgoue,
+                                      );
+                                    },
+                                    child: FormTextField(
+                                      isEnable: false,
+                                      textcontroller: uploadcontroller,
+                                      placeholderStr: "Upload Image",
+
+                                      //   maxLength: 10,
+                                      textInputType: TextInputType.text,
+                                      onchange: (val) {},
+                                      suffixWidget: Padding(
+                                        padding: EdgeInsets.only(right: 20),
+                                        child: Image.asset(
+                                          "assets/images/addimage.png",
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                
+                                  result.length == 0
+                                      ? Container()
+                                      : Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 5,
+                                            top: 3,
+                                            bottom: 2,
+                                          ),
+                                          child: Wrap(
+                                            alignment: WrapAlignment.start,
+                                            runAlignment: WrapAlignment.start,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.start,
+                                            spacing: 6.0,
+                                            children: List<Widget>.generate(result.length, (
+                                              int index,
+                                            ) {
+                                              return GestureDetector(
+                                                onTap: () async {
+                                                  print("openfile");
+                                                  showfileimage(
+                                                    result[index]
+                                                        .split('/')
+                                                        .last,
+                                                    result[index],
+                                                    false,
+                                                  );
+                                                  // Navigator.push(
+                                                  //     context,
+                                                  //     MaterialPageRoute(
+                                                  //         builder: (BuildContext context) => OpenfilePage(
+                                                  //               videoUrl: widget.taskupdatedlist.filelist[index].fileLink,
+                                                  //             )));
+
+                                                  // pdfAsset(uploadpath[index]).then((file) {
+                                                  //   OpenFile.open(file.path);
+                                                  // });
+                                                  // await OpenFile.open(uploadpath[index]);
+                                                },
+                                                child: Chip(
+                                                  side: BorderSide(
+                                                    style: BorderStyle.solid,
+                                                    color: customcolor.blue,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                          Radius.circular(4),
                                                         ),
-                                                      ),
-                                                       result.length == 0
-                                                  ? Container()
-                                                  : Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              left: 5,
-                                                              top: 3,
-                                                              bottom: 2),
-                                                      child: Wrap(
-                                                        alignment:
-                                                            WrapAlignment.start,
-                                                        runAlignment:
-                                                            WrapAlignment.start,
-                                                        crossAxisAlignment:
-                                                            WrapCrossAlignment
-                                                                .start,
-                                                        spacing: 6.0,
-                                                        children: List<
-                                                            Widget>.generate(
-                                                          result.length,
-                                                          (int index) {
-                                                            return GestureDetector(
-                                                              onTap: () async {
-                                                                print(
-                                                                    "openfile");
-                                                                showfileimage(
-                                                                    result[index]
-                                                                        .split(
-                                                                            '/')
-                                                                        .last,
-                                                                    result[
-                                                                        index]);
-                                                                // Navigator.push(
-                                                                //     context,
-                                                                //     MaterialPageRoute(
-                                                                //         builder: (BuildContext context) => OpenfilePage(
-                                                                //               videoUrl: widget.taskupdatedlist.filelist[index].fileLink,
-                                                                //             )));
-
-                                                                // pdfAsset(uploadpath[index]).then((file) {
-                                                                //   OpenFile.open(file.path);
-                                                                // });
-                                                                // await OpenFile.open(uploadpath[index]);
-                                                              },
-                                                              child: Chip(
-                                                                side: BorderSide(
-                                                                    style: BorderStyle
-                                                                        .solid,
-                                                                    color: customcolor
-                                                                        .blue),
-                                                                shape: RoundedRectangleBorder(
-                                                                    borderRadius:
-                                                                        BorderRadius.all(
-                                                                            Radius.circular(4))),
-                                                                labelPadding:
-                                                                    EdgeInsets
-                                                                        .all(
-                                                                            2.0),
-                                                                // avatar: CircleAvatar(
-                                                                //     backgroundColor: Colors.transparent,
-                                                                //     child: Icon(
-                                                                //       Icons.contact_phone_rounded,
-                                                                //       size: 20,
-                                                                //       color: Colors.black,
-                                                                //     )),
-                                                                label: Text(
-                                                                  result[index]
-                                                                      .split(
-                                                                          '/')
-                                                                      .last,
-                                                                  style: TextStyle(
-                                                                      color: customcolor
-                                                                          .blue,
-                                                                      fontSize:
-                                                                          12),
-                                                                ),
-                                                                onDeleted: () {
-                                                                  setStateDialgoue(
-                                                                      () {
-                                                                    result.removeAt(
-                                                                        index);
-                                                                    List<String>
-                                                                        filename =
-                                                                        [];
-                                                                    uploadcontroller
-                                                                        .text = "";
-                                                                    for (int i =
-                                                                            0;
-                                                                        i < result.length;
-                                                                        i++) {
-                                                                      filename.add(result[
-                                                                              i]
-                                                                          .split(
-                                                                              '/')
-                                                                          .last);
-                                                                    }
-                                                                    print(
-                                                                        filename);
-                                                                    String s =
-                                                                        filename
-                                                                            .join(', ');
-                                                                    print(s);
-
-                                                                    uploadcontroller
-                                                                        .text = s;
-                                                                  });
-                                                                },
-                                                                deleteIcon:
-                                                                    Icon(
-                                                                  Icons.close,
-                                                                  color:
-                                                                      customcolor
-                                                                          .blue,
-                                                                  size: 20,
-                                                                ),
-
-                                                                backgroundColor:
-                                                                    customcolor
-                                                                        .blue
-                                                                        .withOpacity(
-                                                                            0.1),
-                                                                // elevation: 6.0,
-                                                                // shadowColor: Colors.grey[60],
-                                                                // padding: EdgeInsets.all(6.0),
-                                                              ),
-                                                            );
-                                                          },
-                                                        ),
-                                                      ),
+                                                  ),
+                                                  labelPadding: EdgeInsets.all(
+                                                    2.0,
+                                                  ),
+                                                  // avatar: CircleAvatar(
+                                                  //     backgroundColor: Colors.transparent,
+                                                  //     child: Icon(
+                                                  //       Icons.contact_phone_rounded,
+                                                  //       size: 20,
+                                                  //       color: Colors.black,
+                                                  //     )),
+                                                  label: Text(
+                                                    result[index]
+                                                        .split('/')
+                                                        .last,
+                                                    style: TextStyle(
+                                                      color: customcolor.blue,
+                                                      fontSize: 12,
                                                     ),
-      ],
-    );
-  }
-):Container(),
-                                             
+                                                  ),
+                                                  onDeleted: () {
+                                                    setStateDialgoue(() {
+                                                      result.removeAt(index);
+                                                      List<String> filename =
+                                                          [];
+                                                      uploadcontroller.text =
+                                                          "";
+                                                      for (
+                                                        int i = 0;
+                                                        i < result.length;
+                                                        i++
+                                                      ) {
+                                                        filename.add(
+                                                          result[i]
+                                                              .split('/')
+                                                              .last,
+                                                        );
+                                                      }
+                                                      print(filename);
+                                                      String s = filename.join(
+                                                        ', ',
+                                                      );
+                                                      print(s);
+
+                                                      uploadcontroller.text = s;
+                                                    });
+                                                  },
+                                                  deleteIcon: Icon(
+                                                    Icons.close,
+                                                    color: customcolor.blue,
+                                                    size: 20,
+                                                  ),
+
+                                                  backgroundColor: customcolor
+                                                      .blue
+                                                      .withOpacity(0.1),
+                                                  // elevation: 6.0,
+                                                  // shadowColor: Colors.grey[60],
+                                                  // padding: EdgeInsets.all(6.0),
+                                                ),
+                                              );
+                                            }),
+                                          ),
+                                        ),
+                                ],
+                              );
+                            },
+                          )
+                  : Container(),
+
               // Bulk Actions Container
               const SizedBox(height: 12),
             ],
@@ -831,187 +915,197 @@ StatefulBuilder(
   }
 
   _displayPickImageDialog(
-      BuildContext? context, OnPickImageCallback onPick) async {
+    BuildContext? context,
+    OnPickImageCallback onPick,
+  ) async {
     onPick(null, null, null);
   }
 
   Future<void> _showSelectionDialog(
-      BuildContext context, int imageno, StateSetter setStateDialgoue) {
+    BuildContext context,
+    int imageno,
+    StateSetter setStateDialgoue,
+  ) {
     return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "From where do you want to take the photo?",
-                    style: TextStyle(
-                        color: customcolor.blue,
-                        fontSize: 15,
-                        fontFamily: AppFonts.didot,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: <Widget>[
-                    GestureDetector(
-                      child: Text("Gallery"),
-                      onTap: () {
-                        Navigator.pop(context);
-                        // if (result.length >= 2) {
-                        //   ShowDialogs.showToast("You have upload 2 images");
-                        // } 
-                        // else {
-                          _openFileExplorer(imageno, setStateDialgoue);
-                        // }
-                      },
-                    ),
-                    Padding(padding: EdgeInsets.all(8.0)),
-                    GestureDetector(
-                      child: Text("Camera"),
-                      onTap: () async {
-                        Navigator.pop(context);
-                        // if (result.length >= 2) {
-                        //   ShowDialogs.showToast("You have upload 2 images");
-                        // } else {
-                          _onImageButtonPressed(
-                              ImageSource.camera, imageno, setStateDialgoue,
-                              context: context);
-                        // }
-                      },
-                    ),
-                  ],
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "From where do you want to take the photo?",
+                style: TextStyle(
+                  color: customcolor.blue,
+                  fontSize: 15,
+                  fontFamily: AppFonts.didot,
+                  fontWeight: FontWeight.w600,
                 ),
-              ));
-        });
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                GestureDetector(
+                  child: Text("Gallery"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // if (result.length >= 2) {
+                    //   ShowDialogs.showToast("You have upload 2 images");
+                    // }
+                    // else {
+                    _openFileExplorer(imageno, setStateDialgoue);
+                    // }
+                  },
+                ),
+                Padding(padding: EdgeInsets.all(8.0)),
+                GestureDetector(
+                  child: Text("Camera"),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    // if (result.length >= 2) {
+                    //   ShowDialogs.showToast("You have upload 2 images");
+                    // } else {
+                    _onImageButtonPressed(
+                      ImageSource.camera,
+                      imageno,
+                      setStateDialgoue,
+                      context: context,
+                    );
+                    // }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _onImageButtonPressed(
-  ImageSource source,
-  int imageno,
-  StateSetter setStateDialgoue, {
-  BuildContext? context,
-}) async {
-  try {
-    // ---------------- CAMERA MODE ----------------
-    if (source == ImageSource.camera) {
-      bool hasPermission =
-          await PermissionHelper.requestPermission(Permission.camera);
+    ImageSource source,
+    int imageno,
+    StateSetter setStateDialgoue, {
+    BuildContext? context,
+  }) async {
+    try {
+      // ---------------- CAMERA MODE ----------------
+      if (source == ImageSource.camera) {
+        bool hasPermission = await PermissionHelper.requestPermission(
+          Permission.camera,
+        );
 
-      if (!hasPermission) {
-        Flushbar(
-          margin: const EdgeInsets.all(8),
-          borderRadius: BorderRadius.circular(8),
-          backgroundColor: customcolor.blue,
-          message: "Camera permission denied",
-          duration: const Duration(seconds: 2),
-          flushbarPosition: FlushbarPosition.TOP,
-        ).show(this.context);
+        if (!hasPermission) {
+          Flushbar(
+            margin: const EdgeInsets.all(8),
+            borderRadius: BorderRadius.circular(8),
+            backgroundColor: customcolor.blue,
+            message: "Camera permission denied",
+            duration: const Duration(seconds: 2),
+            flushbarPosition: FlushbarPosition.TOP,
+          ).show(this.context);
+          return;
+        }
+
+        // Open custom camera screen
+        Navigator.push(
+          context!,
+          MaterialPageRoute(
+            builder: (_) => CameraCaptureScreen(
+              onImageCaptured: (String imagePath) {
+                File captured = File(imagePath);
+                String fileName = captured.path.split('/').last;
+
+                setStateDialgoue(() {
+                  _imageFile = captured;
+                  _fileName = fileName;
+
+                  result.add(captured.path);
+
+                  List<String> filename = [];
+                  uploadcontroller.text = "";
+                  for (int i = 0; i < result.length; i++) {
+                    filename.add(result[i].split('/').last);
+                  }
+
+                  uploadcontroller.text = filename.join(', ');
+                });
+              },
+            ),
+          ),
+        );
+
+        return; // Important: stop further execution
+      }
+    } catch (e) {
+      setState(() {
+        _pickImageError = e;
+      });
+    }
+  }
+
+  void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
+    setState(() => _loadingPath = true);
+
+    try {
+      final ImagePicker picker = ImagePicker();
+
+      final List<XFile> images = await picker.pickMultiImage();
+
+      if (images.isEmpty) {
+        setState(() => _loadingPath = false);
         return;
       }
 
-      // Open custom camera screen
-      Navigator.push(
-        context!,
-        MaterialPageRoute(
-          builder: (_) => CameraCaptureScreen(
-            onImageCaptured: (String imagePath) {
-              File captured = File(imagePath);
-              String fileName = captured.path.split('/').last;
+      // if (images.length > 2) {
+      //   setState(() => _loadingPath = false);
+      //   ShowDialogs.showToast("You can upload upto 2 images");
+      //   return;
+      // }
 
-              setStateDialgoue(() {
-                _imageFile = captured;
-                _fileName = fileName;
+      // result.clear();
+      List<String> fileNames = [];
 
-                result.add(captured.path);
+      //  Compress OUTSIDE UI update
+      for (XFile xfile in images) {
+        File file = File(xfile.path);
 
-                List<String> filename = [];
-                uploadcontroller.text = "";
-                for (int i = 0; i < result.length; i++) {
-                  filename.add(result[i].split('/').last);
-                }
+        if (file.existsSync()) {
+          final dir = await path_provider.getTemporaryDirectory();
+          final targetPath =
+              '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-                uploadcontroller.text = filename.join(', ');
-              });
-            },
-          ),
-        ),
-      );
+          final compressedFile = await FlutterImageCompress.compressAndGetFile(
+            file.path,
+            targetPath,
+            minHeight: 1080,
+            minWidth: 1080,
+            quality: 50,
+          );
 
-      return; // Important: stop further execution
-    }
-
-    
-  } catch (e) {
-    setState(() {
-      _pickImageError = e;
-    });
-  }
-}
-void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
-  setState(() => _loadingPath = true);
-
-  try {
-    final ImagePicker picker = ImagePicker();
-
-    final List<XFile> images = await picker.pickMultiImage();
-
-    if (images.isEmpty) {
-      setState(() => _loadingPath = false);
-      return;
-    }
-
-    // if (images.length > 2) {
-    //   setState(() => _loadingPath = false);
-    //   ShowDialogs.showToast("You can upload upto 2 images");
-    //   return;
-    // }
-
-    result.clear();
-    List<String> fileNames = [];
-
-    //  Compress OUTSIDE UI update
-    for (XFile xfile in images) {
-      File file = File(xfile.path);
-
-      if (file.existsSync()) {
-        final dir = await path_provider.getTemporaryDirectory();
-        final targetPath =
-            '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-        final compressedFile =
-            await FlutterImageCompress.compressAndGetFile(
-          file.path,
-          targetPath,
-          minHeight: 1080,
-          minWidth: 1080,
-          quality: 50,
-        );
-
-        if (compressedFile != null) {
-          result.add(compressedFile.path);
-          fileNames.add(compressedFile.path.split('/').last);
+          if (compressedFile != null) {
+            result.add(compressedFile.path);
+            fileNames.add(compressedFile.path.split('/').last);
+          }
         }
       }
+
+      if (!mounted) return;
+
+      // ✅ UI update ONLY
+      setStateDialgoue(() {
+        _loadingPath = false;
+        uploadcontroller.text = fileNames.join(', ');
+      });
+    } catch (e) {
+      setState(() => _loadingPath = false);
+      debugPrint("ImagePicker error: $e");
     }
-
-    if (!mounted) return;
-
-    // ✅ UI update ONLY
-    setStateDialgoue(() {
-      _loadingPath = false;
-      uploadcontroller.text = fileNames.join(', ');
-    });
-
-  } catch (e) {
-    setState(() => _loadingPath = false);
-    debugPrint("ImagePicker error: $e");
   }
-}
-  showfileimage(String title, String resultvalue) {
+
+  showfileimage(String title, String resultvalue, bool isnetwork) {
     return showDialog(
       context: context,
       builder: (_) {
@@ -1024,15 +1118,15 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
             children: [
               Text("${title}"),
               GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Icon(Icons.close))
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Icon(Icons.close),
+              ),
             ],
           ),
           content: SingleChildScrollView(
             //MUST TO ADDED
-
             physics: NeverScrollableScrollPhysics(),
             child: Container(
               height: SizeConfig.blockSizeVertical * 30,
@@ -1048,23 +1142,48 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
                           resultvalue == "null")
                       ? Center(
                           child: Padding(
-                          padding: EdgeInsets.only(
-                              top: SizeConfig.blockSizeVertical * 10),
-                          child: Text("No Image Uploaded"),
-                        ))
+                            padding: EdgeInsets.only(
+                              top: SizeConfig.blockSizeVertical * 10,
+                            ),
+                            child: Text("No Image Uploaded"),
+                          ),
+                        )
+                      : isnetwork
+                      ? Image.network(
+                          "${resultvalue}",
+                          height: SizeConfig.blockSizeVertical * 28,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (
+                                BuildContext context,
+                                Object exception,
+                                StackTrace? stackTrace,
+                              ) {
+                                print(exception);
+                                print(stackTrace);
+                                return Icon(
+                                  Icons.error_outline,
+                                  size: SizeConfig.blockSizeHorizontal * 10,
+                                );
+                              },
+                        )
                       : Image.file(
                           File(resultvalue),
                           //width: SizeConfig.blockSizeHorizontal*100,
                           height: SizeConfig.blockSizeVertical * 28,
                           fit: BoxFit.cover,
 
-                          errorBuilder: (BuildContext context, Object exception,
-                              StackTrace? stackTrace) {
-                            return Icon(
-                              Icons.error_outline,
-                              size: SizeConfig.blockSizeHorizontal * 10,
-                            );
-                          },
+                          errorBuilder:
+                              (
+                                BuildContext context,
+                                Object exception,
+                                StackTrace? stackTrace,
+                              ) {
+                                return Icon(
+                                  Icons.error_outline,
+                                  size: SizeConfig.blockSizeHorizontal * 10,
+                                );
+                              },
                         ),
                 ],
               ),
@@ -1074,6 +1193,7 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
       },
     );
   }
+
   Widget _bulkButton({
     required String label,
     required Color color,
@@ -1173,7 +1293,9 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
     bool isOmOeReadOnly = _isOmOeReadOnly;
 
     /// CLIENT FINAL DECISION
-    bool isClientFinal = record.clientApprovalStatus != null;
+    bool isClientFinal =
+    
+    (record.clientApprovalStatus != null);
 
     /// OM / OE STATUS
     bool isOmApproved = record.omOeApprovalStatus == "approved";
@@ -1185,6 +1307,12 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
         isOmApproved ||
         (!isClient && isOmRejected) ||
         isOmOeReadOnly;
+    print("islocak");
+    print(isClientFinal);
+    print(isOmApproved);
+    print(isClient);
+    print(isOmRejected);
+    print(isOmOeReadOnly);
 
     /// Check if radio should be disabled for client
     bool radioDisabledForClient = isClient && isOmPending;
@@ -1307,11 +1435,11 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
                       record.omOeApprovalStatus == null
                           ? "Pending"
                           : record.om_oe_attendance_type.toString(),
-                          // record.omOeApprovalStatus == 'approved'
-                          // ? (record.previousStatus.toString())
-                          // : record.omOeApprovalStatus == 'rejected'
-                          // ? (record.previousStatus.toString())
-                          // : "Pending",
+                      // record.omOeApprovalStatus == 'approved'
+                      // ? (record.previousStatus.toString())
+                      // : record.omOeApprovalStatus == 'rejected'
+                      // ? (record.previousStatus.toString())
+                      // : "Pending",
                       style: TextStyle(
                         fontSize: 13,
                         color: _getOmOeStatusColor(record.omOeApprovalStatus),
@@ -1439,12 +1567,9 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
     if (isOmOeReadOnly) {
       // OM/OE read-only mode: disable submit button
       canSubmit = false;
-    }
-   else if(_isClientReadOnly)
-   {
-     canSubmit = false;
-   }
-     else {
+    } else if (_isClientReadOnly) {
+      canSubmit = false;
+    } else {
       // OM/OE user who can still take action
       canSubmit = true;
     }
@@ -1537,7 +1662,7 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
                             _allClientApproved ||
                             (GlobalLists.clientrole == role &&
                                 _hasPendingOmOeApproval) ||
-                            isOmOeReadOnly ,
+                            isOmOeReadOnly,
                       ),
                     ],
                   ),
@@ -1548,12 +1673,18 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
             child: ElevatedButton(
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(
-              (!canSubmit && !_isnotificationCompleted)? Colors.grey.shade500:    !canSubmit?customcolor.blue:  _allClientApproved || !canSubmit || isOmOeReadOnly
+                  (!canSubmit && !_isnotificationCompleted)
+                      ? Colors.grey.shade500
+                      : !canSubmit
+                      ? customcolor.blue
+                      : _allClientApproved || !canSubmit || isOmOeReadOnly
                       ? Colors.grey.shade300
                       : customcolor.blue,
                 ),
                 foregroundColor: MaterialStateProperty.all(
-                 !canSubmit?customcolor.white:    _allClientApproved || !canSubmit || isOmOeReadOnly
+                  !canSubmit
+                      ? customcolor.white
+                      : _allClientApproved || !canSubmit || isOmOeReadOnly
                       ? Colors.grey.shade500
                       : Colors.white,
                 ),
@@ -1566,10 +1697,11 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
                   ),
                 ),
               ),
-              onPressed: 
-              
-              
-      (!canSubmit && !_isnotificationCompleted)? null:     !canSubmit?  _submittedByClientRoster: _allClientApproved || !canSubmit || isOmOeReadOnly
+              onPressed: (!canSubmit && !_isnotificationCompleted)
+                  ? null
+                  : !canSubmit
+                  ? _submittedByClientRoster
+                  : _allClientApproved || !canSubmit || isOmOeReadOnly
                   ? null
                   : _submitAttendaceRoster,
               child: Text(
@@ -1577,9 +1709,10 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
                     ? "Already Approved"
                     : isOmOeReadOnly && role != GlobalLists.clientrole
                     ? "OPs Approval Completed"
-                    :(!canSubmit && !_isnotificationCompleted)?
-                    "Pending OPs Approval": !canSubmit
-                    ? "Submit" 
+                    : (!canSubmit && !_isnotificationCompleted)
+                    ? "Pending OPs Approval"
+                    : !canSubmit
+                    ? "Submit"
                     : "Submit",
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
@@ -1815,54 +1948,54 @@ void _openFileExplorer(int imageno, StateSetter setStateDialgoue) async {
     return (baseApproved + pendingApprovals);
   }
 
-Future<void> _submitAttendaceRoster() async {
-  try {
-    if (!await ConnectionDetector.checkInternetConnection()) {
-      ShowDialogs.showToast("Please check internet connection");
-      return;
-    }
-   // Check for OM/OE read-only mode
-    if (_isOmOeReadOnly) {
-      ShowDialogs.showToast("OPs approval already completed");
-      return;
-    }
-
-    // Check for client permission to submit
-    if (GlobalLists.clientrole == role && _hasPendingOmOeApproval) {
-      ShowDialogs.showToast("Pending approval from OPs side");
-      return;
-    }
-
-    List<Record> allRecords = [];
-    for (var d in attendanceData!.data) {
-      allRecords.addAll(d.records);
-    }
-
-    if (approvalSelection.length != allRecords.length) {
-      ShowDialogs.showToast("Please approve or reject all records");
-      return;
-    }
-    /// ======== FIXED: Check only for NEW rejections ========
-    bool hasNewReject = false;
-
-    for (var record in allRecords) {
-      final userSelection = approvalSelection[record.id];
-
-      // Only count it as a new rejection if:
-      // 1. User selected "reject" AND
-      // 2. It wasn't already rejected from API
-      if (userSelection == "reject" &&
-          !alreadyRejectedFromApi.contains(record.id)) {
-        hasNewReject = true;
-        break; // No need to check further
+  Future<void> _submitAttendaceRoster() async {
+    try {
+      if (!await ConnectionDetector.checkInternetConnection()) {
+        ShowDialogs.showToast("Please check internet connection");
+        return;
       }
-    }
+      // Check for OM/OE read-only mode
+      if (_isOmOeReadOnly) {
+        ShowDialogs.showToast("OPs approval already completed");
+        return;
+      }
 
-    if (hasNewReject) {
-      universalRejectReason = await _rejectReasonDialog();
-      if (universalRejectReason == null) return;
-    }
+      // Check for client permission to submit
+      if (GlobalLists.clientrole == role && _hasPendingOmOeApproval) {
+        ShowDialogs.showToast("Pending approval from OPs side");
+        return;
+      }
 
+      List<Record> allRecords = [];
+      for (var d in attendanceData!.data) {
+        allRecords.addAll(d.records);
+      }
+
+      if (approvalSelection.length != allRecords.length) {
+        ShowDialogs.showToast("Please approve or reject all records");
+        return;
+      }
+
+      /// ======== FIXED: Check only for NEW rejections ========
+      bool hasNewReject = false;
+
+      for (var record in allRecords) {
+        final userSelection = approvalSelection[record.id];
+
+        // Only count it as a new rejection if:
+        // 1. User selected "reject" AND
+        // 2. It wasn't already rejected from API
+        if (userSelection == "reject" &&
+            !alreadyRejectedFromApi.contains(record.id)) {
+          hasNewReject = true;
+          break; // No need to check further
+        }
+      }
+
+      if (hasNewReject) {
+        universalRejectReason = await _rejectReasonDialog();
+        if (universalRejectReason == null) return;
+      }
 
       /// ---------------- CHECK IF USER IS APPROVING ALL RECORDS ----------------
       bool allRecordsApprovedByUser = true;
@@ -1891,111 +2024,102 @@ Future<void> _submitAttendaceRoster() async {
         isFinalSubmitted = allRecordsApprovedByUser ? "true" : "false";
       }
 
-    var supervisorid = await SPManager().getsupervisorid();
+      var supervisorid = await SPManager().getsupervisorid();
 
-    List<Map<String, dynamic>> attendanceIdList = [];
+      List<Map<String, dynamic>> attendanceIdList = [];
 
-    for (var d in attendanceData!.data) {
-      for (var r in d.records) {
-        final status = approvalSelection[r.id];
+      for (var d in attendanceData!.data) {
+        for (var r in d.records) {
+          final status = approvalSelection[r.id];
 
-        attendanceIdList.add({
-          "date": DateFormat('yyyy-MM-dd').format(r.date),
-          "attendance_status": status == "approve" ? "yes" : "no",
-          "attendance_id": r.id,
-          "approve_status":
-              status == "approve" ? "approved" : "rejected",
-          "attendance_type": r.attendance_type,
-        });
+          attendanceIdList.add({
+            "date": DateFormat('yyyy-MM-dd').format(r.date),
+            "attendance_status": status == "approve" ? "yes" : "no",
+            "attendance_id": r.id,
+            "approve_status": status == "approve" ? "approved" : "rejected",
+            "attendance_type": r.attendance_type,
+          });
+        }
       }
-    }
 
-    final request = http.MultipartRequest(
-      "POST",
-      Uri.parse(
-        APIManager.approved_rejected_om_oe_client_submit_attendance_rooster,
-      ),
-    );
-
-    /// Text Fields
-    request.fields["reason"] =
-        hasNewReject ? universalRejectReason ?? "" : "";
-
-    request.fields["attendance_id_list"] =
-        jsonEncode(attendanceIdList);
-
-    request.fields["is_client"] =
-        GlobalLists.clientrole == role ? "true" : "false";
-
-    request.fields["is_final_submitted"] =
-        isFinalSubmitted;
-
-    if (GlobalLists.clientrole == role) {
-      request.fields["client_id"] =
-          widget.clientid.toString();
-    } else {
-      request.fields["user_id"] =
-          supervisorid.toString();
-    }
-
-    /// Multiple Images
-    for (String imagePath in result) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          "roster_image",
-          imagePath,
+      final request = http.MultipartRequest(
+        "POST",
+        Uri.parse(
+          APIManager.approved_rejected_om_oe_client_submit_attendance_rooster,
         ),
       );
-    }
 
-    log("FIELDS => ${request.fields}");
-    log("FILES => ${request.files.length}");
+      /// Text Fields
+      request.fields["reason"] = hasNewReject
+          ? universalRejectReason ?? ""
+          : "";
 
-    final streamedResponse = await request.send();
+      request.fields["attendance_id_list"] = jsonEncode(attendanceIdList);
 
-    final response =
-        await http.Response.fromStream(streamedResponse);
+      request.fields["is_client"] = GlobalLists.clientrole == role
+          ? "true"
+          : "false";
 
-    log(response.body);
+      request.fields["is_final_submitted"] = isFinalSubmitted;
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201) {
-      final json = jsonDecode(response.body);
-
-      final resp = ApproveRejectSubmit.fromJson(json);
-
-      if (resp.status == 1) {
-        ShowDialogs.showToast(resp.msg);
-
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation1, animation2) =>
-                ViewAttendanceRoster(
-              month: widget.month,
-              year: widget.year,
-              attendancesiteid: widget.attendancesiteid,
-              attendanceclientid: widget.clientid,
-              role: role.toString(),
-              maintag: widget.manTag,
-              attendanceshiftid: widget.shiftId,
-              attendanceRosterData: [],
-            ),
-            transitionDuration: Duration.zero,
-          ),
-        );
+      if (GlobalLists.clientrole == role) {
+        request.fields["client_id"] = widget.clientid.toString();
       } else {
-        ShowDialogs.showToast(resp.msg);
+        request.fields["user_id"] = supervisorid.toString();
       }
-    } else {
-      ShowDialogs.showToast(
-          "API Error : ${response.statusCode}");
+
+      /// Multiple Images
+      for (String imagePath in result) {
+        request.files.add(
+          await http.MultipartFile.fromPath("roster_image", imagePath),
+        );
+      }
+
+      log("FIELDS => ${request.fields}");
+      log("FILES => ${request.files.length}");
+
+      final streamedResponse = await request.send();
+
+      final response = await http.Response.fromStream(streamedResponse);
+
+      log(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final json = jsonDecode(response.body);
+
+        final resp = ApproveRejectSubmit.fromJson(json);
+
+        if (resp.status == 1) {
+          ShowDialogs.showToast(resp.msg);
+
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation1, animation2) =>
+                  ViewAttendanceRoster(
+                    month: widget.month,
+                    year: widget.year,
+                    attendancesiteid: widget.attendancesiteid,
+                    attendanceclientid: widget.clientid,
+                    role: role.toString(),
+                    maintag: widget.manTag,
+                    attendanceshiftid: widget.shiftId,
+                    attendanceRosterData: [],
+                  ),
+              transitionDuration: Duration.zero,
+            ),
+          );
+        } else {
+          ShowDialogs.showToast(resp.msg);
+        }
+      } else {
+        ShowDialogs.showToast("API Error : ${response.statusCode}");
+      }
+    } catch (e) {
+      log("Submit error => $e");
+      ShowDialogs.showToast("Something went wrong");
     }
-  } catch (e) {
-    log("Submit error => $e");
-    ShowDialogs.showToast("Something went wrong");
   }
-}
   // _submitAttendaceRoster() async {
   //   // Check for OM/OE read-only mode
   //   if (_isOmOeReadOnly) {
@@ -2116,7 +2240,7 @@ Future<void> _submitAttendaceRoster() async {
   //       "attendance_id_list": jsonEncode(attendanceIdList),
   //       "is_client": GlobalLists.clientrole == role ? "true" : "false",
   //       "is_final_submitted": isFinalSubmitted,
-        
+
   //     };
 
   //     if (GlobalLists.clientrole == role) {
@@ -2175,16 +2299,12 @@ Future<void> _submitAttendaceRoster() async {
   //     ShowDialogs.showToast("Something went wrong");
   //   }
   // }
-
   _submittedByClientRoster() async {
-    
-
     List<Record> allRecords = [];
     for (var d in attendanceData!.data) {
       allRecords.addAll(d.records);
     }
 
-    
     /// ======== FIXED: Check only for NEW rejections ========
     bool hasNewReject = false;
 
@@ -2212,8 +2332,6 @@ Future<void> _submitAttendaceRoster() async {
         return;
       }
 
-    
-
       /// ---------------- BUILD attendance_id_list ----------------
 
       List<Map<String, dynamic>> attendanceIdList = [];
@@ -2240,69 +2358,196 @@ Future<void> _submitAttendaceRoster() async {
 
           attendanceIdList.add({
             "date": DateFormat('yyyy-MM-dd').format(r.date),
-             "attendance_id": r.id,
+            "attendance_id": r.id,
             "attendance_status": finalStatus,
-          
-           "attendance_type": r.attendance_type,
-         "reason":r.reason,
-           "client_id":widget.clientid,"site_id":r.siteId.toString(),
-            "notification_sent":false
-            
+
+            "attendance_type": r.attendance_type,
+            "reason": r.reason,
+            "client_id": widget.clientid,
+            "site_id": r.siteId.toString(),
+            "notification_sent": false,
           });
         }
       }
 
-      
-      var map = {
-        
-        "attendance_data": jsonEncode(attendanceIdList),
-        
-      };
+      // var map = {
 
-     
-      log('check this $map');
+      //   "attendance_data": jsonEncode(attendanceIdList),
+
+      // };
+
+      // log('check this $map');
+      final request = http.MultipartRequest(
+        "POST",
+        Uri.parse(APIManager.client_final_submit_attendance_rooster),
+      );
+
+      /// Attendance JSON
+      request.fields["attendance_data"] = jsonEncode(attendanceIdList);
+
+      /// Multiple Images
+      for (String imagePath in result) {
+        request.files.add(
+          await http.MultipartFile.fromPath("roster_image", imagePath),
+        );
+      }
+      final streamedResponse = await request.send();
+
+      final response = await http.Response.fromStream(streamedResponse);
+      final json = jsonDecode(response.body);
+      final resp = CommonResponse.fromJson(json);
+      if (resp.status == 1) {
+        setState(() {
+          _fetchAttendanceRoster();
+          // _isnotificationCompleted=true;
+        });
+        ShowDialogs.showToast(resp.msg);
+      } else {
+        ShowDialogs.showToast(resp.msg);
+      }
 
       /// ---------------- API CALL ----------------
 
-      await APIManager().apiRequest(
-        context,
-        API.client_final_submit_attendance_rooster,
-        (response) {
-          CommonResponse resp = response;
+      // await APIManager().apiRequest(
+      //   context,
+      //   API.client_final_submit_attendance_rooster,
+      //   (response) {
+      //     CommonResponse resp = response;
 
-          if (resp.status == 1) {
-            setState(() {
-              _fetchAttendanceRoster();
-              // _isnotificationCompleted=true;
-            });
-            ShowDialogs.showToast(resp.msg);
-          } else {
-            ShowDialogs.showToast(resp.msg);
-          }
-        },
-        (error) {
-          ShowDialogs.showToast("Error: $error");
-        },
-        false,
-        "",
-        jsonval: map,
-      );
+      //     if (resp.status == 1) {
+      //       setState(() {
+      //         _fetchAttendanceRoster();
+      //         // _isnotificationCompleted=true;
+      //       });
+      //       ShowDialogs.showToast(resp.msg);
+      //     } else {
+      //       ShowDialogs.showToast(resp.msg);
+      //     }
+      //   },
+      //   (error) {
+      //     ShowDialogs.showToast("Error: $error");
+      //   },
+      //   false,
+      //   "",
+      //   jsonval: map,
+      // );
     } catch (e) {
       log("Submit error => $e");
       ShowDialogs.showToast("Something went wrong");
     }
   }
+  // _submittedByClientRoster() async {
 
+  //   List<Record> allRecords = [];
+  //   for (var d in attendanceData!.data) {
+  //     allRecords.addAll(d.records);
+  //   }
+
+  //   /// ======== FIXED: Check only for NEW rejections ========
+  //   bool hasNewReject = false;
+
+  //   for (var record in allRecords) {
+  //     final userSelection = approvalSelection[record.id];
+
+  //     // Only count it as a new rejection if:
+  //     // 1. User selected "reject" AND
+  //     // 2. It wasn't already rejected from API
+  //     if (userSelection == "reject" &&
+  //         !alreadyRejectedFromApi.contains(record.id)) {
+  //       hasNewReject = true;
+  //       break; // No need to check further
+  //     }
+  //   }
+
+  //   if (hasNewReject) {
+  //     universalRejectReason = await _rejectReasonDialog();
+  //     if (universalRejectReason == null) return;
+  //   }
+
+  //   try {
+  //     if (!await ConnectionDetector.checkInternetConnection()) {
+  //       ShowDialogs.showToast("Please check internet connection");
+  //       return;
+  //     }
+
+  //     /// ---------------- BUILD attendance_id_list ----------------
+
+  //     List<Map<String, dynamic>> attendanceIdList = [];
+
+  //     for (var d in attendanceData!.data) {
+  //       for (var r in d.records) {
+  //         final status = approvalSelection[r.id];
+
+  //         // Use the appropriate status based on whether it's a new rejection or existing
+  //         String finalStatus;
+  //         String approveStatus;
+
+  //         if (alreadyRejectedFromApi.contains(r.id) && status == "reject") {
+  //           // Keep existing API rejection status
+  //           finalStatus = r.previousStatus == 'yes'
+  //               ? "no"
+  //               : "yes"; // Opposite of original
+  //           approveStatus = "rejected";
+  //         } else {
+  //           // Use user's new selection
+  //           finalStatus = status == "approve" ? "yes" : "no";
+  //           approveStatus = status == "approve" ? "approved" : "rejected";
+  //         }
+
+  //         attendanceIdList.add({
+  //           "date": DateFormat('yyyy-MM-dd').format(r.date),
+  //            "attendance_id": r.id,
+  //           "attendance_status": finalStatus,
+
+  //          "attendance_type": r.attendance_type,
+  //        "reason":r.reason,
+  //          "client_id":widget.clientid,"site_id":r.siteId.toString(),
+  //           "notification_sent":false
+
+  //         });
+  //       }
+  //     }
+
+  //     var map = {
+
+  //       "attendance_data": jsonEncode(attendanceIdList),
+
+  //     };
+
+  //     log('check this $map');
+
+  //     /// ---------------- API CALL ----------------
+
+  //     await APIManager().apiRequest(
+  //       context,
+  //       API.client_final_submit_attendance_rooster,
+  //       (response) {
+  //         CommonResponse resp = response;
+
+  //         if (resp.status == 1) {
+  //           setState(() {
+  //             _fetchAttendanceRoster();
+  //             // _isnotificationCompleted=true;
+  //           });
+  //           ShowDialogs.showToast(resp.msg);
+  //         } else {
+  //           ShowDialogs.showToast(resp.msg);
+  //         }
+  //       },
+  //       (error) {
+  //         ShowDialogs.showToast("Error: $error");
+  //       },
+  //       false,
+  //       "",
+  //       jsonval: map,
+  //     );
+  //   } catch (e) {
+  //     log("Submit error => $e");
+  //     ShowDialogs.showToast("Something went wrong");
+  //   }
+  // }
 }
 //submitted by Client
-
-
-
-
-
-
-
-
 
 // Extension for capitalizing first letter
 extension StringExtension on String {
@@ -2311,5 +2556,9 @@ extension StringExtension on String {
     return this[0].toUpperCase() + substring(1);
   }
 }
+
 typedef void OnPickImageCallback(
-    double? maxWidth, double? maxHeight, int? quality);
+  double? maxWidth,
+  double? maxHeight,
+  int? quality,
+);

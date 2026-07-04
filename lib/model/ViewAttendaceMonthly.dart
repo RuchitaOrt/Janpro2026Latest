@@ -54,12 +54,13 @@ class Datum {
   List<Record> records;
   List<String> reasons;
   List<String?> omOeResson;
-
+  List<String?> roster_image;
   Datum({
     required this.date,
     required this.records,
     required this.reasons,
     required this.omOeResson,
+    required this.roster_image
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
@@ -74,6 +75,9 @@ class Datum {
         omOeResson: (json["om_oe_resson"] ?? [])
             .map<String?>((e) => e?.toString())
             .toList(),
+            roster_image: (json["roster_image"] ?? [])
+            .map<String?>((e) => e?.toString())
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -82,6 +86,7 @@ class Datum {
         "records": records.map((x) => x.toJson()).toList(),
         "reasons": reasons,
         "om_oe_resson": omOeResson,
+        "roster_image":roster_image
       };
 }
 

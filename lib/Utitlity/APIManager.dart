@@ -206,6 +206,9 @@ class APIManager {
   static String markstatus =
       baseURL! + "/api/trainingmaster/update_janitor_status";
   static String approved_rejected_om_oe_client_submit_attendance_rooster=baseURL! + "/api/attendancemaster/approved_rejected_om_oe_client_submit_attendance_rooster";
+
+
+   static String client_final_submit_attendance_rooster=baseURL! + "/api/attendancemaster/client_final_submit_attendance_rooster";
   Future<String> apiEndPoint(API api) async {
     var apiPathString = "";
 

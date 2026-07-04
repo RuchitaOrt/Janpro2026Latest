@@ -609,14 +609,16 @@ print(allEmployees.length);
                           style: TextStyle(
                               color:   Colors.black))
                 ],
-              )): _attendanceRosterData.isEmpty
-                ? Center(
-                    child: Text(
-                      "No data available",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                :  Stack(
+              )): 
+              // _attendanceRosterData.isEmpty
+              //   ? Center(
+              //       child: Text(
+              //         "No data available",
+              //         style: TextStyle(color: Colors.grey),
+              //       ),
+              //     )
+              //   : 
+                 Stack(
                 children: [
                 Column(
                     children: [
@@ -658,7 +660,7 @@ print(allEmployees.length);
                                       ),
                                     ],
                                   ),
-                    
+                             SizedBox(width: 5,),
                                   Row(
                                     children: [
                                       // Month Dropdown
@@ -702,7 +704,7 @@ print(allEmployees.length);
                                           ),
                                         ),
                                       ),
-                                      SizedBox(width: 8),
+                                      SizedBox(width: 2),
                                       // Year Dropdown
                                       GestureDetector(
                                         onTap: () => _showYearPicker(
@@ -730,7 +732,7 @@ print(allEmployees.length);
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
-                                                SizedBox(width: 4),
+                                                SizedBox(width: 2),
                                                 Icon(
                                                   Icons.arrow_drop_down,
                                                   color: customcolor.blue,
@@ -742,7 +744,7 @@ print(allEmployees.length);
                                         ),
                                       ),
                     
-                                      SizedBox(width: 10),
+                                      // SizedBox(width: 10),
                                       GlobalLists.mainlisttab.isNotEmpty
                                           ? _buildChoicemainListfortab()
                                           : Container(),
@@ -753,7 +755,9 @@ print(allEmployees.length);
                             ),
                     
                            // selectedShift?.employeeList?.isEmpty ||
-                           allEmployees.isEmpty ||
+                  _attendanceRosterData.isEmpty
+                ? Container()
+                :          allEmployees.isEmpty ||
                                     GlobalLists.supervisorrole != role &&
                                         !selectedShift.sup_final_submitted
                                 ? SizedBox()
@@ -904,7 +908,9 @@ print(allEmployees.length);
                                   ),
                     
                             // Stats bar
-                            _isLandscap ||
+                   _attendanceRosterData.isEmpty
+                ? Container()
+                :          _isLandscap ||
                             allEmployees.isEmpty||
                                     // selectedShift?.employeeList?.isEmpty ||
                                     GlobalLists.supervisorrole != role &&
@@ -1024,7 +1030,14 @@ print(allEmployees.length);
                       // Employee Cards
                       Expanded(
                         child: 
-                        allEmployees.isEmpty
+                _attendanceRosterData.isEmpty
+                ? Center(
+                    child: Text(
+                      "No data available",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                :         allEmployees.isEmpty
                         // selectedShift?.employeeList?.isEmpty ?? true
                             ? Center(
                                 child: Column(
@@ -1364,7 +1377,7 @@ print(allEmployees.length);
                                                 : selectedShift?.is_month_end == 1 &&
                                                         selectedShift?.is_final_submitted ==
                                                             true
-                                                    ? "Download Roster ${selectedShift?.is_final_submitted}"
+                                                    ? "Download Roster"
                                                     : selectedCells.isNotEmpty &&
                                                             multiSelectMode
                                                         ? "Review Discrepancy"
@@ -4497,7 +4510,7 @@ Future<void> openSelectedFile() async {
           child: Align(
             alignment: Alignment.center,
             child: Container(
-              width: 50,
+              width: 30,
               decoration: BoxDecoration(
                 color: customcolor.white,
                 borderRadius: BorderRadius.circular(20),

@@ -53,38 +53,41 @@ class Dailogbox{
   }
 
 Widget _legendDot(Color color, String text, [String stext = '']) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
         ),
-      ),
-      const SizedBox(width: 4),
-      Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          color: Colors.black87,
-          fontFamily: AppFonts.regular,
-        ),
-      ),
-      const SizedBox(width: 10),
-
-      if (stext.isNotEmpty)
+        const SizedBox(width: 4),
         Text(
-          '( $stext )',
+          text,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 14,
             color: Colors.black87,
             fontFamily: AppFonts.regular,
           ),
         ),
-    ],
+        const SizedBox(width: 10),
+    
+        if (stext.isNotEmpty)
+          Text(
+            '( $stext )',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              fontFamily: AppFonts.regular,
+            ),
+          ),
+      ],
+    ),
   );
 }
 
