@@ -21,7 +21,7 @@ class Dailogbox{
                 _legendDot(  Color(0xFF2563EB), "Working Holiday","W"),
                 _legendDot(  Color(0xFF4ADE80), "Halfday","F"),
                 _legendDot(  Color(0xFF8B5CF6), "OT Hrs","OT"),
-                _legendDot(customcolor.gradientgrey, "Week Off"),
+                _legendDot(customcolor.gradientgrey, "Week Off", "O"),
              //   _legendDot(customcolor.lightgreen, ""),
 
 

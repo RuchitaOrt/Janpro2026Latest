@@ -37,8 +37,7 @@ class ShiftData {
 
   final bool review_updated_by_oe_om;
   final bool review_updated_by_client;
-
-  
+final bool notification_sent;
 
 
 
@@ -54,6 +53,7 @@ class ShiftData {
     required this.review_updated_by_oe_om,
     required this.review_updated_by_client,
     required this.sup_final_submitted,
+     required this.notification_sent,
    
 
   });
@@ -77,7 +77,7 @@ class ShiftData {
         review_updated_by_oe_om:json['review_updated_by_oe_om']??false,
         review_updated_by_client:json["review_updated_by_client"]??false,
         sup_final_submitted:json['sup_final_submitted'],
-       
+        notification_sent:json['notification_sent'] ?? false,
 
     );
   }

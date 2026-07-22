@@ -137,9 +137,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         //  print(r.id);
         //    print(r.omOeApprovalStatus);
         if (r.omOeApprovalStatus == null || r.omOeApprovalStatus!.isEmpty) {
-          print("in if");
-          print(r.id);
-          print(r.omOeApprovalStatus);
+          // print("in if");
+          // print(r.id);
+          // print(r.omOeApprovalStatus);
           return false;
         }
       }
@@ -165,6 +165,24 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     return true;
   }
 
+  bool get isnotificationStatus {
+    if (attendanceData == null) return false;
+
+    for (var d in attendanceData!.data) {
+      for (var r in d.records) {
+        //  print(r.id);
+        //    print(r.omOeApprovalStatus);
+        if (r.notification_sent == true) {
+          print("in if");
+          print(r.id);
+          print(r.omOeApprovalStatus);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   /// Check if client can take action on any record
   bool get _canClientTakeAction {
     if (GlobalLists.clientrole != role)
@@ -183,8 +201,6 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
   /// Check if OM/OE user should be in read-only mode
   bool get _isOmOeReadOnly {
-    print("_isOmOeReadOnly");
-    print(_isOmOeApprovalCompleted);
     // If user is not a client and OM/OE approval is completed
     return GlobalLists.clientrole != role && _isOmOeApprovalCompleted;
   }
@@ -234,78 +250,122 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKeyview,
+    return WillPopScope(
+      onWillPop: () async {
+        if (GlobalLists.is_notification_sent.value == true) {
+          Navigator.pop(context, true);
+        } else {
+          Navigator.pop(context, false);
+        }
 
-      endDrawer: Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: customcolor.blue,
-          primaryColor: customcolor.blue,
+        return false;
+      },
+      child: Scaffold(
+        key: _scaffoldKeyview,
+
+        endDrawer: Theme(
+          data: Theme.of(context).copyWith(
+            canvasColor: customcolor.blue,
+            primaryColor: customcolor.blue,
+          ),
+          child: AppDrawerfilter(role),
         ),
-        child: AppDrawerfilter(role),
-      ),
-      backgroundColor: customcolor.greybg,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(148),
-        child: AppbarComman(
-          setStyleStr: 'View Remark Attendance',
-          onPressedBack: () {},
-          onPressedNotify: () {},
-          onPressedSearch: () {},
-          onPressedSort: () {},
-          onPressedmenu: () {
-            _scaffoldKeyview.currentState!.openEndDrawer();
-          },
+        backgroundColor: customcolor.greybg,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(148),
+          child: AppbarComman(
+            setStyleStr: 'View Remark Attendance',
+            onPressedBack: () {},
+            onPressedNotify: () {},
+            onPressedSearch: () {},
+            onPressedSort: () {},
+            onPressedmenu: () {
+              _scaffoldKeyview.currentState!.openEndDrawer();
+            },
+          ),
         ),
-      ),
 
-      body: attendanceData?.data.length == 0 || attendanceData == null
-          ? const Center(child: Text("No Record Found"))
-          : Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: CustomRefreshIndicator(
-                onRefresh: () async {
-                  _fetchAttendanceRoster();
-                },
+        body: attendanceData?.data.length == 0 || attendanceData == null
+            ? const Center(child: Text("No Record Found"))
+            : Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: CustomRefreshIndicator(
+                  onRefresh: () async {
+                    _fetchAttendanceRoster();
+                  },
 
-                builder:
-                    (
-                      BuildContext context,
-                      Widget child,
-                      IndicatorController controller,
-                    ) {
-                      return Stack(
-                        alignment: Alignment.topCenter,
-                        children: <Widget>[
-                          if (!controller.isIdle)
-                            Positioned(
-                              top: 35.0 * controller.value,
-                              child: SizedBox(
-                                height: 30,
-                                width: 30,
-                                child: CircularProgressIndicator(
-                                  value: !controller.isLoading
-                                      ? controller.value.clamp(0.0, 1.0)
-                                      : null,
+                  builder:
+                      (
+                        BuildContext context,
+                        Widget child,
+                        IndicatorController controller,
+                      ) {
+                        return Stack(
+                          alignment: Alignment.topCenter,
+                          children: <Widget>[
+                            if (!controller.isIdle)
+                              Positioned(
+                                top: 35.0 * controller.value,
+                                child: SizedBox(
+                                  height: 30,
+                                  width: 30,
+                                  child: CircularProgressIndicator(
+                                    value: !controller.isLoading
+                                        ? controller.value.clamp(0.0, 1.0)
+                                        : null,
+                                  ),
                                 ),
                               ),
+                            Transform.translate(
+                              offset: Offset(0, 100.0 * controller.value),
+                              child: child,
                             ),
-                          Transform.translate(
-                            offset: Offset(0, 100.0 * controller.value),
-                            child: child,
-                          ),
-                        ],
-                      );
-                    },
-                child: Column(
-                  children: [
-                    _topBulkAction(),
-                    Expanded(child: _attendanceList()),
-                    _submitButton(),
-                  ],
+                          ],
+                        );
+                      },
+                  child: Column(
+                    children: [
+                      //                      Platform.isIOS?      GestureDetector(
+
+                      //                           onTap: ()
+
+                      //                           {
+
+                      //                               if(GlobalLists.is_notification_sent.value==true)
+
+                      //       {
+
+                      // Navigator.pop(context, true);
+
+                      //       }else{
+
+                      //          Navigator.pop(context, false);
+
+                      //       }
+
+                      //                           },
+
+                      //                           child: Align(
+
+                      //                             alignment: Alignment.topLeft,
+
+                      //                             child: Icon(Icons.arrow_back_ios))):Container(),
+                      //                             SizedBox(height: Platform.isIOS?  4:0,),
+                      _topBulkAction(),
+                      Expanded(child: _attendanceList()),
+                      //ruchita14july
+                      ((role == GlobalLists.operationmanagerrole ||
+                                  role == GlobalLists.operationrole ||
+                                  role == GlobalLists.unitrole ||
+                                  role == GlobalLists.supervisorrole) &&
+                              isnotificationStatus == false)
+                          ? Container()
+                          : _submitButton(),
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -336,15 +396,40 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Discrepancies",
-                              style: AppFonts.headerStyle(
-                                fontSize: ResponsiveFlutter.of(
-                                  context,
-                                ).fontSize(2.5),
-                                color: customcolor.textblue,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                Platform.isIOS
+                                    ? GestureDetector(
+                                        onTap: () {
+                                          if (GlobalLists
+                                                  .is_notification_sent
+                                                  .value ==
+                                              true) {
+                                            Navigator.pop(context, true);
+                                          } else {
+                                            Navigator.pop(context, false);
+                                          }
+                                        },
+
+                                        child: Align(
+                                          alignment: Alignment.topLeft,
+
+                                          child: Icon(Icons.arrow_back_ios),
+                                        ),
+                                      )
+                                    : Container(),
+                                SizedBox(height: Platform.isIOS ? 4 : 0),
+                                Text(
+                                  "Discrepancies",
+                                  style: AppFonts.headerStyle(
+                                    fontSize: ResponsiveFlutter.of(
+                                      context,
+                                    ).fontSize(2.5),
+                                    color: customcolor.textblue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                             SizedBox(height: 10),
 
@@ -660,109 +745,74 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         ],
                       ),
                     ),
+// Text("${attendanceData!.data[0].roster_image}"),
+              //17JUne
+              (role == GlobalLists.operationmanagerrole ||
+                      role == GlobalLists.operationrole ||
+                      role == GlobalLists.unitrole ||
+                      role == GlobalLists.clientrole)
+                  ? 
+                  // (_allClientApproved ||
+                  //           (_isClientReadOnly && !_isnotificationCompleted))
+                  //       ? Container(child: Text("data"),)
+                        // : 
+                        (_isOmOeReadOnly && role != GlobalLists.clientrole)
+                        ? showUploadedImages()
+                        : ((role == GlobalLists.operationmanagerrole ||
+                                  role == GlobalLists.operationrole ||
+                                  role == GlobalLists.unitrole ||
+                                  role == GlobalLists.supervisorrole) &&
+                              isnotificationStatus == false)
+                        ? Container()
+                        : showUploadedImages()
+                  : 
+                  (role == GlobalLists.supervisorrole &&   attendanceData!.data[0].roster_image.isNotEmpty)?
+                  showUploadedImages():
+                  Container(),
 
-              attendanceData!.data[0].roster_image.length == 0
-                  ? SizedBox()
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 20, left: 5),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+              // Bulk Actions Container
+              ((role == GlobalLists.operationmanagerrole ||
+                          role == GlobalLists.operationrole ||
+                          role == GlobalLists.unitrole ||
+                          role == GlobalLists.supervisorrole) &&
+                      isnotificationStatus == false)
+                  ? Container()
+                  : result.isEmpty
+                  ? Container()
+                  : const SizedBox(height: 12),
+            ],
+          );
+  }
+
+  showUploadedImages() {
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setStateDialgoue) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 5, left: 5),
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
                           children: [
                             Text(
-                              "Uploaded Images uu${_allClientApproved}",
+                              "Uploaded Images",
                               style: AppFonts.headerStyle(
                                 fontSize: 13,
                                 color: customcolor.black,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
-                            SizedBox(height: 5),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 5,
-                                top: 3,
-                                bottom: 2,
-                              ),
-                              child: Wrap(
-                                alignment: WrapAlignment.start,
-                                runAlignment: WrapAlignment.start,
-                                crossAxisAlignment: WrapCrossAlignment.start,
-                                spacing: 6.0,
-                                children: List<Widget>.generate(
-                                  attendanceData!.data[0].roster_image.length,
-                                  (int index) {
-                                    return GestureDetector(
-                                      onTap: () async {
-                                        print("openfile");
-                                        showfileimage(
-                                          attendanceData!
-                                              .data[0]
-                                              .roster_image[index]!
-                                              .split('/')
-                                              .last,
-                                          attendanceData!
-                                              .data[0]
-                                              .roster_image[index]!,
-                                          true,
-                                        );
-                                      },
-                                      child: Chip(
-                                        side: BorderSide(
-                                          style: BorderStyle.solid,
-                                          color: customcolor.blue,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(4),
-                                          ),
-                                        ),
-                                        labelPadding: EdgeInsets.all(2.0),
-
-                                        label: Text(
-                                          attendanceData!
-                                              .data[0]
-                                              .roster_image[index]!
-                                              .split('/')
-                                              .last,
-                                          style: TextStyle(
-                                            color: customcolor.blue,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-
-                                        backgroundColor: customcolor.blue
-                                            .withOpacity(0.1),
-                                        // elevation: 6.0,
-                                        // shadowColor: Colors.grey[60],
-                                        // padding: EdgeInsets.all(6.0),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-              //17JUne
-              (role == GlobalLists.operationmanagerrole ||
-                      role == GlobalLists.operationrole ||
-                      role == GlobalLists.unitrole ||
-                      role == GlobalLists.clientrole)
-                  ?
-                   (_allClientApproved 
-                  ||
-                            (_isClientReadOnly && !_isnotificationCompleted))
-                        ? Container()
-                        :(_isOmOeReadOnly && role != GlobalLists.clientrole)?Container(): StatefulBuilder(
-                            builder: (BuildContext context, StateSetter setStateDialgoue) {
-                              return Column(
-                                children: [
-                                  GestureDetector(
+                            (_isOmOeReadOnly && role != GlobalLists.clientrole)
+                                ? Container()
+                                : GestureDetector(
                                     onTap: () {
                                       _showSelectionDialog(
                                         context,
@@ -770,148 +820,186 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                                         setStateDialgoue,
                                       );
                                     },
-                                    child: FormTextField(
-                                      isEnable: false,
-                                      textcontroller: uploadcontroller,
-                                      placeholderStr: "Upload Image",
-
-                                      //   maxLength: 10,
-                                      textInputType: TextInputType.text,
-                                      onchange: (val) {},
-                                      suffixWidget: Padding(
-                                        padding: EdgeInsets.only(right: 20),
-                                        child: Image.asset(
-                                          "assets/images/addimage.png",
-                                          width: 20,
-                                          height: 20,
-                                        ),
-                                      ),
+                                    child: Icon(
+                                      Icons.upload,
+                                      color: customcolor.blue,
                                     ),
                                   ),
-                                
-                                  result.length == 0
-                                      ? Container()
-                                      : Padding(
-                                          padding: const EdgeInsets.only(
-                                            left: 5,
-                                            top: 3,
-                                            bottom: 2,
-                                          ),
-                                          child: Wrap(
-                                            alignment: WrapAlignment.start,
-                                            runAlignment: WrapAlignment.start,
-                                            crossAxisAlignment:
-                                                WrapCrossAlignment.start,
-                                            spacing: 6.0,
-                                            children: List<Widget>.generate(result.length, (
-                                              int index,
-                                            ) {
-                                              return GestureDetector(
-                                                onTap: () async {
-                                                  print("openfile");
-                                                  showfileimage(
-                                                    result[index]
-                                                        .split('/')
-                                                        .last,
-                                                    result[index],
-                                                    false,
-                                                  );
-                                                  // Navigator.push(
-                                                  //     context,
-                                                  //     MaterialPageRoute(
-                                                  //         builder: (BuildContext context) => OpenfilePage(
-                                                  //               videoUrl: widget.taskupdatedlist.filelist[index].fileLink,
-                                                  //             )));
+                          ],
+                        ),
 
-                                                  // pdfAsset(uploadpath[index]).then((file) {
-                                                  //   OpenFile.open(file.path);
-                                                  // });
-                                                  // await OpenFile.open(uploadpath[index]);
-                                                },
-                                                child: Chip(
-                                                  side: BorderSide(
-                                                    style: BorderStyle.solid,
-                                                    color: customcolor.blue,
-                                                  ),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.all(
-                                                          Radius.circular(4),
-                                                        ),
-                                                  ),
-                                                  labelPadding: EdgeInsets.all(
-                                                    2.0,
-                                                  ),
-                                                  // avatar: CircleAvatar(
-                                                  //     backgroundColor: Colors.transparent,
-                                                  //     child: Icon(
-                                                  //       Icons.contact_phone_rounded,
-                                                  //       size: 20,
-                                                  //       color: Colors.black,
-                                                  //     )),
-                                                  label: Text(
-                                                    result[index]
-                                                        .split('/')
-                                                        .last,
-                                                    style: TextStyle(
-                                                      color: customcolor.blue,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                  onDeleted: () {
-                                                    setStateDialgoue(() {
-                                                      result.removeAt(index);
-                                                      List<String> filename =
-                                                          [];
-                                                      uploadcontroller.text =
-                                                          "";
-                                                      for (
-                                                        int i = 0;
-                                                        i < result.length;
-                                                        i++
-                                                      ) {
-                                                        filename.add(
-                                                          result[i]
-                                                              .split('/')
-                                                              .last,
-                                                        );
-                                                      }
-                                                      print(filename);
-                                                      String s = filename.join(
-                                                        ', ',
-                                                      );
-                                                      print(s);
+                        attendanceData!.data[0].roster_image.isEmpty
+                            ? const SizedBox()
+                            : IconButton(
+                                onPressed: () {
+                                  _showUploadedImagesDialog(
+                                    context,
+                                    attendanceData!.data[0].roster_image,
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.remove_red_eye,
+                                  color: customcolor.blue,
+                                ),
+                              ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-                                                      uploadcontroller.text = s;
-                                                    });
-                                                  },
-                                                  deleteIcon: Icon(
-                                                    Icons.close,
-                                                    color: customcolor.blue,
-                                                    size: 20,
-                                                  ),
+            result.isEmpty
+                ? const SizedBox()
+                : SizedBox(
+                    height: 42,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.only(
+                        left: 5,
+                        top: 3,
+                        bottom: 2,
+                      ),
+                      itemCount: result.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 6),
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            showfileimage(
+                              result[index].split('/').last,
+                              result[index],
+                              false,
+                            );
+                          },
+                          child: Chip(
+                            side: BorderSide(color: customcolor.blue),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            labelPadding: const EdgeInsets.all(2),
+                            label: Text(
+                              result[index].split('/').last,
+                              style: TextStyle(
+                                color: customcolor.blue,
+                                fontSize: 12,
+                              ),
+                            ),
+                            deleteIcon: Icon(
+                              Icons.close,
+                              color: customcolor.blue,
+                              size: 20,
+                            ),
+                            onDeleted: () {
+                              setStateDialgoue(() {
+                                result.removeAt(index);
 
-                                                  backgroundColor: customcolor
-                                                      .blue
-                                                      .withOpacity(0.1),
-                                                  // elevation: 6.0,
-                                                  // shadowColor: Colors.grey[60],
-                                                  // padding: EdgeInsets.all(6.0),
-                                                ),
-                                              );
-                                            }),
-                                          ),
-                                        ),
-                                ],
-                              );
+                                uploadcontroller.text = result
+                                    .map((e) => e.split('/').last)
+                                    .join(', ');
+                              });
                             },
-                          )
-                  : Container(),
+                            backgroundColor: customcolor.blue.withOpacity(0.1),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+          ],
+        );
+      },
+    );
+  }
 
-              // Bulk Actions Container
-              const SizedBox(height: 12),
-            ],
-          );
+  void _showUploadedImagesDialog(BuildContext context, List<String?> images) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            constraints: const BoxConstraints(maxHeight: 500),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Uploaded Images",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 16),
+
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: images.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final imageUrl = images[index]!;
+                      print(imageUrl);
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+
+                          showfileimage(
+                            imageUrl.split('/').last,
+                            imageUrl,
+                            true,
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: customcolor.blue),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Image.network(imageUrl, width: 20, height: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  imageUrl.split('/').last,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Icon(Icons.open_in_new),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: customcolor.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Close"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   _displayPickImageDialog(
@@ -996,7 +1084,38 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         bool hasPermission = await PermissionHelper.requestPermission(
           Permission.camera,
         );
+        PermissionStatus status = await Permission.camera.request();
 
+        print(status);
+        if (status.isPermanentlyDenied) {
+          showDialog(
+            context: this.context,
+            builder: (_) => AlertDialog(
+              title: const Text("Camera Permission"),
+              content: const Text(
+                "Camera permission has been permanently denied. Please enable it from Settings.",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(this.context),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: customcolor.blue),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    openAppSettings();
+                  },
+                  child: const Text(
+                    "Settings",
+                    style: TextStyle(color: customcolor.blue),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
         if (!hasPermission) {
           Flushbar(
             margin: const EdgeInsets.all(8),
@@ -1116,7 +1235,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${title}"),
+              Text("${title}", style: TextStyle(fontSize: 12)),
               GestureDetector(
                 onTap: () {
                   Navigator.pop(context);
@@ -1129,7 +1248,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             //MUST TO ADDED
             physics: NeverScrollableScrollPhysics(),
             child: Container(
-              height: SizeConfig.blockSizeVertical * 30,
+              height: SizeConfig.blockSizeVertical * 60,
               width: double.maxFinite,
               child: ListView(
                 shrinkWrap: true,
@@ -1151,8 +1270,8 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                       : isnetwork
                       ? Image.network(
                           "${resultvalue}",
-                          height: SizeConfig.blockSizeVertical * 28,
-                          fit: BoxFit.cover,
+                          height: SizeConfig.blockSizeVertical * 55,
+                          fit: BoxFit.contain,
                           errorBuilder:
                               (
                                 BuildContext context,
@@ -1170,7 +1289,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                       : Image.file(
                           File(resultvalue),
                           //width: SizeConfig.blockSizeHorizontal*100,
-                          height: SizeConfig.blockSizeVertical * 28,
+                          height: SizeConfig.blockSizeVertical * 55,
                           fit: BoxFit.cover,
 
                           errorBuilder:
@@ -1293,9 +1412,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     bool isOmOeReadOnly = _isOmOeReadOnly;
 
     /// CLIENT FINAL DECISION
-    bool isClientFinal =
-    
-    (record.clientApprovalStatus != null);
+    bool isClientFinal = (record.clientApprovalStatus != null);
 
     /// OM / OE STATUS
     bool isOmApproved = record.omOeApprovalStatus == "approved";
@@ -1307,12 +1424,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         isOmApproved ||
         (!isClient && isOmRejected) ||
         isOmOeReadOnly;
-    print("islocak");
-    print(isClientFinal);
-    print(isOmApproved);
-    print(isClient);
-    print(isOmRejected);
-    print(isOmOeReadOnly);
+    // print("islocak");
+    // print(isClientFinal);
+    // print(isOmApproved);
+    // print(isClient);
+    // print(isOmRejected);
+    // print(isOmOeReadOnly);
 
     /// Check if radio should be disabled for client
     bool radioDisabledForClient = isClient && isOmPending;
@@ -1471,10 +1588,16 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         value: "approve",
                         id: record.id,
                         enabled:
-                            !lockRadio &&
-                            !_allClientApproved &&
-                            !radioDisabledForClient &&
-                            !isOmOeReadOnly,
+                            ((role == GlobalLists.operationmanagerrole ||
+                                    role == GlobalLists.operationrole ||
+                                    role == GlobalLists.unitrole ||
+                                    role == GlobalLists.supervisorrole) &&
+                                isnotificationStatus == false)
+                            ? false
+                            : !lockRadio &&
+                                  !_allClientApproved &&
+                                  !radioDisabledForClient &&
+                                  !isOmOeReadOnly,
                         isOmPending: isOmPending && isClient,
                       ),
                       Text(
@@ -1489,10 +1612,16 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                         value: "reject",
                         id: record.id,
                         enabled:
-                            !lockRadio &&
-                            !_allClientApproved &&
-                            !radioDisabledForClient &&
-                            !isOmOeReadOnly,
+                            ((role == GlobalLists.operationmanagerrole ||
+                                    role == GlobalLists.operationrole ||
+                                    role == GlobalLists.unitrole ||
+                                    role == GlobalLists.supervisorrole) &&
+                                isnotificationStatus == false)
+                            ? false
+                            : !lockRadio &&
+                                  !_allClientApproved &&
+                                  !radioDisabledForClient &&
+                                  !isOmOeReadOnly,
                         isOmPending: isOmPending && isClient,
                       ),
                       Text(
@@ -1704,18 +1833,28 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                   : _allClientApproved || !canSubmit || isOmOeReadOnly
                   ? null
                   : _submitAttendaceRoster,
-              child: Text(
-                _allClientApproved
-                    ? "Already Approved"
-                    : isOmOeReadOnly && role != GlobalLists.clientrole
-                    ? "OPs Approval Completed"
-                    : (!canSubmit && !_isnotificationCompleted)
-                    ? "Pending OPs Approval"
-                    : !canSubmit
-                    ? "Submit"
-                    : "Submit",
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
+              child: isclienSubmitted
+                  ? CircularProgressIndicator(
+                      color: customcolor.white,
+                      strokeWidth: 2,
+                    )
+                  : Text(
+                      _allClientApproved
+                          ? "Already Approved"
+                          : isOmOeReadOnly && role != GlobalLists.clientrole
+                          ? "OPs Approval Completed"
+                          : (!canSubmit && !_isnotificationCompleted)
+                          ? "Pending OPs Approval"
+                          : !canSubmit
+                          ? "Submit"
+                          : isnotificationStatus == false
+                          ? ""
+                          : "Submit",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -1948,20 +2087,33 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
     return (baseApproved + pendingApprovals);
   }
 
+  bool isclienSubmitted = false;
   Future<void> _submitAttendaceRoster() async {
     try {
+      setState(() {
+        isclienSubmitted = true;
+      });
       if (!await ConnectionDetector.checkInternetConnection()) {
+         setState(() {
+            isclienSubmitted = false;
+          });
         ShowDialogs.showToast("Please check internet connection");
         return;
       }
       // Check for OM/OE read-only mode
       if (_isOmOeReadOnly) {
+         setState(() {
+            isclienSubmitted = false;
+          });
         ShowDialogs.showToast("OPs approval already completed");
         return;
       }
 
       // Check for client permission to submit
       if (GlobalLists.clientrole == role && _hasPendingOmOeApproval) {
+         setState(() {
+            isclienSubmitted = false;
+          });
         ShowDialogs.showToast("Pending approval from OPs side");
         return;
       }
@@ -1972,6 +2124,9 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       }
 
       if (approvalSelection.length != allRecords.length) {
+         setState(() {
+            isclienSubmitted = false;
+          });
         ShowDialogs.showToast("Please approve or reject all records");
         return;
       }
@@ -2002,6 +2157,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
 
       for (var record in allRecords) {
         final userSelection = approvalSelection[record.id];
+        print("approvalSelection ${approvalSelection[record.id]}");
         if (userSelection != "approve") {
           setState(() {
             allRecordsApprovedByUser = false;
@@ -2021,6 +2177,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         // For non-client users (OM/OE):
         // - If user is approving ALL records, use "true"
         // - Otherwise, use "false"
+        print("allRecordsApprovedByUser ${allRecordsApprovedByUser}");
         isFinalSubmitted = allRecordsApprovedByUser ? "true" : "false";
       }
 
@@ -2061,7 +2218,7 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
           : "false";
 
       request.fields["is_final_submitted"] = isFinalSubmitted;
-
+      print("RUCHTIA  SUSHMA ${isFinalSubmitted}");
       if (GlobalLists.clientrole == role) {
         request.fields["client_id"] = widget.clientid.toString();
       } else {
@@ -2075,16 +2232,19 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
         );
       }
 
-      log("FIELDS => ${request.fields}");
-      log("FILES => ${request.files.length}");
+      print("FIELDS => ${request.fields}");
+      print("FILES => ${request.files.length}");
 
       final streamedResponse = await request.send();
 
       final response = await http.Response.fromStream(streamedResponse);
-
-      log(response.body);
+      print("!4july");
+      print(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        setState(() {
+          isclienSubmitted = false;
+        });
         final json = jsonDecode(response.body);
 
         final resp = ApproveRejectSubmit.fromJson(json);
@@ -2110,12 +2270,21 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
             ),
           );
         } else {
+          setState(() {
+            isclienSubmitted = false;
+          });
           ShowDialogs.showToast(resp.msg);
         }
       } else {
+        setState(() {
+          isclienSubmitted = false;
+        });
         ShowDialogs.showToast("API Error : ${response.statusCode}");
       }
     } catch (e) {
+      setState(() {
+        isclienSubmitted = false;
+      });
       log("Submit error => $e");
       ShowDialogs.showToast("Something went wrong");
     }
@@ -2299,7 +2468,12 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
   //     ShowDialogs.showToast("Something went wrong");
   //   }
   // }
+
   _submittedByClientRoster() async {
+    print("RUCHI");
+    setState(() {
+      isclienSubmitted = true;
+    });
     List<Record> allRecords = [];
     for (var d in attendanceData!.data) {
       allRecords.addAll(d.records);
@@ -2391,18 +2565,27 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
           await http.MultipartFile.fromPath("roster_image", imagePath),
         );
       }
+      print("reque ${request.fields}");
+      print("RUCHI ${request}");
       final streamedResponse = await request.send();
 
       final response = await http.Response.fromStream(streamedResponse);
       final json = jsonDecode(response.body);
       final resp = CommonResponse.fromJson(json);
+      print("resp client submit ${resp}");
+      print("RUCHI resp ${resp}");
       if (resp.status == 1) {
         setState(() {
+          isclienSubmitted = false;
+          GlobalLists.is_notification_sent.value = true;
           _fetchAttendanceRoster();
           // _isnotificationCompleted=true;
         });
         ShowDialogs.showToast(resp.msg);
       } else {
+        setState(() {
+          isclienSubmitted = false;
+        });
         ShowDialogs.showToast(resp.msg);
       }
 
@@ -2432,7 +2615,10 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
       //   jsonval: map,
       // );
     } catch (e) {
-      log("Submit error => $e");
+      setState(() {
+        isclienSubmitted = false;
+      });
+      print("Submit error => $e");
       ShowDialogs.showToast("Something went wrong");
     }
   }

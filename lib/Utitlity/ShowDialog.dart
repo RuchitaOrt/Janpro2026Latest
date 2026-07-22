@@ -228,7 +228,7 @@ class ShowDialogs {
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text("Set In The City"),
+      title: Text("Janpro"),
       content: Text(message!),
       actions: [
         okButton,

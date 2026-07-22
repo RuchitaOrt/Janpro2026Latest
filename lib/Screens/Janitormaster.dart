@@ -678,15 +678,19 @@ class _JanitormasterState extends State<Janitormaster>
                             if (role == GlobalLists.supervisorrole) {
                               if (GlobalLists.clientid == "" ||
                                   GlobalLists.siteid == "") {
+                                     FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast(
                                     "This superviour not assigned with any shift.");
                               } else if (namecontroller.text.isEmpty) {
+                                 FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast("Please Enter Name");
                               } else if (!validateNameInput(
                                   namecontroller.text)) {
+                                     FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast(
                                     "Please Enter Valid Name");
                               } else if (mobilecontroller.text.isEmpty) {
+                                 FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast(
                                     "Please Enter Mobile Number");
                               } else {
@@ -699,14 +703,18 @@ class _JanitormasterState extends State<Janitormaster>
                               }
                             } else {
                               if (clientcontroller.text.isEmpty) {
+                                 FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast("Please Select Client");
                               } else if (namecontroller.text.isEmpty) {
+                                 FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast("Please Enter Name");
                               } else if (!validateNameInput(
                                   namecontroller.text)) {
+                                     FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast(
                                     "Please Enter Valid Name");
                               } else if (mobilecontroller.text.isEmpty) {
+                                 FocusScope.of(context).unfocus();
                                 ShowDialogs.showToast(
                                     "Please Enter Mobile Number");
                               } else {

@@ -54,8 +54,9 @@ class MainList {
 
 class Attendance extends StatefulWidget {
   final String? clientname;
+  final int? selectedShiftIndex;
 
-  Attendance(this.clientname);
+  Attendance(this.clientname,{this.selectedShiftIndex=0});
 
   //overall im getting
 
@@ -119,10 +120,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
 
   final scrollController = ScrollController();
   bool isExpandedSite = false;
-
+ String _isSSupelected = "";
   @override
   void initState() {
     super.initState();
+    selectedShiftIndex=widget.selectedShiftIndex!;
     var datefrom = DateFormat('dd-MM-yyyy').format(DateTime.now());
     GlobalLists.datecontroller.text = datefrom;
     getrole();
@@ -2791,10 +2793,10 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     ),
 
                                     SizedBox(height: 10),
-                                    ElevatedButton(
+                                (role==GlobalLists.reginalmanagerrole || role==GlobalLists.headrole)?Container():    ElevatedButton(
                                       onPressed: () {
-                                        log('_isSelected');
-                                        log('role');
+                                        print('_isSelected');
+                                        print('role');
                                         _isSelected == 'OverAll' ||
                                                 (role == '1' && maintag == 0)
                                             ? ShowDialogs.showToast(
@@ -2823,7 +2825,11 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                         month: month,
                                                         year: year,
                                                         attendanceclientid:
-                                                            attendanceclientid,
+                                                            GlobalLists
+                                                                .mainlisttab[maintag]
+                                                                .clientId
+                                                                .toString(),
+                                                        // attendanceclientid,
                                                         role: role.toString(),
                                                         // onReloadData: refreshData,
                                                       ),
@@ -2833,7 +2839,6 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                 ),
                                               );
                                       },
-                                      child: Text('View Attendance Roster'),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: customcolor.blue,
                                         shape: RoundedRectangleBorder(
@@ -2842,6 +2847,7 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                           ),
                                         ),
                                       ),
+                                      child: Text('View Attendance Roster'),
                                     ),
 
                                     // workflow
@@ -3149,51 +3155,56 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     role == GlobalLists.supervisorrole
                                         ? ElevatedButton(
                                             onPressed: () {
-                                              log(_isSelected);
-                                              log('_isSelected');
-                                              log('role$role');
-                                              log('maintag$maintag');
+                                              print(_isSelected);
+                                              print('_isSelected');
+                                              print('role$role');
+                                              print('maintag$maintag');
 
-                                              _isSelected == 'OverAll' ||
+                                             print(
+                                                      "attendanceclientid rr${GlobalLists.mainlisttab[maintag].clientId.toString()}",
+                                                    );
+                                              // _fetchAttendanceRoster();
+                                             _isSelected == 'OverAll' 
+                                              ||
                                                       (role == '1' &&
                                                           maintag == 0)
                                                   ? ShowDialogs.showToast(
                                                       'Please select client-site',
                                                     )
-                                                  :
-                                                    // _fetchAttendanceRoster();
-                                                    Navigator.push(
-                                                      context,
-                                                      PageRouteBuilder(
-                                                        pageBuilder:
-                                                            (
-                                                              context,
-                                                              animation1,
-                                                              animation2,
-                                                            ) => ViewAttendanceRoster(
-                                                              maintag: maintag,
-                                                              attendancesiteid:
-                                                                  GlobalLists
-                                                                      .mainlisttab[maintag]
-                                                                      .siteId,
-                                                              attendanceshiftid:
-                                                                  attendanceshiftid,
-                                                              attendanceRosterData:
-                                                                  _attendanceRosterData,
-                                                              month: month,
-                                                              year: year,
-                                                              attendanceclientid:
-                                                                  attendanceclientid,
-                                                              role: role
-                                                                  .toString(),
-                                                              // onReloadData: refreshData,
-                                                            ),
-                                                        transitionDuration:
-                                                            Duration(
-                                                              seconds: 0,
-                                                            ),
+                                                  :   Navigator.push(
+                                                context,
+                                                PageRouteBuilder(
+                                                  pageBuilder:
+                                                      (
+                                                        context,
+                                                        animation1,
+                                                        animation2,
+                                                      ) => ViewAttendanceRoster(
+                                                        maintag: maintag,
+                                                        attendancesiteid:
+                                                            GlobalLists
+                                                                .mainlisttab[maintag]
+                                                                .siteId,
+                                                        attendanceshiftid:
+                                                            attendanceshiftid,
+                                                        attendanceRosterData:
+                                                            _attendanceRosterData,
+                                                        month: month,
+                                                        year: year,
+                                                        attendanceclientid:
+                                                            GlobalLists
+                                                                .mainlisttab[maintag]
+                                                                .clientId
+                                                                .toString(),
+                                                        // attendanceclientid,
+                                                        role: role.toString(),
+                                                        // onReloadData: refreshData,
                                                       ),
-                                                    );
+                                                  transitionDuration: Duration(
+                                                    seconds: 0,
+                                                  ),
+                                                ),
+                                              );
                                             },
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: customcolor.blue,
@@ -3291,8 +3302,12 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                                                             .blockSizeHorizontal *
                                                                         65,
                                                               child: Column(
-mainAxisAlignment: MainAxisAlignment.start,
-crossAxisAlignment: CrossAxisAlignment.start,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .start,
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
                                                                 children: [
                                                                   Text(
                                                                     "Attendance",
@@ -3317,7 +3332,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
                                                                               .bold,
                                                                     ),
                                                                   ),
-                                                                   Text(
+                                                                  Text(
                                                                     "${GlobalLists.attendanceDetails[selectedShiftIndex].shiftName}",
                                                                     maxLines: 2,
                                                                     textAlign:
@@ -3353,15 +3368,22 @@ crossAxisAlignment: CrossAxisAlignment.start,
                                                                 radius: 40.0,
                                                                 //   lineWidth: 5.0,
                                                                 animation: true,
-                                                                percent: double.parse(GlobalLists.attendanceDetails[selectedShiftIndex].percentage.toString()) >
+                                                                percent:
+                                                                    double.parse(
+                                                                          GlobalLists
+                                                                              .attendanceDetails[selectedShiftIndex]
+                                                                              .percentage
+                                                                              .toString(),
+                                                                        ) >
                                                                         100.0
                                                                     ? 0.0
-                                                                    :double.parse(GlobalLists.attendanceDetails[selectedShiftIndex].percentage.toString()) /
+                                                                    : double.parse(
+                                                                            GlobalLists.attendanceDetails[selectedShiftIndex].percentage.toString(),
+                                                                          ) /
                                                                           100,
 
                                                                 center: new Text(
-
-                                                                   "${GlobalLists.attendanceDetails[selectedShiftIndex].count}/${GlobalLists.attendanceDetails[selectedShiftIndex].noOfStaff}",
+                                                                  "${GlobalLists.attendanceDetails[selectedShiftIndex].count}/${GlobalLists.attendanceDetails[selectedShiftIndex].noOfStaff}",
                                                                   style: AppFonts.headerStyle(
                                                                     fontSize:
                                                                         24,
@@ -3390,8 +3412,12 @@ crossAxisAlignment: CrossAxisAlignment.start,
                                                                         GlobalLists
                                                                             .shiftid,
                                                                         context,
-                                                                        GlobalLists.attendanceDetails[selectedShiftIndex].noOfStaff!,
-                                                                        GlobalLists.attendanceDetails[selectedShiftIndex].count!
+                                                                        GlobalLists
+                                                                            .attendanceDetails[selectedShiftIndex]
+                                                                            .noOfStaff!,
+                                                                        GlobalLists
+                                                                            .attendanceDetails[selectedShiftIndex]
+                                                                            .count!,
                                                                         // GlobalLists
                                                                         //     .attendancedata!
                                                                         //     .noOfStaff,
@@ -3507,8 +3533,8 @@ crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         /// SHIFT CHIPS
-        /// 
-        /// 
+        ///
+        ///
         SizedBox(
           height: 30,
           child: ListView.builder(
@@ -3521,7 +3547,8 @@ crossAxisAlignment: CrossAxisAlignment.start,
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
                   label: Text(
-                    "${shift.shiftStartTime ?? ""} - ${shift.shiftEndTime ?? ""}",
+                    //16july
+                    "${shift.startTime ?? ""} - ${shift.endTime ?? ""}",
                     style: AppFonts.headerStyle(
                       fontSize: 12,
                       color: selectedShiftIndex == index
@@ -3544,6 +3571,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
                   selected: selectedShiftIndex == index,
                   onSelected: (value) {
                     setState(() {
+                      
                       selectedShiftIndex = index;
                     });
                   },
@@ -3780,7 +3808,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
                           .attendanceDetails[tag]
                           .permission,
                     ),
-              SizedBox(height: 20),
+              SizedBox(height: 90),
             ],
           );
   }
@@ -3902,6 +3930,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
               onSelected: (selected) {
                 setState(() {
                   _isSelected = item;
+                  print("selectRU");
                   if (GlobalLists
                           .mainlisttab[maintag]
                           .attendanceDetails
@@ -3990,10 +4019,17 @@ crossAxisAlignment: CrossAxisAlignment.start,
               selected: maintag == value,
               onSelected: (selected) {
                 setState(() {
+                 
                   _isSelected = item.clientName;
                   maintag = value;
                   log('maintag ${maintag}');
-                  log('item.clientName ${item.clientName}');
+                  print("maintag cluent");
+                  print('item.clientName ${item.clientName}');
+                  if(role==GlobalLists.supervisorrole)
+                  {
+                    clientname=item.clientName;
+                     print("clientname ${clientname}");
+                  }
                   log('GlobalLists.graphlist ${GlobalLists.graphlist.length}');
                   if (GlobalLists.graphlist.length == 0 &&
                       item.clientName == 'OverAll') {
@@ -4334,288 +4370,283 @@ crossAxisAlignment: CrossAxisAlignment.start,
 
   addaddtendance(BuildContext context) {
     //24june
-        showModalBottomSheet(
-          backgroundColor: Colors.white,
-          isScrollControlled: true,
-          isDismissible: true,
-          enableDrag: true,
-          elevation: 5.0,
-          barrierColor: Colors.black.withOpacity(0.7),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.0),
-              topRight: Radius.circular(20.0),
-            ),
-          ),
-          context: context,
-          builder: (builder) {
-            return StatefulBuilder(
-              builder: (BuildContext context, StateSetter setStateDialgoue) {
-                return Container(
-                  height:
-                      (role == GlobalLists.headrole ||
-                          role == GlobalLists.reginalmanagerrole ||
-                          role == GlobalLists.clientrole)
-                      ? SizeConfig.blockSizeVertical * 48 +
-                            MediaQuery.of(context).viewInsets.bottom
-                      : SizeConfig.blockSizeVertical * 47 +
-                            MediaQuery.of(context).viewInsets.bottom,
-                  margin: EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 2),
-                  padding: EdgeInsets.all(5),
-                  color: Colors.white,
-                  child: Stack(
+    showModalBottomSheet(
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      elevation: 5.0,
+      barrierColor: Colors.black.withOpacity(0.7),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+      ),
+      context: context,
+      builder: (builder) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setStateDialgoue) {
+            return Container(
+              height:
+                  (role == GlobalLists.headrole ||
+                      role == GlobalLists.reginalmanagerrole ||
+                      role == GlobalLists.clientrole)
+                  ? SizeConfig.blockSizeVertical * 48 +
+                        MediaQuery.of(context).viewInsets.bottom
+                  : SizeConfig.blockSizeVertical * 47 +
+                        MediaQuery.of(context).viewInsets.bottom,
+              margin: EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 2),
+              padding: EdgeInsets.all(5),
+              color: Colors.white,
+              child: Stack(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 5),
+                      SizedBox(height: 5),
 
-                          /// drag indicator
-                          Center(
-                            child: Container(
-                              width: 50,
-                              child: Divider(
-                                thickness: 4,
-                                color: customcolor.greytext,
-                              ),
-                            ),
+                      /// drag indicator
+                      Center(
+                        child: Container(
+                          width: 50,
+                          child: Divider(
+                            thickness: 4,
+                            color: customcolor.greytext,
                           ),
+                        ),
+                      ),
 
-                          SizedBox(height: 20),
+                      SizedBox(height: 20),
 
-                          /// title
-                          Text(
-                            "Mark Attendance",
-                            style: AppFonts.headerStyle(
-                              fontSize: 22,
-                              color: customcolor.black,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
+                      /// title
+                      Text(
+                        "Mark Attendance",
+                        style: AppFonts.headerStyle(
+                          fontSize: 22,
+                          color: customcolor.black,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
 
-                          SizedBox(height: 15),
+                      SizedBox(height: 15),
 
-                          Expanded(
-                            child: GlobalLists.dropdownList.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      "No janitor's present  ${GlobalLists.dropdownList.length}",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: customcolor.greytext,
+                      Expanded(
+                        child: GlobalLists.dropdownList.isEmpty
+                            ? Center(
+                                child: Text(
+                                  "No janitor's present  ${GlobalLists.dropdownList.length}",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: customcolor.greytext,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: GlobalLists.dropdownList.length,
+                                itemBuilder: (context, index) {
+                                  final janitor =
+                                      GlobalLists.dropdownList[index];
+                                  print("IN MARK");
+                                  final id = int.parse(janitor.id.toString());
+
+                                  final isFromApi = apiSelectedJanitorIds
+                                      .contains(id); // 🔒 disable
+                                  final isSelected =
+                                      isFromApi ||
+                                      selectedJanitorIds.contains(
+                                        id,
+                                      ); // ✅ checked
+                                  print(isSelected);
+                                  return Container(
+                                    margin: EdgeInsets.only(bottom: 8),
+                                    decoration: BoxDecoration(
+                                      color: isFromApi
+                                          ? customcolor.blue.withOpacity(0.08)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: customcolor.greybg,
                                       ),
                                     ),
-                                  )
-                                :
-                                ListView.builder(
-                                    itemCount: GlobalLists.dropdownList.length,
-                                    itemBuilder: (context, index) {
-                                      final janitor =
-                                          GlobalLists.dropdownList[index];
-                                          print("IN MARK");
-                                        final id = int.parse(janitor.id.toString());
-
-    final isFromApi = apiSelectedJanitorIds.contains(id);   // 🔒 disable
-    final isSelected = isFromApi || selectedJanitorIds.contains(id); // ✅ checked
-                                          print(isSelected);
-                                      return Container(
-                                        margin: EdgeInsets.only(bottom: 8),
-                                        decoration: BoxDecoration(
-                                          color: isFromApi
-                                              ? customcolor.blue.withOpacity(0.08)
-                                              : Colors.white,
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: customcolor.greybg,
-                                          ),
+                                    child: CheckboxListTile(
+                                      value: isSelected,
+                                      activeColor: customcolor.blue,
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                      title: Text(
+                                        janitor.name,
+                                        style: AppFonts.headerStyle(
+                                          fontSize: 15,
+                                          color: customcolor.black,
+                                          fontWeight: FontWeight.normal,
                                         ),
-                                        child:
-                                        CheckboxListTile(
-                                          value: isSelected,
-                                          activeColor: customcolor.blue,
-                                          controlAffinity:
-                                              ListTileControlAffinity.leading,
-                                          title: Text(
-                                            janitor.name,
-                                            style: AppFonts.headerStyle(
-                                              fontSize: 15,
-                                              color: customcolor.black,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                          ),
-                                          subtitle: Text(
-                                            janitor.contact,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: customcolor.greytext,
-                                            ),
-                                          ),
-                                          onChanged:isFromApi
-            ? null // disable ONLY api ones
-            : (value) {
-                                            setStateDialgoue(() {
-
-                                              if (value == true) {
-                                                selectedJanitorIds.add(
-                                                  int.parse(janitor.id),
-                                                );
-                                                log(
-                                                  'Selected IDs: $selectedJanitorIds',
-                                                );
-                                              } else {
-                                                selectedJanitorIds.remove(
-                                                  int.parse(janitor.id),
-                                                );
-                                                log(
-                                                  'remove IDs: $selectedJanitorIds',
-                                                );
-                                              }
-                                            });
-                                          },
+                                      ),
+                                      subtitle: Text(
+                                        janitor.contact,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: customcolor.greytext,
                                         ),
-                                      );
-                                    },
-                                  ),
-                          ),
-
-                          SizedBox(height: 10),
-
-                          ///  SUBMIT BUTTON
-                          GestureDetector(
-                            onTap: () {
-                            // ShowDialogs.showToast(
-                            //       "D:Clicked on button",
-                            //     );
-                              if (lat == null || long == null) {
-                                grantPermission();
-                                //  ShowDialogs.showToast(
-                                //   "D:Location not granted",
-                                // );
-                              } else if (selectedJanitorIds.isEmpty) {
-                                ShowDialogs.showToast(
-                                  "Please select at least one janitor",
-                                );
-                              } else {
-                                //  ShowDialogs.showToast(
-                                //   "D:in else",
-                                // );
-                             print('NEWIPHONE In side addattendanceApi');
-                              int total= 0;
-                              int count=0;
-                              print(role);
-                              print(GlobalLists.operationrole);
-                           if(role==GlobalLists.unitrole )
-                           {
-                            //  ShowDialogs.showToast(
-                            //       "D:in unitrole",
-                            //     );
-      total=
-                                GlobalLists
-                                                          .mainlisttab[maintag]
-                                                          .attendanceDetails[tag]
-                                                          .noOfStaff;
-                                //GlobalLists.attendancedata!.noOfStaff;
-                                 count=
-                                GlobalLists
-                                                          .mainlisttab[maintag]
-                                                          .attendanceDetails[tag]
-                                                          .count;
-                                // GlobalLists.attendancedata!.count;
-                           }else if(role==GlobalLists.operationrole)
-                           {
-    //  ShowDialogs.showToast(
-    //                               "D:in operationrole",
-    //                             );
-                              total=
-                                GlobalLists
-                                                          .mainlisttab[maintag]
-                                                          .attendanceDetails[tag]
-                                                          .noOfStaff;
-                                //GlobalLists.attendancedata!.noOfStaff;
-                                 count=
-                                GlobalLists
-                                                          .mainlisttab[maintag]
-                                                          .attendanceDetails[tag]
-                                                          .count;
-                           }else if(role==GlobalLists.operationmanagerrole)
-                           {
-                            // ShowDialogs.showToast(
-                            //       "D:in operationmanagerrole",
-                            //     );
-
-                              total=
-                                GlobalLists
-                                                          .mainlisttab[maintag]
-                                                          .attendanceDetails[tag]
-                                                          .noOfStaff;
-                                //GlobalLists.attendancedata!.noOfStaff;
-                                 count=
-                                GlobalLists
-                                                          .mainlisttab[maintag]
-                                                          .attendanceDetails[tag]
-                                                          .count;
-                           }else
-                           {
-                            //  ShowDialogs.showToast(
-                            //       "D:in else role ${role}",
-                            //     );
-                              total=
-
-                                GlobalLists.attendanceDetails[selectedShiftIndex]!.noOfStaff!;
-
-                               count=  GlobalLists.attendanceDetails[selectedShiftIndex]!.count!;
-                           }
-                                //  ShowDialogs.showToast(
-                                //   "D: ${total.toString()} ${count.toString()}",
-                                // );
-                                int remaining = total - count;
-                                if (remaining <= 0) {
-                                  ShowDialogs.showToast(
-                                    "All janitors already marked",
-                                  );
-                                  return;
-                                }
-
-                                if (selectedJanitorIds.length > remaining) {
-                                  ShowDialogs.showToast(
-                                    "You can only select $remaining janitor(s)",
-                                  );
-                                  return;
-                                }
-                                // ShowDialogs.showToast(
-                                //   "D: called api",
-                                // );
-                                addattendanceApi();
-                              }
-                            },
-                            child: Align(
-                              alignment: Alignment.bottomRight,
-                              child: ValueListenableBuilder<bool>(
-                                valueListenable: GlobalLists.isaddAttendance,
-                                builder: (context, isLoading, _) {
-                                  if (isLoading) {
-                                    return CircularProgressIndicator(
-                                      color: customcolor.blue,
-                                    );
-                                  }
-                                  return Image.asset(
-                                    'assets/images/next.png',
-                                    width: 50,
-                                    height: 50,
+                                      ),
+                                      onChanged: isFromApi
+                                          ? null // disable ONLY api ones
+                                          : (value) {
+                                              setStateDialgoue(() {
+                                                if (value == true) {
+                                                  selectedJanitorIds.add(
+                                                    int.parse(janitor.id),
+                                                  );
+                                                  log(
+                                                    'Selected IDs: $selectedJanitorIds',
+                                                  );
+                                                } else {
+                                                  selectedJanitorIds.remove(
+                                                    int.parse(janitor.id),
+                                                  );
+                                                  log(
+                                                    'remove IDs: $selectedJanitorIds',
+                                                  );
+                                                }
+                                              });
+                                            },
+                                    ),
                                   );
                                 },
                               ),
-                            ),
+                      ),
+
+                      SizedBox(height: 10),
+
+                      ///  SUBMIT BUTTON
+                      GestureDetector(
+                        onTap: () {
+                          // ShowDialogs.showToast(
+                          //       "D:Clicked on button",
+                          //     );
+                          if (lat == null || long == null) {
+                            grantPermission();
+                            //  ShowDialogs.showToast(
+                            //   "D:Location not granted",
+                            // );
+                          } else if (selectedJanitorIds.isEmpty) {
+                            ShowDialogs.showToast(
+                              "Please select at least one janitor",
+                            );
+                          } else {
+                            //  ShowDialogs.showToast(
+                            //   "D:in else",
+                            // );
+                            print('NEWIPHONE In side addattendanceApi');
+                            int total = 0;
+                            int count = 0;
+                            print(role);
+                            print(GlobalLists.operationrole);
+                            if (role == GlobalLists.unitrole) {
+                              //  ShowDialogs.showToast(
+                              //       "D:in unitrole",
+                              //     );
+                              total = GlobalLists
+                                  .mainlisttab[maintag]
+                                  .attendanceDetails[tag]
+                                  .noOfStaff;
+                              //GlobalLists.attendancedata!.noOfStaff;
+                              count = GlobalLists
+                                  .mainlisttab[maintag]
+                                  .attendanceDetails[tag]
+                                  .count;
+                              // GlobalLists.attendancedata!.count;
+                            } else if (role == GlobalLists.operationrole) {
+                              //  ShowDialogs.showToast(
+                              //                               "D:in operationrole",
+                              //                             );
+                              total = GlobalLists
+                                  .mainlisttab[maintag]
+                                  .attendanceDetails[tag]
+                                  .noOfStaff;
+                              //GlobalLists.attendancedata!.noOfStaff;
+                              count = GlobalLists
+                                  .mainlisttab[maintag]
+                                  .attendanceDetails[tag]
+                                  .count;
+                            } else if (role ==
+                                GlobalLists.operationmanagerrole) {
+                              // ShowDialogs.showToast(
+                              //       "D:in operationmanagerrole",
+                              //     );
+
+                              total = GlobalLists
+                                  .mainlisttab[maintag]
+                                  .attendanceDetails[tag]
+                                  .noOfStaff;
+                              //GlobalLists.attendancedata!.noOfStaff;
+                              count = GlobalLists
+                                  .mainlisttab[maintag]
+                                  .attendanceDetails[tag]
+                                  .count;
+                            }else {
+                              //  ShowDialogs.showToast(
+                              //       "D:in else role ${role}",
+                              //     );
+                              total = GlobalLists
+                                  .attendanceDetails[selectedShiftIndex]!
+                                  .noOfStaff!;
+
+                              count = GlobalLists
+                                  .attendanceDetails[selectedShiftIndex]!
+                                  .count!;
+                            }
+                            //  ShowDialogs.showToast(
+                            //   "D: ${total.toString()} ${count.toString()}",
+                            // );
+                            int remaining = total - count;
+                            if (remaining <= 0) {
+                              ShowDialogs.showToast(
+                                "All janitors already marked",
+                              );
+                              return;
+                            }
+
+                            if (selectedJanitorIds.length > remaining) {
+                              ShowDialogs.showToast(
+                                "You can only select $remaining janitor(s)",
+                              );
+                              return;
+                            }
+                            // ShowDialogs.showToast(
+                            //   "D: called api",
+                            // );
+                            addattendanceApi();
+                          }
+                        },
+                        child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: GlobalLists.isaddAttendance,
+                            builder: (context, isLoading, _) {
+                              if (isLoading) {
+                                return CircularProgressIndicator(
+                                  color: customcolor.blue,
+                                );
+                              }
+                              return Image.asset(
+                                'assets/images/next.png',
+                                width: 50,
+                                height: 50,
+                              );
+                            },
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
-                );
-              },
+                ],
+              ),
             );
           },
         );
+      },
+    );
   }
 
   deleteattendanceApi(String id) async {
@@ -4689,9 +4720,8 @@ crossAxisAlignment: CrossAxisAlignment.start,
           );
           //24june
           // // Remove from employeeList
-         GlobalLists.attendanceDetails[selectedShiftIndex].employeeList!.removeWhere(
-            (item) => item.id.toString() == id.toString(),
-          );
+          GlobalLists.attendanceDetails[selectedShiftIndex].employeeList!
+              .removeWhere((item) => item.id.toString() == id.toString());
 
           // Save updated list back to SharedPreferences
           await prefs.setString(
@@ -4701,8 +4731,11 @@ crossAxisAlignment: CrossAxisAlignment.start,
 
           // Update global list & UI
           setState(() {
-            GlobalLists.attendanceemployeelist = GlobalLists.attendanceDetails[selectedShiftIndex]!.employeeList!;
-            GlobalLists.attendanceDetails[selectedShiftIndex]!.employeeList!=resp.data!.attendanceDetails![selectedShiftIndex].employeeList;
+            GlobalLists.attendanceemployeelist = GlobalLists
+                .attendanceDetails[selectedShiftIndex]!
+                .employeeList!;
+            GlobalLists.attendanceDetails[selectedShiftIndex]!.employeeList !=
+                resp.data!.attendanceDetails![selectedShiftIndex].employeeList;
             // GlobalLists.attendancedata!.employeeList[a] = resp.data.employeeList;
           });
 
@@ -4895,7 +4928,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
       }
     }
     return Container(
-      padding: EdgeInsets.only(bottom: 130),
+      padding: EdgeInsets.only(bottom: 70),
       height: SizeConfig.blockSizeVertical * 50,
       child: ListView.builder(
         scrollDirection: Axis.vertical,
@@ -5098,6 +5131,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
                               // if (delete_permission==false) {
                               //   ShowDialogs.showToast('No Active Shift');
                               // } else {
+                              print("DELE");
                               ShowDialogs.showConfirmDialog(
                                 context,
                                 "Delete",
@@ -5198,8 +5232,8 @@ crossAxisAlignment: CrossAxisAlignment.start,
       var map = {
         'supervisor': supervisorid,
         'today_date':
-        //  "23-06-2026",
-        GlobalLists.datecontroller.text,
+            //  "23-06-2026",
+            GlobalLists.datecontroller.text,
       };
 
       APIManager().apiRequest(
@@ -5255,15 +5289,30 @@ crossAxisAlignment: CrossAxisAlignment.start,
                   resp.data?.attendanceDetails ?? [];
               print("SHIFT COUNT ${GlobalLists.attendanceDetails.length}");
 
-              for (var shift in GlobalLists.attendanceDetails) {
-                print("${shift.shiftName} => ${shift.employeeList?.length}");
+              for (int i = 0; i < GlobalLists.attendanceDetails.length; i++) {
+                // print("${shift.shiftName} => ${shift.employeeList?.length}");
+                if (GlobalLists.attendanceDetails[i].current_time == true) {
+                  print("index selectedShiftIndex ${i}");
+                  selectedShiftIndex = i;
+                }
               }
+              //change
 
-              selectedShiftIndex = 0;
               isdataloaded = true;
-
+print("Add atten ${_isSelected}");
               if (resp.data!.clientSiteName == widget.clientname) {
                 maintag = 1;
+                _isSelected=resp.data!.clientSiteName!;
+    setState(() {
+                  _isSelected=resp.data!.clientSiteName!;
+               });
+print("Add atten 1${_isSelected}");
+              }else{
+               setState(() {
+                  _isSelected="OverAll";
+               });
+
+print("Add atten ${_isSelected}");
               }
             });
 
@@ -5829,180 +5878,189 @@ crossAxisAlignment: CrossAxisAlignment.start,
 
   //addattendance api
   addattendanceApi() async {
-        print('NEWIPHONE In side addattendanceApi');
-        var status1 = await ConnectionDetector.checkInternetConnection();
-        var map = <String, dynamic>{};
-        List<Map<String, dynamic>> attendanceDetails = [];
+    print('NEWIPHONE In side addattendanceApi');
+    var status1 = await ConnectionDetector.checkInternetConnection();
+    var map = <String, dynamic>{};
+    List<Map<String, dynamic>> attendanceDetails = [];
 
-        for (var janitor in GlobalLists.dropdownList) {
-          final id = int.parse(janitor.id);
-          if (selectedJanitorIds.contains(id)) {
-            attendanceDetails.add({
-              "name": janitor.name,
-              "contact": int.parse(janitor.contact),
-            });
-          }
-        }
+    for (var janitor in GlobalLists.dropdownList) {
+      final id = int.parse(janitor.id);
+      if (selectedJanitorIds.contains(id)) {
+        attendanceDetails.add({
+          "name": janitor.name,
+          "contact": int.parse(janitor.contact),
+        });
+      }
+    }
 
-        if (role == GlobalLists.unitrole ||
-            role == GlobalLists.operationrole ||
-            role == GlobalLists.operationmanagerrole) {
-          map['attendnace_details'] = jsonEncode(attendanceDetails);
+    if (role == GlobalLists.unitrole ||
+        role == GlobalLists.operationrole ||
+        role == GlobalLists.operationmanagerrole) {
+      map['attendnace_details'] = jsonEncode(attendanceDetails);
 
-          map['name'] = namecontroller.text.trim();
-          map['contact'] = mobilecontroller.text.trim();
-          map['client_id'] = attendanceclientid;
-          map['site_id'] = attendancesiteid;
-          map['latitude'] = lat;
-          map['longitude'] = long;
-          map['user_type'] = role == GlobalLists.supervisorrole ? "Supervisor" : "";
-          map['shift'] = attendanceshiftid;
-          map["date"] = DateTime.now().toIso8601String().split('T')[0];
-          map["time"] = DateTime.now()
-              .toIso8601String()
-              .split('T')[1]
-              .split('.')[0];
-        } else {
-          map['attendnace_details'] = jsonEncode(attendanceDetails);
+      map['name'] = namecontroller.text.trim();
+      map['contact'] = mobilecontroller.text.trim();
+      map['client_id'] = attendanceclientid;
+      map['site_id'] = attendancesiteid;
+      map['latitude'] = lat;
+      map['longitude'] = long;
+      map['user_type'] = role == GlobalLists.supervisorrole ? "Supervisor" : "";
+      map['shift'] = attendanceshiftid;
+      map["date"] = DateTime.now().toIso8601String().split('T')[0];
+      map["time"] = DateTime.now()
+          .toIso8601String()
+          .split('T')[1]
+          .split('.')[0];
+    } else {
+      map['attendnace_details'] = jsonEncode(attendanceDetails);
 
-          map['name'] = namecontroller.text.trim();
-          map['contact'] = mobilecontroller.text.trim();
-          map['client_id'] = GlobalLists.clientid;
-          map['site_id'] = GlobalLists.siteid;
-          map['latitude'] = lat;
-          map['longitude'] = long;
-          map['user_type'] = role == GlobalLists.supervisorrole ? "Supervisor" : "";
-          map['shift'] = GlobalLists.attendanceDetails[selectedShiftIndex].id.toString();
-          // GlobalLists.shiftid;
-          map["date"] = DateTime.now().toIso8601String().split('T')[0];
-          map["time"] = DateTime.now()
-              .toIso8601String()
-              .split('T')[1]
-              .split('.')[0];
-        }
+      map['name'] = namecontroller.text.trim();
+      map['contact'] = mobilecontroller.text.trim();
+      map['client_id'] = GlobalLists.clientid;
+      map['site_id'] = GlobalLists.siteid;
+      map['latitude'] = lat;
+      map['longitude'] = long;
+      map['user_type'] = role == GlobalLists.supervisorrole ? "Supervisor" : "";
+      map['shift'] = GlobalLists.attendanceDetails[selectedShiftIndex].id
+          .toString();
+      // GlobalLists.shiftid;
+      map["date"] = DateTime.now().toIso8601String().split('T')[0];
+      map["time"] = DateTime.now()
+          .toIso8601String()
+          .split('T')[1]
+          .split('.')[0];
+    }
     //  ShowDialogs.showToast(
     //                               "D: called ${map}",
     //                             );
-        log('addattendanceApi Map: $map');
+    log('addattendanceApi Map: $map');
 
-        if (status1) {
-          //  Online mode
-          // ShowDialogs.showLoadingDialog(context, _keyLoader);
-          setState(() {
-            GlobalLists.isaddAttendance.value = true;
-          });
-          APIManager().apiRequest(
-            context,
-            API.addattendance,
-            (response) async {
-              addattten.AddAttendanceResponse resp = response;
-              if (resp.status == 1) {
-                setState(() {
-                  // Navigator.of(this.context).pop();
-                  GlobalLists.isaddAttendance.value = false;
-                  print("RUCHIIF");
-                  // Timer(Duration(seconds: 1), () => Navigator.pop(context));
-                  ShowDialogs().confirmationdone(
-                    context,
-                    "Mark Attendance \nSuccessfully",
-                  );
-                  Timer(
-                    Duration(seconds: 1),
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => Attendance(clientname),
-                      ),
-                    ),
-                  );
-                });
-              } else {
-                ShowDialogs.showToast(resp.msg);
-
-                setState(() {
-                  GlobalLists.isaddAttendance.value = false;
-                });
-                // Navigator.of(this.context).pop();
-              }
-            },
-            (error) {
-              log('ERR msg is $error');
-            },
-            false,
-            "",
-            jsonval: map,
-          );
-        } else {
-          //  Offline Mode
-          await DBHelper.insertOfflineRequest(
-            '${Global.baseUrl}/api/attendancemaster/Add_AttendanceMaster',
-            map,
-          );
-
-          final newId = DateTime.now().millisecondsSinceEpoch;
-          log(map.toString());
-
-          final newEmployee = att.EmployeeList(
-            id: newId,
-            name: map['name'],
-            contact: map['contact'],
-            loginTime: map['time'],
-          );
-
-          //  Check duplicate in GlobalLists
-          bool exists = GlobalLists.attendanceemployeelist.any(
-            (e) => e.contact == newEmployee.contact,
-          );
-
-          if (!exists) {
-            // setState(() {
-            GlobalLists.attendanceemployeelist.add(newEmployee);
-            GlobalLists.attendanceDetails[selectedShiftIndex]!.employeeList!.add(newEmployee);
-            // });
-
-            //  Update SharedPreferences cache
-            final prefs = await SharedPreferences.getInstance();
-            String? cachedData = prefs.getString('cached_attendance_data');
-
-            if (cachedData != null) {
-              try {
-                att.AttendencelistResponse resp = att.attendencelistResponseFromJson(
-                  cachedData,
-                );
-
-                // Avoid duplicates in cache
-                bool cacheExists = resp.data!.attendanceDetails![selectedShiftIndex].employeeList!.any(
-                  (e) => e.contact == newEmployee.contact,
-                );
-
-                if (!cacheExists) {
-                  resp.data!.attendanceDetails![selectedShiftIndex].employeeList!.add(newEmployee);
-                  await prefs.setString(
-                    'cached_attendance_data',
-                    att.attendencelistResponseToJson(resp),
-                  );
-                }
-              } catch (e) {
-                print('Error updating cached data: $e');
-              }
-            }
+    if (status1) {
+      //  Online mode
+      // ShowDialogs.showLoadingDialog(context, _keyLoader);
+      setState(() {
+        GlobalLists.isaddAttendance.value = true;
+      });
+      APIManager().apiRequest(
+        context,
+        API.addattendance,
+        (response) async {
+          addattten.AddAttendanceResponse resp = response;
+          if (resp.status == 1) {
+            setState(() {
+              // Navigator.of(this.context).pop();
+              GlobalLists.isaddAttendance.value = false;
+              print("RUCHIIF");
+              // Timer(Duration(seconds: 1), () => Navigator.pop(context));
+              ShowDialogs().confirmationdone(
+                context,
+                "Mark Attendance \nSuccessfully",
+              );
+             print(clientname);
+             print("cleint ${clientname}");
+              print("cleint ${selectedShiftIndex}");
+              Timer(
+                Duration(seconds: 1),
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (BuildContext context) => Attendance(clientname,selectedShiftIndex: selectedShiftIndex,),
+                  ),
+                ),
+              );
+              
+            });
           } else {
-            ShowDialogs.showToast("Already marked attendance for this contact");
+            ShowDialogs.showToast(resp.msg);
+
+            setState(() {
+              GlobalLists.isaddAttendance.value = false;
+            });
+            // Navigator.of(this.context).pop();
           }
+        },
+        (error) {
+          log('ERR msg is $error');
+        },
+        false,
+        "",
+        jsonval: map,
+      );
+    } else {
+      //  Offline Mode
+      await DBHelper.insertOfflineRequest(
+        '${Global.baseUrl}/api/attendancemaster/Add_AttendanceMaster',
+        map,
+      );
 
-          // Navigate
-          Timer(
-            Duration(seconds: 1),
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (BuildContext context) => Attendance(clientname),
-              ),
-            ),
-          );
+      final newId = DateTime.now().millisecondsSinceEpoch;
+      log(map.toString());
 
-          ShowDialogs.showToast("Saved offline. Will sync when connected.");
+      final newEmployee = att.EmployeeList(
+        id: newId,
+        name: map['name'],
+        contact: map['contact'],
+        loginTime: map['time'],
+      );
+
+      //  Check duplicate in GlobalLists
+      bool exists = GlobalLists.attendanceemployeelist.any(
+        (e) => e.contact == newEmployee.contact,
+      );
+
+      if (!exists) {
+        // setState(() {
+        GlobalLists.attendanceemployeelist.add(newEmployee);
+        GlobalLists.attendanceDetails[selectedShiftIndex]!.employeeList!.add(
+          newEmployee,
+        );
+        // });
+
+        //  Update SharedPreferences cache
+        final prefs = await SharedPreferences.getInstance();
+        String? cachedData = prefs.getString('cached_attendance_data');
+
+        if (cachedData != null) {
+          try {
+            att.AttendencelistResponse resp = att
+                .attendencelistResponseFromJson(cachedData);
+
+            // Avoid duplicates in cache
+            bool cacheExists = resp
+                .data!
+                .attendanceDetails![selectedShiftIndex]
+                .employeeList!
+                .any((e) => e.contact == newEmployee.contact);
+
+            if (!cacheExists) {
+              resp.data!.attendanceDetails![selectedShiftIndex].employeeList!
+                  .add(newEmployee);
+              await prefs.setString(
+                'cached_attendance_data',
+                att.attendencelistResponseToJson(resp),
+              );
+            }
+          } catch (e) {
+            print('Error updating cached data: $e');
+          }
         }
+      } else {
+        ShowDialogs.showToast("Already marked attendance for this contact");
+      }
+
+      // Navigate
+      Timer(
+        Duration(seconds: 1),
+        () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) => Attendance(clientname),
+          ),
+        ),
+      );
+
+      ShowDialogs.showToast("Saved offline. Will sync when connected.");
+    }
   }
 
   //janitorlist for attendance

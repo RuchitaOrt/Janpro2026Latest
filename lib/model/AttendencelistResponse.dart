@@ -120,6 +120,7 @@ class AttendanceDetail {
   String? startTime;
   String? endTime;
   int? count;
+  bool? current_time;
   List<EmployeeList>? employeeList;
   String? date;
   num? percentage;
@@ -146,6 +147,7 @@ class AttendanceDetail {
     this.employeeList,
     this.date,
     this.percentage,
+    this.current_time
   });
 factory AttendanceDetail.fromJson(Map<String, dynamic> json) {
   print("============== SHIFT ==============");
@@ -191,6 +193,7 @@ factory AttendanceDetail.fromJson(Map<String, dynamic> json) {
     employeeList: employees,
     date: json["Date"],
     percentage: json["percentage"],
+    current_time:json['current_time']
   );
 }
   // factory AttendanceDetail.fromJson(Map<String, dynamic> json) =>
@@ -243,6 +246,7 @@ factory AttendanceDetail.fromJson(Map<String, dynamic> json) {
         "start_time": startTime,
         "end_time": endTime,
         "count": count,
+        'current_time':current_time,
         "employee_list":
             employeeList?.map((x) => x.toJson()).toList() ?? [],
         "Date": date,

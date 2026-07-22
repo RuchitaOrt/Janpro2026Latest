@@ -50,7 +50,8 @@
 		<string>We need to send you notifications for important updates</string>
 		<key>NSUserNotificationAlertStyle</key>
 		<string>alert</string>
-
+        <key>NSPhotoLibraryAddUsageDescription</key>
+<string>This app saves captured photos.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Allow access to photos to upload photos from your library.</string>
 		<key>UIBackgroundModes</key>

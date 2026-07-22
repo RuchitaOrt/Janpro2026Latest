@@ -48,6 +48,8 @@ class GlobalLists {
   static ValueNotifier<bool> iscomplaintLoadin = ValueNotifier<bool>(false);
   static ValueNotifier<bool> isAddEditJanitor = ValueNotifier<bool>(false);
   static ValueNotifier<bool> isActiveLoader = ValueNotifier<bool>(false);
+  static ValueNotifier<bool> is_notification_sent = ValueNotifier<bool>(false);
+
 
   static List<AttendanceDetail> attendanceDetails = [];
 
