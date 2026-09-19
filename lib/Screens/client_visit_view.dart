@@ -172,14 +172,56 @@ class _ClientVisitViewState extends State<ClientVisitView> {
                                 ),
                               ),
                             )
-                          : ShowDialogs.norecordwidget(
-                              SizeConfig.blockSizeHorizontal * 35,
-                              SizeConfig.blockSizeVertical * 42))
+                          : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+ Padding(
+   padding: const EdgeInsets.only(left: 15,top: 15),
+   child: Row(
+                                            children: [
+                                              GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      PageRouteBuilder(
+                                                        pageBuilder: (context,
+                                                                animation1,
+                                                                animation2) =>
+                                                            HomePage(),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Icon(Icons.arrow_back)),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              Container(
+                                                child: Text(
+                                                  "SITE VISIT",
+                                                  style: AppFonts.headerStyle(
+                                                      fontSize:
+                                                          ResponsiveFlutter.of(
+                                                                  context)
+                                                              .fontSize(2.3),
+                                                      color: customcolor.black,
+                                                      fontWeight:
+                                                          FontWeight.w300),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+ ),
+                              ShowDialogs.norecordwidget(
+                                  SizeConfig.blockSizeHorizontal * 1,
+                                  SizeConfig.blockSizeVertical * 42),
+                            ],
+                          ))
                 ],
               ),
             ),
           ),
-          Align(
+      mainlisttab.length > 0  ?  Align(
             alignment: Alignment.bottomRight,
             child: Padding(
               padding: EdgeInsets.only(
@@ -229,7 +271,7 @@ class _ClientVisitViewState extends State<ClientVisitView> {
                 ),
               ),
             ),
-          )
+          ):Container()
         ],
       ),
     );

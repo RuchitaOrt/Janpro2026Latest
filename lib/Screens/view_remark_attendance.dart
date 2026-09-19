@@ -1566,8 +1566,27 @@ class _ViewRemarkAttendanceState extends State<ViewRemarkAttendance> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-
+            const SizedBox(height: 15),
+       record.ot_hours!=null?      Row(
+                  children: [
+                    Text(
+                      "OT Status : ",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                     record.ot_hours!=null? record.ot_hours.toString():"-",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
+                ):Container(),
+               record.ot_hours!=null?    const SizedBox(height: 10):Container(),
+        
             /// RADIO GROUP
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

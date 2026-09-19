@@ -118,6 +118,7 @@ class Record {
   bool? notification_sent;
   String? client_attendance_type;
   String? om_oe_attendance_type;
+  dynamic ot_hours;
 
   Record({
     required this.id,
@@ -147,6 +148,7 @@ class Record {
     required this.notification_sent,
     required this.client_attendance_type,
     required this.om_oe_attendance_type,
+    this.ot_hours
   });
 
   factory Record.fromJson(Map<String, dynamic> json) => Record(
@@ -179,6 +181,7 @@ class Record {
         notification_sent:json['notification_sent'] ?? false,
         client_attendance_type: json['client_attendance_type']??"",
         om_oe_attendance_type: json['om_oe_attendance_type']??"",
+        ot_hours:json['ot_hours'] 
       );
 
   Map<String, dynamic> toJson() => {
@@ -210,5 +213,6 @@ class Record {
         "notification_sent":notification_sent,
         "client_attendance_type": client_attendance_type,
         "om_oe_attendance_type": om_oe_attendance_type,
+        "ot_hours":ot_hours
       };
 }

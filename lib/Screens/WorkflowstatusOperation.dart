@@ -335,7 +335,9 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                         top: 20,
                         bottom: 20,
                       ),
-                      child: Container(
+                      child: 
+                      Container(
+                        // color: customcolor.appbarcolor,
                         height: SizeConfig.blockSizeVertical * 100,
                         child: SingleChildScrollView(
                           child: Column(
@@ -678,20 +680,26 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                                       role == GlobalLists.operationrole ||
                                       role == GlobalLists.operationmanagerrole)
                                   ? isdataloaded == false
-                                        ? ShowDialogs.norecordwidget(
+                                        ? 
+                                        ShowDialogs.norecordwidget(
                                             0.0,
                                             SizeConfig.blockSizeVertical * 30,
                                           )
-                                        : newoperationalmodule()
+                                        : 
+                                        
+                                         newoperationalmodule()
                                   : (role == GlobalLists.clientrole)
                                   ? headmodule()
                                   : isdataloaded == false
-                                  ? ShowDialogs.norecordwidget(
+                                  ? 
+                                  ShowDialogs.norecordwidget(
                                       0.0,
                                       SizeConfig.blockSizeVertical * 30,
                                     )
                                   : GlobalLists.isShiftActive == 0
-                                  ? ShowDialogs.norecordwidget(
+                                  ? 
+                                 
+                                  ShowDialogs.norecordwidget(
                                       0.0,
                                       SizeConfig.blockSizeVertical * 30,
                                     )
@@ -699,7 +707,7 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
                             ],
                           ),
                         ),
-                      ),
+                       ),
                     ),
                   ],
                 );
@@ -712,7 +720,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
   Widget headmodule() {
     print("headmodule");
     return GlobalLists.mainlisttabs.length == 0
-        ? ShowDialogs.norecordwidget(
+        ? 
+        ShowDialogs.norecordwidget(
             // SizeConfig.blockSizeHorizontal * 30,
             //vishu 13 aug 24
             0.0,
@@ -791,7 +800,8 @@ class _WorkflowstatusOperation extends State<WorkflowstatusOperation>
 }
 print("_pendingScrollIndex ${_pendingScrollIndex}");
     return GlobalLists.operationalmainlisttab.length == 0
-        ? ShowDialogs.norecordwidget(
+        ?
+         ShowDialogs.norecordwidget(
             // SizeConfig.blockSizeHorizontal * 30,
             // vishu 13 aug 24
             0.0,
@@ -1067,98 +1077,78 @@ print("_pendingScrollIndex ${_pendingScrollIndex}");
     });
     return choices;
   }
+_buildChoicemainopertaionalList() {
+  List<Widget> choices = [];
 
-  _buildChoicemainopertaionalList() {
-  
-    List<Widget> choices = [];
-
-    GlobalLists.operationalmainlisttab.forEachIndexed((item, value) {
-      choices.add(
-        Container(
-           width: 180,
-         
-          height: 25,
-          child: Padding(
-            padding: const EdgeInsets.only(right: 5),
-            child: ChoiceChip(
-              label: Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Text(
-                  item.clientName,
-                  style: AppFonts.headerStyle(
-                    fontSize: 12,
-                    color: GlobalLists.maintag == value
-                        ? customcolor.white
-                        : item.pendingstatus == 0
-                        ? customcolor.red
-                        : customcolor.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              side: BorderSide(
-                width: 0.5,
+  GlobalLists.operationalmainlisttab.forEachIndexed((item, value) {
+    choices.add(
+      Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: ChoiceChip(
+          label: Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Text(
+              item.clientName,
+              style: AppFonts.headerStyle(
+                fontSize: 12,
                 color: GlobalLists.maintag == value
                     ? customcolor.white
                     : item.pendingstatus == 0
-                    ? customcolor.red
-                    : customcolor.green,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(10),
-                  bottomRight: Radius.circular(10),
-                ),
-              ),
-              labelStyle: AppFonts.headerStyle(
-                fontSize: 12,
-                color: GlobalLists.maintag == value
-                    ? customcolor.blue
-                    : customcolor.greytext,
+                        ? customcolor.red
+                        : customcolor.green,
                 fontWeight: FontWeight.bold,
               ),
-              selectedColor: customcolor.tabblue,
-              backgroundColor: customcolor.white,
-              selected: GlobalLists.maintag == value,
-
-              onSelected: (selected) async {
-                print("COming");
-
-                print("Selected Index: $value");
-              
-                
-
-                setState(() {
-                  _isSelected = item.clientName;
-                  GlobalLists.maintag = value;
-                  tag = 0;
-                  GlobalLists.tabsmain = <Tab>[];
-
-                  GlobalLists.selectedindex = 0;
-_pendingScrollIndex = value;
-                  // operationlManagerdetailworkflowstatusApi(
-                  //     item.clientId.toString(), item.siteId.toString());
-                });
-                
-      
-              await  operationlManagerdetailworkflowstatusApi(
-                  item.clientId.toString(),
-                  item.siteId.toString(),
-                );
-
-  //               if (mounted) {
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     _scrollToChip(value);
-  //   });
-  // }
-              },
             ),
           ),
+
+          side: BorderSide(
+            width: 0.5,
+            color: GlobalLists.maintag == value
+                ? customcolor.white
+                : item.pendingstatus == 0
+                    ? customcolor.red
+                    : customcolor.green,
+          ),
+
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(10),
+              bottomRight: Radius.circular(10),
+            ),
+          ),
+
+          selectedColor: customcolor.tabblue,
+          backgroundColor: customcolor.white,
+          selected: GlobalLists.maintag == value,
+
+          // Optional: make chip more compact
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+
+          onSelected: (selected) async {
+            print("COming");
+            print("Selected Index: $value");
+
+            setState(() {
+              _isSelected = item.clientName;
+              GlobalLists.maintag = value;
+              tag = 0;
+              GlobalLists.tabsmain = <Tab>[];
+              GlobalLists.selectedindex = 0;
+              _pendingScrollIndex = value;
+            });
+
+            await operationlManagerdetailworkflowstatusApi(
+              item.clientId.toString(),
+              item.siteId.toString(),
+            );
+          },
         ),
-      );
-    });
-    return choices;
-  }
+      ),
+    );
+  });
+
+  return choices;
+}
 
   Widget _buildChoicemainopertaionalListForTab() {
     final selectedItem =
@@ -1363,7 +1353,7 @@ _pendingScrollIndex = value;
               //  physics: ScrollPhysics(),
               children: [
                 Container(
-                  height: SizeConfig.blockSizeVertical * 80,
+                  // height: SizeConfig.blockSizeVertical * 100,
                   //to make half scroll replace 100 with 63
                   decoration: BoxDecoration(
                     // color: Colors.blue,
@@ -1599,52 +1589,7 @@ _pendingScrollIndex = value;
                                                               customcolor.blue,
                                                         ),
                                                       ),
-                                                      /* (role ==
-                                                            GlobalLists
-                                                                .headrole ||
-                                                            role ==
-                                                                GlobalLists
-                                                                    .reginalmanagerrole ||
-                                                            role ==
-                                                                GlobalLists
-                                                                    .clientrole ||
-                                                            role ==
-                                                                GlobalLists
-                                                                    .operationrole ||
-                                                            role ==
-                                                                GlobalLists
-                                                                    .operationmanagerrole)
-                                                            ? SizedBox(
-                                                          height: 0,
-                                                        )
-                                                            : SizedBox(
-                                                          height: 7,
-                                                        ),
-                                                        (role == GlobalLists.headrole ||
-                                                            role ==  GlobalLists .reginalmanagerrole ||
-                                                            role ==  GlobalLists  .clientrole ||
-                                                            role ==  GlobalLists .operationrole ||
-                                                            role ==  GlobalLists .operationmanagerrole)
-                                                            ? Container()
-                                                            : Text(
-                                                          "${GlobalLists.mainlisttabs[GlobalLists.maintag].details[0].uncheckCount.toString()} Task Pending",
-                                                          maxLines: 2,
-                                                          textAlign:
-                                                          TextAlign.start,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style: AppFonts.headerStyle(
-                                                              fontSize:
-                                                              ResponsiveFlutter.of(
-                                                                  context)
-                                                                  .fontSize(
-                                                                  2),
-                                                              color: customcolor
-                                                                  .appbarcolor,
-                                                              fontWeight:
-                                                              FontWeight
-                                                                  .bold),
-                                                        ),*/
+                                                    
                                                     ],
                                                   ),
                                                 ),
@@ -1653,126 +1598,7 @@ _pendingScrollIndex = value;
                                           ],
                                         ),
                                       ),
-                                      /* child: Material(
-                                          elevation: 2,
-                                          borderRadius: BorderRadius.circular(10),
-                                          child: Container(
-                                            width: SizeConfig.blockSizeHorizontal *  100,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(10.0),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisAlignment:  MainAxisAlignment.start,
-                                                children: [
-                                                  // SizedBox(height: 20,),
-                                                  Row(
-                                                    crossAxisAlignment: CrossAxisAlignment .start,
-                                                    mainAxisAlignment: MainAxisAlignment  .spaceBetween,
-                                                    children: [
-                                                      Padding(
-                                                        padding: const EdgeInsets.only(top: 10),
-                                                        child: Container(
-                                                          width: SizeConfig.blockSizeHorizontal *60,
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment .start,
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment.start,
-                                                            children: [
-                                                              Text(
-                                                                "${GlobalLists.card_startcurrentdatevalue}-${GlobalLists.card_endcurrentdatevalue}",
-                                                                //  "${GlobalLists.workflowstatuslist[GlobalLists.selectedindex].startTime} - ${GlobalLists.workflowstatuslist[GlobalLists.selectedindex].endTime}",
-                                                                maxLines: 2,
-                                                                textAlign:  TextAlign .start,
-                                                                overflow: TextOverflow .ellipsis,
-                                                                style: AppFonts.headerStyle(
-                                                                    fontSize: ResponsiveFlutter.of(context).fontSize( 2.2),
-                                                                    color: customcolor.blue,
-                                                                    fontWeight:FontWeight.w600),
-                                                              ),
-                                                              SizedBox(
-                                                                height: 10,
-                                                              ),
-                                                              Text(
-                                                                "${GlobalLists.card_superviorfirtvalue}",
-                                                                //"${GlobalLists.workflowstatuslist[GlobalLists.selectedindex].clientName} - ${GlobalLists.workflowstatuslist[GlobalLists.selectedindex].siteName}",
-                                                                maxLines: 2,
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .start,
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-
-                                                                style: AppFonts.headerStyle(
-                                                                    fontSize: ResponsiveFlutter.of(
-                                                                            context)
-                                                                        .fontSize(
-                                                                            1.6),
-                                                                    color: customcolor
-                                                                        .black,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .w400),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Column(
-                                                        crossAxisAlignment: CrossAxisAlignment .end,
-                                                        mainAxisAlignment: MainAxisAlignment .start,
-                                                        children: [
-                                                          Container(
-                                                            // color: customcolor.appbarcolor,
-                                                            child:
-                                                                CircularPercentIndicator( animationDuration: 500,
-                                                              //   radius: 35.0,
-                                                              lineWidth: 4.0,
-                                                              radius: 34.0,
-                                                              //   lineWidth: 5.0,
-                                                              animation: true,
-                                                              percent:
-                                                                  // 0.0,
-                                                                  double.parse(GlobalLists.card_percentvalue) >100.0 ? 0.0   : double.parse(GlobalLists.card_percentvalue) /  100,
-                                                              //GlobalLists.workflowstatuslist[GlobalLists.selectedindex].percentage>100.0?0.0: GlobalLists.workflowstatuslist[GlobalLists.selectedindex].percentage/100,
-                                                              center: new Text(
-                                                                //"",
-                                                                "${double.parse(GlobalLists.card_percentvalue).toStringAsFixed(0)}%",
-                                                                //"${GlobalLists.workflowstatuslist[GlobalLists.selectedindex].percentage.toStringAsFixed(0)}%",
-                                                                style: AppFonts.headerStyle(
-                                                                    fontSize:
-                                                                        15,
-                                                                    color: customcolor
-                                                                        .yellow,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold),
-                                                              ),
-
-                                                              circularStrokeCap:
-                                                                  CircularStrokeCap
-                                                                      .round,
-                                                              progressColor:
-                                                                  customcolor
-                                                                      .textblue,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-
-                                                  // Container(
-                                                  //   height: 5,
-                                                  // ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),*/
+                                  
                                     ),
                                   ),
 
@@ -1796,10 +1622,11 @@ _pendingScrollIndex = value;
                               // physics: ScrollPhysics(),
                               children: [
                                 SizedBox(height: 10),
-                                Container(
-                                  height: SizeConfig.blockSizeVertical * 55,
-                                  child: masterarea(tabindexmain),
-                                ),
+                                // Container(
+                                //   height: SizeConfig.blockSizeVertical * 55,
+                                //   child:
+                                   masterarea(tabindexmain),
+                                // ),
                               ],
                             );
                           }),
@@ -1822,7 +1649,7 @@ _pendingScrollIndex = value;
       physics: ScrollPhysics(),
       children: [
         Container(
-          height: SizeConfig.blockSizeVertical * 100,
+          // height: SizeConfig.blockSizeVertical * 100,
           //to make half scroll replace 100 with 63
           decoration: BoxDecoration(
             //color: Colors.white,
@@ -2144,6 +1971,7 @@ _pendingScrollIndex = value;
                         SizedBox(height: 10),
 
                         Container(
+                          // color: customcolor.appbarcolor,
                           height: SizeConfig.blockSizeVertical * 55,
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 85),
@@ -2182,7 +2010,9 @@ _pendingScrollIndex = value;
   //new manager operation
   Widget opertaionmanagermodule() {
     return GlobalLists.tabsmain.length == 0
-        ? ShowDialogs.norecordwidget(
+        ? 
+        
+        ShowDialogs.norecordwidget(
             SizeConfig.blockSizeHorizontal * 30,
             // 0.0,
             SizeConfig.blockSizeVertical * 30,
@@ -2196,7 +2026,7 @@ _pendingScrollIndex = value;
               Container(
                 height: Platform.isAndroid
                     ? SizeConfig.blockSizeVertical * 64
-                    : SizeConfig.blockSizeVertical * 60, //64
+                    : SizeConfig.blockSizeVertical * 100, //64//new
                 //to make half scroll replace 100 with 63
                 decoration: BoxDecoration(
                   //color: Colors.amber,
@@ -2212,10 +2042,12 @@ _pendingScrollIndex = value;
 
   newscroll() {
     return GlobalLists.detailopeermainlisttab.length == 0
-        ? ShowDialogs.norecordwidget(
+        ? 
+        
+        ShowDialogs.norecordwidget(
             // vishu 13 aug 24
-            // SizeConfig.blockSizeHorizontal * 30,
-            0.0,
+             SizeConfig.blockSizeHorizontal * 30,
+            // /0.0,
             SizeConfig.blockSizeVertical * 30,
           )
         : Column(
@@ -2536,14 +2368,14 @@ _pendingScrollIndex = value;
                           // color: customcolor.blue,
                           height: Platform.isAndroid
                               ? SizeConfig.blockSizeVertical * 42
-                              : SizeConfig.blockSizeVertical * 40, //42
+                              : SizeConfig.blockSizeVertical * 50, //42
                           child:
                               //  Container(child: Text(" ${GlobalLists.tabsmain.length}"),)
                               //wait2
                               GlobalLists.detailopeermainlisttab.length == 0
                               ? Container()
                               : Padding(
-                                  padding: EdgeInsets.only(bottom: 6),
+                                  padding: EdgeInsets.only(bottom: 0),
                                   child: newoperationmasterarea(tabindexmain),
                                 ),
                         ),
@@ -2887,7 +2719,7 @@ _pendingScrollIndex = value;
     return isdataloaded == false
         ? Container()
         : Padding(
-            padding: const EdgeInsets.only(left: 6, right: 6, bottom: 6),
+            padding: const EdgeInsets.only(left: 6, right: 6, bottom: 0),
             child: ListView(
               shrinkWrap: true,
               physics: ScrollPhysics(),
@@ -2941,7 +2773,8 @@ _pendingScrollIndex = value;
                       //}),
                       //7dec
                       //wait5
-                      newoperationexpandedheader(tabindexmain, tag),
+                    
+                       newoperationexpandedheader(tabindexmain, tag),
                       //
                     ],
                   ),

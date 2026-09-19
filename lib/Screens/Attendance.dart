@@ -2793,7 +2793,8 @@ class _AttendanceState extends State<Attendance> with TickerProviderStateMixin {
                                     ),
 
                                     SizedBox(height: 10),
-                                (role==GlobalLists.reginalmanagerrole || role==GlobalLists.headrole)?Container():    ElevatedButton(
+                       GlobalLists
+                                                                .mainlisttab.length==0?Container():         (role==GlobalLists.reginalmanagerrole || role==GlobalLists.headrole)?Container():    ElevatedButton(
                                       onPressed: () {
                                         print('_isSelected');
                                         print('role');
@@ -5503,6 +5504,7 @@ print("Add atten ${_isSelected}");
 
   void _handleAttendanceResponse(unitatt.UnitAttendanceResponse resp) async {
     GlobalLists.mainlisttab = [];
+    if(resp.data.length!=0){
     setState(() {
       isdataloaded = true;
       for (int i = 0; i < resp.data.length; i++) {
@@ -5575,6 +5577,7 @@ print("Add atten ${_isSelected}");
       print("unit 1");
       unitgraphattendanceApi();
     });
+    }
   }
 
   // only graph data offline db

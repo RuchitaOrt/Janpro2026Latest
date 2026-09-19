@@ -84,14 +84,20 @@ class RankingData extends StatelessWidget {
                 const SizedBox(height: 5),
 
                 /// Name
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 18, // 🔥 bigger like screenshot
-                    fontWeight: FontWeight.w600,
-                    color: isTop ? Colors.white : Colors.black,
-                  ),
-                ),
+                Padding(
+  padding: const EdgeInsets.only(right: 48),
+  child: Text(
+   name,
+    maxLines: 2,
+    overflow: TextOverflow.ellipsis,
+    softWrap: true,
+    style: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      color: isTop ? Colors.white : Colors.black,
+    ),
+  ),
+),
 
                 const SizedBox(height: 4),
 

@@ -16,11 +16,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SupervisorRankingListScreen extends StatefulWidget {
   final String selectedMonth;
   final int selectedYear;
+  final String selectedDate;
 
   const SupervisorRankingListScreen({
     super.key,
     required this.selectedMonth,
     required this.selectedYear,
+    required this.selectedDate
   });
 
   @override
@@ -135,7 +137,7 @@ Future<void> getRanking() async {
   String datefrom = "${widget.selectedYear}-$monthNumber";
 
   final payload = {
-    "date": datefrom,
+    "date": widget.selectedDate,
     "rm_id": rmID,
     "page": page.toString(),
   };
